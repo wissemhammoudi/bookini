@@ -18,12 +18,12 @@
 
 ## Week 3 Tasks
 
-- [ ] Implement password hashing with bcrypt
-- [ ] Build registration endpoint and service
-- [ ] Build login endpoint and token issuance
-- [ ] Add refresh token flow and logout flow
-- [ ] Implement password reset and change password flows
-- [ ] Write authentication tests
+- [x] Implement password hashing with bcrypt
+- [x] Build registration endpoint and service
+- [x] Build login endpoint and token issuance
+- [x] Add refresh token flow and logout flow
+- [x] Implement password reset and change password flows
+- [x] Write authentication tests
 
 ## Week 4 Tasks
 

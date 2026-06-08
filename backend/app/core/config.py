@@ -26,6 +26,11 @@ class Settings(BaseSettings):
     api_host: str = Field(default="0.0.0.0")
     api_port: int = Field(default=8000, ge=1, le=65535)
 
+    secret_key: str = Field(min_length=16)
+    jwt_algorithm: str = Field(default="HS256")
+    access_token_expire_minutes: int = Field(default=15, ge=1)
+    refresh_token_expire_days: int = Field(default=7, ge=1)
+
     database_url: str = Field(min_length=1)
     redis_url: str = Field(min_length=1)
 

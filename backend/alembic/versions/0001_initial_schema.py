@@ -21,14 +21,15 @@ depends_on: Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    user_role_enum = sa.Enum(
-        "SUPER_ADMIN", "ADMIN", "USER", name="user_role_enum"
-    )
+    user_role_enum = sa.Enum("SUPER_ADMIN", "ADMIN", "USER", name="user_role_enum")
     floor_status_enum = sa.Enum(
         "AVAILABLE", "OCCUPIED", "MAINTENANCE", name="floor_status_enum"
     )
     reservation_status_enum = sa.Enum(
-        "PENDING", "CONFIRMED", "CANCELLED", "COMPLETED",
+        "PENDING",
+        "CONFIRMED",
+        "CANCELLED",
+        "COMPLETED",
         name="reservation_status_enum",
     )
 
