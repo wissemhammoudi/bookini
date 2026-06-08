@@ -35,13 +35,13 @@
 
 ## Week 5 Tasks
 
-- [ ] Implement floor repository and service
-- [ ] Add floor create, update, delete, list, and search endpoints
-- [ ] Implement soft delete behavior
-- [ ] Implement reservation repository and service
-- [ ] Validate overlap, time, and floor existence rules
-- [ ] Add reservation history and current reservation queries
-- [ ] Test reservation conflict scenarios
+- [x] Implement floor repository and service
+- [x] Add floor create, update, delete, list, and search endpoints
+- [x] Implement soft delete behavior
+- [x] Implement reservation repository and service
+- [x] Validate overlap, time, and floor existence rules
+- [x] Add reservation history and current reservation queries
+- [x] Test reservation conflict scenarios
 
 ## Week 6 Tasks
 
