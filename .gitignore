@@ -1,0 +1,16 @@
+# Python caches and bytecode
+__pycache__/
+*.py[cod]
+
+# Test and tooling caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Virtual environments
+.venv/
+venv/
+
+# Local environment files
+.env
+backend/.env
