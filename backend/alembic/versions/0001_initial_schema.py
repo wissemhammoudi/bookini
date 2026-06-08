@@ -21,16 +21,23 @@ depends_on: Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    user_role_enum = sa.Enum("SUPER_ADMIN", "ADMIN", "USER", name="user_role_enum")
-    floor_status_enum = sa.Enum(
-        "AVAILABLE", "OCCUPIED", "MAINTENANCE", name="floor_status_enum"
+    user_role_enum = postgresql.ENUM(
+        "SUPER_ADMIN", "ADMIN", "USER", name="user_role_enum", create_type=False
     )
-    reservation_status_enum = sa.Enum(
+    floor_status_enum = postgresql.ENUM(
+        "AVAILABLE",
+        "OCCUPIED",
+        "MAINTENANCE",
+        name="floor_status_enum",
+        create_type=False,
+    )
+    reservation_status_enum = postgresql.ENUM(
         "PENDING",
         "CONFIRMED",
         "CANCELLED",
         "COMPLETED",
         name="reservation_status_enum",
+        create_type=False,
     )
 
     bind = op.get_bind()

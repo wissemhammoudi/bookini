@@ -33,6 +33,22 @@ class Settings(BaseSettings):
 
     database_url: str = Field(min_length=1)
     redis_url: str = Field(min_length=1)
+    cors_allow_origins: list[str] = Field(
+        default_factory=lambda: [
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+            "http://localhost",
+            "http://127.0.0.1",
+        ]
+    )
+
+    seed_default_users: bool = Field(default=False)
+    seed_user_email: str = Field(default="user@bookini.local")
+    seed_user_password: str = Field(default="User123456!")
+    seed_admin_email: str = Field(default="admin@bookini.local")
+    seed_admin_password: str = Field(default="Admin123456!")
+    seed_super_admin_email: str = Field(default="superadmin@bookini.local")
+    seed_super_admin_password: str = Field(default="SuperAdmin123456!")
 
 
 @lru_cache

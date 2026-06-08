@@ -4,6 +4,7 @@ pydantic-settings==2.10.1
 python-dotenv==1.1.1
 sqlalchemy==2.0.41
 alembic==1.16.2
+greenlet==3.2.3
 asyncpg==0.30.0; python_version < "3.14"
 psycopg[binary]==3.2.13; python_version >= "3.14"
 pytest==8.4.1

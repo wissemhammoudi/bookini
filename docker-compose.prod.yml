@@ -3,6 +3,7 @@ services:
     image: traefik:v3.1
     command:
       - --configFile=/etc/traefik/traefik.yml
+    restart: unless-stopped
     ports:
       - "80:80"
       - "443:443"
@@ -17,6 +18,7 @@ services:
 
   postgres:
     image: postgres:16-alpine
+    restart: unless-stopped
     environment:
       POSTGRES_DB: bookini
       POSTGRES_USER: postgres
@@ -31,6 +33,7 @@ services:
 
   redis:
     image: redis:7-alpine
+    restart: unless-stopped
     command: ["redis-server", "--appendonly", "yes"]
     volumes:
       - redis_data:/data
@@ -44,6 +47,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    restart: unless-stopped
     environment:
       APP_ENV: production
       LOG_LEVEL: INFO
@@ -85,6 +89,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+    restart: unless-stopped
     environment:
       NODE_ENV: production
     labels:
@@ -105,6 +110,7 @@ services:
 
   prometheus:
     image: prom/prometheus:v2.54.1
+    restart: unless-stopped
     command:
       - --config.file=/etc/prometheus/prometheus.yml
       - --storage.tsdb.path=/prometheus
@@ -121,6 +127,7 @@ services:
 
   grafana:
     image: grafana/grafana:11.2.0
+    restart: unless-stopped
     environment:
       GF_SECURITY_ADMIN_USER: admin
       GF_SECURITY_ADMIN_PASSWORD: admin
@@ -137,6 +144,7 @@ services:
 
   loki:
     image: grafana/loki:3.2.0
+    restart: unless-stopped
     command: ["-config.file=/etc/loki/loki-config.yml"]
     volumes:
       - ./monitoring/loki/loki-config.yml:/etc/loki/loki-config.yml:ro
@@ -146,6 +154,7 @@ services:
 
   promtail:
     image: grafana/promtail:3.2.0
+    restart: unless-stopped
     command: ["-config.file=/etc/promtail/promtail-config.yml"]
     volumes:
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
@@ -156,6 +165,7 @@ services:
 
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:v0.49.1
+    restart: unless-stopped
     ports:
       - "8088:8080"
     volumes:
@@ -166,6 +176,7 @@ services:
 
   node-exporter:
     image: prom/node-exporter:v1.8.2
+    restart: unless-stopped
     command:
       - --path.rootfs=/host
     ports:
