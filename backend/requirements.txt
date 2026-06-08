@@ -2,6 +2,10 @@ fastapi==0.116.0
 uvicorn[standard]==0.35.0
 pydantic-settings==2.10.1
 python-dotenv==1.1.1
+sqlalchemy==2.0.41
+alembic==1.16.2
+asyncpg==0.30.0; python_version < "3.14"
+psycopg[binary]==3.2.13; python_version >= "3.14"
 pytest==8.4.1
 pytest-asyncio==1.0.0
 httpx==0.28.1

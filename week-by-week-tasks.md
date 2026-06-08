@@ -10,11 +10,11 @@
 
 ## Week 2 Tasks
 
-- [ ] Define SQLAlchemy async base and database session handling
-- [ ] Create models for users, floors, reservations, activities, and audit logs
-- [ ] Define status and role enums
-- [ ] Configure Alembic and create initial migration
-- [ ] Verify table relationships and constraints
+- [x] Define SQLAlchemy async base and database session handling
+- [x] Create models for users, floors, reservations, activities, and audit logs
+- [x] Define status and role enums
+- [x] Configure Alembic and create initial migration
+- [x] Verify table relationships and constraints
 
 ## Week 3 Tasks
 
