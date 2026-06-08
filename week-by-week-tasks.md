@@ -80,14 +80,14 @@
 
 ## Week 10 Tasks
 
-- [ ] Build admin dashboard
-- [ ] Build floor management page
-- [ ] Build reservation management page
-- [ ] Build occupancy monitoring page
-- [ ] Build statistics page with charts
-- [ ] Build super admin dashboard
-- [ ] Build audit logs page
-- [ ] Build admin management page
+- [x] Build admin dashboard
+- [x] Build floor management page
+- [x] Build reservation management page
+- [x] Build occupancy monitoring page
+- [x] Build statistics page with charts
+- [x] Build super admin dashboard
+- [x] Build audit logs page
+- [x] Build admin management page
 
 ## Week 11 Tasks
 

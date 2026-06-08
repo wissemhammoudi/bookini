@@ -49,6 +49,12 @@ export const AppLayout = () => {
               <Button component={RouterLink} to="/profile" color="inherit">
                 Profile
               </Button>
+              <Button component={RouterLink} to="/admin/dashboard" color="inherit">
+                Admin
+              </Button>
+              <Button component={RouterLink} to="/super-admin/dashboard" color="inherit">
+                Super Admin
+              </Button>
             </Stack>
 
             <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>

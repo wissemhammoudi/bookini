@@ -38,3 +38,70 @@ export type ActivityItem = {
   description: string | null
   created_at: string
 }
+
+export type StatisticsSummary = {
+  total_reservations: number
+  daily_reservations: number
+  monthly_reservations: number
+  annual_reservations: number
+  cancellation_rate: number
+  active_users: number
+  charts: {
+    bar: {
+      labels: string[]
+      series: number[]
+    }
+    line: {
+      labels: string[]
+      series: number[]
+    }
+    pie: {
+      labels: string[]
+      series: number[]
+    }
+  }
+}
+
+export type OccupancyMetrics = {
+  total_rooms: number
+  occupied_rooms: number
+  available_rooms: number
+  occupancy_percentage: number
+  chart: {
+    type: string
+    labels: string[]
+    series: number[]
+  }
+}
+
+export type NamedChartSeries = {
+  items: Array<Record<string, string | number>>
+  chart: {
+    type: string
+    labels: string[]
+    series: number[]
+  }
+}
+
+export type AdminDashboard = {
+  role: string
+  permissions_scope: string
+  total_admin_users: number
+}
+
+export type AdminUser = {
+  id: string
+  full_name: string
+  email: string
+  role: 'ADMIN' | 'SUPER_ADMIN'
+  is_active: boolean
+}
+
+export type AuditLogItem = {
+  id: string
+  user_id: string
+  action: string
+  ip_address: string
+  metadata: Record<string, unknown>
+  timestamp: string
+}

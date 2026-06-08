@@ -63,6 +63,13 @@ class ReservationRepository:
         result = await self._session.execute(statement)
         return list(result.scalars().all())
 
+    async def list_all(self) -> list[Reservation]:
+        statement: Select[tuple[Reservation]] = select(Reservation).order_by(
+            Reservation.start_time.desc()
+        )
+        result = await self._session.execute(statement)
+        return list(result.scalars().all())
+
     async def cancel(self, reservation: Reservation) -> Reservation:
         reservation.status = ReservationStatus.CANCELLED
         await self._session.commit()

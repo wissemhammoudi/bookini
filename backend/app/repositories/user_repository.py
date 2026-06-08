@@ -1,6 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.domain.enums import UserRole
 from app.models.user import User
 
 
@@ -36,6 +37,21 @@ class UserRepository:
 
     async def update_password(self, user: User, new_password_hash: str) -> User:
         user.password_hash = new_password_hash
+        await self._session.commit()
+        await self._session.refresh(user)
+        return user
+
+    async def list_admins(self) -> list[User]:
+        statement = (
+            select(User)
+            .where(User.role.in_([UserRole.ADMIN, UserRole.SUPER_ADMIN]))
+            .order_by(User.created_at.desc())
+        )
+        result = await self._session.execute(statement)
+        return list(result.scalars().all())
+
+    async def update_role(self, user: User, role: UserRole) -> User:
+        user.role = role
         await self._session.commit()
         await self._session.refresh(user)
         return user

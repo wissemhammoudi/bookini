@@ -11,6 +11,14 @@ import { AvailableRoomsPage } from '../pages/available-rooms-page'
 import { CreateReservationPage } from '../pages/create-reservation-page'
 import { ActivitiesPage } from '../pages/activities-page'
 import { ProfilePage } from '../pages/profile-page'
+import { AdminDashboardPage } from '../pages/admin-dashboard-page'
+import { FloorManagementPage } from '../pages/floor-management-page'
+import { ReservationManagementPage } from '../pages/reservation-management-page'
+import { OccupancyMonitoringPage } from '../pages/occupancy-monitoring-page'
+import { StatisticsPage } from '../pages/statistics-page'
+import { SuperAdminDashboardPage } from '../pages/super-admin-dashboard-page'
+import { AuditLogsPage } from '../pages/audit-logs-page'
+import { AdminManagementPage } from '../pages/admin-management-page'
 
 export const AppRouter = () => {
   return (
@@ -27,6 +35,26 @@ export const AppRouter = () => {
             <Route path="/reservations" element={<ReservationsPage />} />
             <Route path="/activities" element={<ActivitiesPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+            <Route path="/admin/floors" element={<FloorManagementPage />} />
+            <Route
+              path="/admin/reservations"
+              element={<ReservationManagementPage />}
+            />
+            <Route
+              path="/admin/occupancy"
+              element={<OccupancyMonitoringPage />}
+            />
+            <Route path="/admin/statistics" element={<StatisticsPage />} />
+            <Route
+              path="/super-admin/dashboard"
+              element={<SuperAdminDashboardPage />}
+            />
+            <Route path="/super-admin/audit-logs" element={<AuditLogsPage />} />
+            <Route
+              path="/super-admin/admins"
+              element={<AdminManagementPage />}
+            />
           </Route>
         </Route>
 

@@ -1,6 +1,7 @@
 import uuid
 from typing import Any
 
+from sqlalchemy import Select, desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.audit_log import AuditLog
@@ -31,3 +32,10 @@ class AuditLogRepository:
         await self._session.commit()
         await self._session.refresh(log)
         return log
+
+    async def list_recent(self, limit: int = 50) -> list[AuditLog]:
+        statement: Select[tuple[AuditLog]] = (
+            select(AuditLog).order_by(desc(AuditLog.timestamp)).limit(limit)
+        )
+        result = await self._session.execute(statement)
+        return list(result.scalars().all())
