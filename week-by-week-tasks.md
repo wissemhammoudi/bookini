@@ -53,11 +53,11 @@
 
 ## Week 7 Tasks
 
-- [ ] Build occupancy metrics service
-- [ ] Build reservation statistics service
-- [ ] Add endpoints for daily, monthly, annual, and cancellation metrics
-- [ ] Add peak hour and active user reports
-- [ ] Return chart-friendly payloads for frontend graphs
+- [x] Build occupancy metrics service
+- [x] Build reservation statistics service
+- [x] Add endpoints for daily, monthly, annual, and cancellation metrics
+- [x] Add peak hour and active user reports
+- [x] Return chart-friendly payloads for frontend graphs
 
 ## Week 8 Tasks
 
