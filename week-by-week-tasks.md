@@ -27,11 +27,11 @@
 
 ## Week 4 Tasks
 
-- [ ] Create reusable role-based authorization dependency
-- [ ] Protect admin and super admin routes
-- [ ] Add permission checks to sensitive operations
-- [ ] Standardize unauthorized and forbidden responses
-- [ ] Write RBAC tests
+- [x] Create reusable role-based authorization dependency
+- [x] Protect admin and super admin routes
+- [x] Add permission checks to sensitive operations
+- [x] Standardize unauthorized and forbidden responses
+- [x] Write RBAC tests
 
 ## Week 5 Tasks
 
