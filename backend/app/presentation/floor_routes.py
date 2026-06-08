@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.responses import success_response
@@ -8,8 +8,10 @@ from app.domain.enums import FloorStatus
 from app.infrastructure.session import get_db_session
 from app.models.floor import Floor
 from app.models.user import User
+from app.repositories.audit_log_repository import AuditLogRepository
 from app.repositories.floor_repository import FloorRepository
 from app.schemas.floor import FloorCreateRequest, FloorUpdateRequest
+from app.services.audit_log_service import AuditLogService
 from app.services.floor_service import FloorService
 
 router = APIRouter(prefix="/floors", tags=["floors"])
@@ -17,6 +19,16 @@ router = APIRouter(prefix="/floors", tags=["floors"])
 
 def _service_from_session(session: AsyncSession) -> FloorService:
     return FloorService(FloorRepository(session))
+
+
+def _audit_service_from_session(session: AsyncSession) -> AuditLogService:
+    return AuditLogService(AuditLogRepository(session))
+
+
+def _client_ip(request: Request) -> str:
+    if request.client and request.client.host:
+        return request.client.host
+    return "unknown"
 
 
 def _serialize_floor(floor: Floor) -> dict[str, object]:
@@ -36,11 +48,21 @@ def _serialize_floor(floor: Floor) -> dict[str, object]:
 @router.post("")
 async def create_floor(
     payload: FloorCreateRequest,
-    _: User = Depends(require_roles(["ADMIN", "SUPER_ADMIN"])),
+    request: Request,
+    current_user: User = Depends(require_roles(["ADMIN", "SUPER_ADMIN"])),
     session: AsyncSession = Depends(get_db_session),
 ) -> dict[str, object]:
     service = _service_from_session(session)
+    audit_service = _audit_service_from_session(session)
+
     floor = await service.create_floor(**payload.model_dump())
+    await audit_service.record(
+        user_id=current_user.id,
+        action="FLOOR_CREATED",
+        ip_address=_client_ip(request),
+        metadata={"floor_id": str(floor.id), "name": floor.name},
+    )
+
     return success_response(
         message="Floor created successfully", data=_serialize_floor(floor)
     )
@@ -50,11 +72,21 @@ async def create_floor(
 async def update_floor(
     floor_id: str,
     payload: FloorUpdateRequest,
-    _: User = Depends(require_roles(["ADMIN", "SUPER_ADMIN"])),
+    request: Request,
+    current_user: User = Depends(require_roles(["ADMIN", "SUPER_ADMIN"])),
     session: AsyncSession = Depends(get_db_session),
 ) -> dict[str, object]:
     service = _service_from_session(session)
+    audit_service = _audit_service_from_session(session)
+
     floor = await service.update_floor(floor_id=floor_id, payload=payload.model_dump())
+    await audit_service.record(
+        user_id=current_user.id,
+        action="FLOOR_UPDATED",
+        ip_address=_client_ip(request),
+        metadata={"floor_id": str(floor.id), "payload": payload.model_dump()},
+    )
+
     return success_response(
         message="Floor updated successfully", data=_serialize_floor(floor)
     )
@@ -63,11 +95,21 @@ async def update_floor(
 @router.delete("/{floor_id}")
 async def delete_floor(
     floor_id: str,
-    _: User = Depends(require_roles(["ADMIN", "SUPER_ADMIN"])),
+    request: Request,
+    current_user: User = Depends(require_roles(["ADMIN", "SUPER_ADMIN"])),
     session: AsyncSession = Depends(get_db_session),
 ) -> dict[str, object]:
     service = _service_from_session(session)
+    audit_service = _audit_service_from_session(session)
+
     floor = await service.delete_floor(floor_id=floor_id)
+    await audit_service.record(
+        user_id=current_user.id,
+        action="FLOOR_DELETED",
+        ip_address=_client_ip(request),
+        metadata={"floor_id": str(floor.id)},
+    )
+
     return success_response(
         message="Floor deleted successfully",
         data={"id": str(floor.id), "is_deleted": floor.is_deleted},

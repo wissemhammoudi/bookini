@@ -45,11 +45,11 @@
 
 ## Week 6 Tasks
 
-- [ ] Implement activity CRUD linked to reservations
-- [ ] Add audit log entity persistence
-- [ ] Record login, logout, register, floor, and reservation actions
-- [ ] Add metadata and IP capture for audit events
-- [ ] Test event logging and activity flows
+- [x] Implement activity CRUD linked to reservations
+- [x] Add audit log entity persistence
+- [x] Record login, logout, register, floor, and reservation actions
+- [x] Add metadata and IP capture for audit events
+- [x] Test event logging and activity flows
 
 ## Week 7 Tasks
 

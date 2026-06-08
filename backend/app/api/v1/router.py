@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 
+from app.presentation.activity_routes import router as activity_router
 from app.presentation.admin_routes import router as admin_router
 from app.presentation.auth_routes import router as auth_router
 from app.presentation.floor_routes import router as floor_router
@@ -12,3 +13,4 @@ api_v1_router.include_router(auth_router)
 api_v1_router.include_router(admin_router)
 api_v1_router.include_router(floor_router)
 api_v1_router.include_router(reservation_router)
+api_v1_router.include_router(activity_router)
