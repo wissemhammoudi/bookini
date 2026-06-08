@@ -2,11 +2,19 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.responses import Response
+from prometheus_client import CONTENT_TYPE_LATEST, Counter, generate_latest
 
 from app.api.v1.router import api_v1_router
 from app.core.config import get_settings
 from app.core.exception_handlers import register_exception_handlers
 from app.core.logging_config import get_logger, setup_logging
+
+REQUEST_COUNT = Counter(
+    "bookini_http_requests_total",
+    "Total HTTP requests processed by Bookini API",
+    ["method", "path", "status_code"],
+)
 
 
 @asynccontextmanager
@@ -30,6 +38,21 @@ def create_app() -> FastAPI:
     )
 
     register_exception_handlers(app)
+
+    @app.middleware("http")
+    async def metrics_middleware(request, call_next):  # type: ignore[no-untyped-def]
+        response = await call_next(request)
+        REQUEST_COUNT.labels(
+            method=request.method,
+            path=request.url.path,
+            status_code=str(response.status_code),
+        ).inc()
+        return response
+
+    @app.get("/metrics", include_in_schema=False)
+    async def metrics() -> Response:
+        return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
+
     app.include_router(api_v1_router, prefix=settings.api_v1_prefix)
 
     return app

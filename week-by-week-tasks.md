@@ -91,14 +91,14 @@
 
 ## Week 11 Tasks
 
-- [ ] Add Dockerfile for backend
-- [ ] Add Dockerfile for frontend
-- [ ] Build single docker-compose stack
-- [ ] Configure Traefik routes and HTTPS redirection
-- [ ] Add Prometheus scrape targets
-- [ ] Add Grafana dashboards
-- [ ] Add Loki and Promtail configuration
-- [ ] Add cAdvisor and node-exporter services
+- [x] Add Dockerfile for backend
+- [x] Add Dockerfile for frontend
+- [x] Build single docker-compose stack
+- [x] Configure Traefik routes and HTTPS redirection
+- [x] Add Prometheus scrape targets
+- [x] Add Grafana dashboards
+- [x] Add Loki and Promtail configuration
+- [x] Add cAdvisor and node-exporter services
 
 ## Week 12 Tasks
 
