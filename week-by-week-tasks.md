@@ -102,10 +102,10 @@
 
 ## Week 12 Tasks
 
-- [ ] Add backend unit tests
-- [ ] Add backend integration tests
-- [ ] Add frontend unit tests
-- [ ] Add critical UI flow tests
-- [ ] Configure GitHub Actions workflow
-- [ ] Add lint, test, build, and security scan jobs
-- [ ] Finalize README and operational documentation
+- [x] Add backend unit tests
+- [x] Add backend integration tests
+- [x] Add frontend unit tests
+- [x] Add critical UI flow tests
+- [x] Configure GitHub Actions workflow
+- [x] Add lint, test, build, and security scan jobs
+- [x] Finalize README and operational documentation
