@@ -61,12 +61,12 @@
 
 ## Week 8 Tasks
 
-- [ ] Scaffold React + TypeScript + Vite app
-- [ ] Configure MUI theme and layout system
-- [ ] Add light and dark mode support
-- [ ] Set up React Router protected routes
-- [ ] Configure Axios and React Query
-- [ ] Add form handling and Zod validation setup
+- [x] Scaffold React + TypeScript + Vite app
+- [x] Configure MUI theme and layout system
+- [x] Add light and dark mode support
+- [x] Set up React Router protected routes
+- [x] Configure Axios and React Query
+- [x] Add form handling and Zod validation setup
 
 ## Week 9 Tasks
 
