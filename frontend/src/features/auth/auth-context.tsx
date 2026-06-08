@@ -4,28 +4,36 @@ import {
   useState,
 } from 'react'
 import { AuthContext } from './auth-context-object'
-
-const AUTH_TOKEN_KEY = 'bookini_auth_token'
+import {
+  clearStoredTokens,
+  getStoredAccessToken,
+  getStoredRefreshToken,
+  setStoredTokens,
+} from './auth-storage'
 
 export const AuthProvider = ({ children }: PropsWithChildren) => {
-  const [token, setToken] = useState<string | null>(() =>
-    localStorage.getItem(AUTH_TOKEN_KEY),
+  const [token, setToken] = useState<string | null>(() => getStoredAccessToken())
+  const [refreshToken, setRefreshToken] = useState<string | null>(() =>
+    getStoredRefreshToken(),
   )
 
   const value = useMemo(
     () => ({
       token,
-      isAuthenticated: Boolean(token),
-      signIn: (nextToken: string) => {
-        localStorage.setItem(AUTH_TOKEN_KEY, nextToken)
-        setToken(nextToken)
+      refreshToken,
+      isAuthenticated: Boolean(token && refreshToken),
+      signIn: (payload: { accessToken: string; refreshToken: string }) => {
+        setStoredTokens(payload.accessToken, payload.refreshToken)
+        setToken(payload.accessToken)
+        setRefreshToken(payload.refreshToken)
       },
       signOut: () => {
-        localStorage.removeItem(AUTH_TOKEN_KEY)
+        clearStoredTokens()
         setToken(null)
+        setRefreshToken(null)
       },
     }),
-    [token],
+    [refreshToken, token],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

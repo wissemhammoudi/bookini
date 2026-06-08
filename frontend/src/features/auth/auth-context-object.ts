@@ -2,8 +2,9 @@ import { createContext } from 'react'
 
 export type AuthContextValue = {
   token: string | null
+  refreshToken: string | null
   isAuthenticated: boolean
-  signIn: (token: string) => void
+  signIn: (payload: { accessToken: string; refreshToken: string }) => void
   signOut: () => void
 }
 

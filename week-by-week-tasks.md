@@ -70,13 +70,13 @@
 
 ## Week 9 Tasks
 
-- [ ] Create login and register pages
-- [ ] Build user dashboard
-- [ ] Build available rooms page
-- [ ] Build create reservation page
-- [ ] Build my reservations page
-- [ ] Build activities page
-- [ ] Build profile page
+- [x] Create login and register pages
+- [x] Build user dashboard
+- [x] Build available rooms page
+- [x] Build create reservation page
+- [x] Build my reservations page
+- [x] Build activities page
+- [x] Build profile page
 
 ## Week 10 Tasks
 
