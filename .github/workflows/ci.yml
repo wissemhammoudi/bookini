@@ -69,3 +69,23 @@ jobs:
 
       - name: Security scan (npm audit)
         run: npm audit --audit-level=high
+
+  deploy:
+    name: Deploy to Production VPS
+    needs: [backend-quality, frontend-quality]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script: |
+            cd ${{ secrets.SSH_TARGET_DIR }}
+            git fetch origin master
+            git reset --hard origin/master
+            docker compose -f docker-compose.prod.yml up -d --build
+

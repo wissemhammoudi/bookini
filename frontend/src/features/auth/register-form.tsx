@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Alert, Button, Stack, TextField } from '@mui/material'
-import { useForm } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
 import { z } from 'zod'
 
 const registerSchema = z
@@ -29,7 +29,7 @@ export const RegisterForm = ({
   onSubmit,
 }: RegisterFormProps) => {
   const {
-    register,
+    control,
     handleSubmit,
     formState: { errors },
   } = useForm<RegisterFormValues>({
@@ -43,38 +43,62 @@ export const RegisterForm = ({
   })
 
   return (
-    <Stack component="form" spacing={2} onSubmit={handleSubmit((v) => onSubmit(v))}>
+    <Stack component="form" spacing={2} onSubmit={handleSubmit((v) => onSubmit(v))} noValidate>
       {error ? <Alert severity="error">{error}</Alert> : null}
-      <TextField
-        label="Full name"
-        autoComplete="name"
-        error={Boolean(errors.full_name)}
-        helperText={errors.full_name?.message}
-        {...register('full_name')}
+      <Controller
+        name="full_name"
+        control={control}
+        render={({ field }) => (
+          <TextField
+            {...field}
+            label="Full name"
+            autoComplete="name"
+            error={Boolean(errors.full_name)}
+            helperText={errors.full_name?.message}
+          />
+        )}
       />
-      <TextField
-        label="Email"
-        type="email"
-        autoComplete="email"
-        error={Boolean(errors.email)}
-        helperText={errors.email?.message}
-        {...register('email')}
+      <Controller
+        name="email"
+        control={control}
+        render={({ field }) => (
+          <TextField
+            {...field}
+            label="Email"
+            type="email"
+            autoComplete="email"
+            error={Boolean(errors.email)}
+            helperText={errors.email?.message}
+          />
+        )}
       />
-      <TextField
-        label="Password"
-        type="password"
-        autoComplete="new-password"
-        error={Boolean(errors.password)}
-        helperText={errors.password?.message}
-        {...register('password')}
+      <Controller
+        name="password"
+        control={control}
+        render={({ field }) => (
+          <TextField
+            {...field}
+            label="Password"
+            type="password"
+            autoComplete="new-password"
+            error={Boolean(errors.password)}
+            helperText={errors.password?.message}
+          />
+        )}
       />
-      <TextField
-        label="Confirm password"
-        type="password"
-        autoComplete="new-password"
-        error={Boolean(errors.confirmPassword)}
-        helperText={errors.confirmPassword?.message}
-        {...register('confirmPassword')}
+      <Controller
+        name="confirmPassword"
+        control={control}
+        render={({ field }) => (
+          <TextField
+            {...field}
+            label="Confirm password"
+            type="password"
+            autoComplete="new-password"
+            error={Boolean(errors.confirmPassword)}
+            helperText={errors.confirmPassword?.message}
+          />
+        )}
       />
       <Button type="submit" variant="contained" disabled={isLoading}>
         {isLoading ? 'Creating account...' : 'Create account'}

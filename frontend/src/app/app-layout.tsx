@@ -31,7 +31,7 @@ export const AppLayout = () => {
               <Typography variant="h6" sx={{ fontWeight: 700 }}>
                 Bookini
               </Typography>
-              <Button component={RouterLink} to="/" color="inherit">
+              <Button component={RouterLink} to="/dashboard" color="inherit">
                 Dashboard
               </Button>
               <Button component={RouterLink} to="/rooms" color="inherit">

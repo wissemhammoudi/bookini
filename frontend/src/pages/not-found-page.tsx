@@ -9,7 +9,7 @@ export const NotFoundPage = () => {
         The page you requested does not exist.
       </Typography>
       <Button component={RouterLink} to="/" variant="contained">
-        Go to dashboard
+        Go home
       </Button>
     </Stack>
   )

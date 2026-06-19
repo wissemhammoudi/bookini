@@ -27,7 +27,7 @@ export const LoginPage = () => {
 
       const nextPath =
         (location.state as { from?: string } | null)?.from ?? '/'
-      navigate(nextPath, { replace: true })
+      navigate(nextPath ?? '/dashboard', { replace: true })
     } catch {
       setError('Could not sign in. Please try again.')
     }

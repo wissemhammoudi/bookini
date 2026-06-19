@@ -29,7 +29,7 @@ export const RegisterPage = () => {
         accessToken: tokens.access_token,
         refreshToken: tokens.refresh_token,
       })
-      navigate('/', { replace: true })
+      navigate('/dashboard', { replace: true })
     } catch {
       setError('Could not create account. Please verify your details.')
     }

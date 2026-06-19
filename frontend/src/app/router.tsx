@@ -5,6 +5,7 @@ import { ProtectedRoute } from '../features/auth/protected-route'
 import { DashboardPage } from '../pages/dashboard-page'
 import { LoginPage } from '../pages/login-page'
 import { NotFoundPage } from '../pages/not-found-page'
+import { LandingPage } from '../pages/landing-page'
 import { ReservationsPage } from '../pages/reservations-page'
 import { RegisterPage } from '../pages/register-page'
 import { AvailableRoomsPage } from '../pages/available-rooms-page'
@@ -24,12 +25,13 @@ export const AppRouter = () => {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
 
         <Route element={<ProtectedRoute />}>
           <Route element={<AppLayout />}>
-            <Route path="/" element={<DashboardPage />} />
+            <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/rooms" element={<AvailableRoomsPage />} />
             <Route path="/reservations/new" element={<CreateReservationPage />} />
             <Route path="/reservations" element={<ReservationsPage />} />

@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Alert, Button, Stack, TextField } from '@mui/material'
-import { useForm } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
 import { z } from 'zod'
 
 const loginSchema = z.object({
@@ -18,7 +18,7 @@ type LoginFormProps = {
 
 export const LoginForm = ({ error, isLoading = false, onSubmit }: LoginFormProps) => {
   const {
-    register,
+    control,
     handleSubmit,
     formState: { errors },
   } = useForm<LoginFormValues>({
@@ -34,23 +34,36 @@ export const LoginForm = ({ error, isLoading = false, onSubmit }: LoginFormProps
       component="form"
       spacing={2}
       onSubmit={handleSubmit((values) => onSubmit(values))}
+      noValidate
     >
       {error ? <Alert severity="error">{error}</Alert> : null}
-      <TextField
-        label="Email"
-        type="email"
-        autoComplete="email"
-        error={Boolean(errors.email)}
-        helperText={errors.email?.message}
-        {...register('email')}
+      <Controller
+        name="email"
+        control={control}
+        render={({ field }) => (
+          <TextField
+            {...field}
+            label="Email"
+            type="email"
+            autoComplete="email"
+            error={Boolean(errors.email)}
+            helperText={errors.email?.message}
+          />
+        )}
       />
-      <TextField
-        label="Password"
-        type="password"
-        autoComplete="current-password"
-        error={Boolean(errors.password)}
-        helperText={errors.password?.message}
-        {...register('password')}
+      <Controller
+        name="password"
+        control={control}
+        render={({ field }) => (
+          <TextField
+            {...field}
+            label="Password"
+            type="password"
+            autoComplete="current-password"
+            error={Boolean(errors.password)}
+            helperText={errors.password?.message}
+          />
+        )}
       />
       <Button type="submit" variant="contained" disabled={isLoading}>
         {isLoading ? 'Signing in...' : 'Sign in'}
