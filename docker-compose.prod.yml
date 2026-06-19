@@ -61,11 +61,11 @@ services:
       DATABASE_URL: postgresql+psycopg://postgres:postgres@postgres:5432/bookini
       REDIS_URL: redis://redis:6379/0
       SEED_DEFAULT_USERS: "true"
-      SEED_USER_EMAIL: user@bookini.local
+      SEED_USER_EMAIL: user@bookini.com
       SEED_USER_PASSWORD: User123456!
-      SEED_ADMIN_EMAIL: admin@bookini.local
+      SEED_ADMIN_EMAIL: admin@bookini.com
       SEED_ADMIN_PASSWORD: Admin123456!
-      SEED_SUPER_ADMIN_EMAIL: superadmin@bookini.local
+      SEED_SUPER_ADMIN_EMAIL: superadmin@bookini.com
       SEED_SUPER_ADMIN_PASSWORD: SuperAdmin123456!
     command: [ "sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000" ]
     labels:
