@@ -9,7 +9,7 @@ import {
   Typography,
 } from '@mui/material'
 
-import { listFloors } from '../lib/api'
+import { listFloors } from '@/lib/api'
 
 export const AvailableRoomsPage = () => {
   const roomsQuery = useQuery({

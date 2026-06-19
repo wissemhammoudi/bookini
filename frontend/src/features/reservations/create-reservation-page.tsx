@@ -13,7 +13,7 @@ import {
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
-import { createReservationRequest, listFloors } from '../lib/api'
+import { createReservationRequest, listFloors } from '@/lib/api'
 
 const reservationSchema = z
   .object({

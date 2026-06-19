@@ -5,7 +5,7 @@ import {
   getMostReservedRooms,
   getPeakHours,
   getStatisticsSummary,
-} from '../lib/api'
+} from '@/lib/api'
 
 const MiniBars = ({ labels, series }: { labels: string[]; series: number[] }) => {
   const maxValue = Math.max(...series, 1)

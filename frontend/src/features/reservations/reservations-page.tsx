@@ -9,7 +9,7 @@ import {
   Typography,
 } from '@mui/material'
 
-import { cancelReservationRequest, listReservationHistory } from '../lib/api'
+import { cancelReservationRequest, listReservationHistory } from '@/lib/api'
 
 export const ReservationsPage = () => {
   const queryClient = useQueryClient()
@@ -86,4 +86,3 @@ export const ReservationsPage = () => {
     </Stack>
   )
 }
-

@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Alert, Button, Paper, Stack, Typography } from '@mui/material'
 
-import { cancelReservationRequest, listAdminReservations } from '../lib/api'
+import { cancelReservationRequest, listAdminReservations } from '@/lib/api'
 
 export const ReservationManagementPage = () => {
   const queryClient = useQueryClient()

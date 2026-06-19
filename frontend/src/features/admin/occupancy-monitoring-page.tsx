@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { Alert, LinearProgress, Paper, Stack, Typography } from '@mui/material'
 
-import { getOccupancyMetrics } from '../lib/api'
+import { getOccupancyMetrics } from '@/lib/api'
 
 export const OccupancyMonitoringPage = () => {
   const occupancyQuery = useQuery({

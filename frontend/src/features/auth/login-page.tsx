@@ -4,9 +4,9 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { Link as RouterLink } from 'react-router-dom'
 import { Alert, Link, Paper, Stack, Typography } from '@mui/material'
 
-import { LoginForm, type LoginFormValues } from '../features/auth/login-form'
-import { useAuth } from '../features/auth/use-auth'
-import { loginRequest } from '../lib/api'
+import { LoginForm, type LoginFormValues } from '@/features/auth/login-form'
+import { useAuth } from '@/features/auth/use-auth'
+import { loginRequest } from '@/lib/api'
 
 export const LoginPage = () => {
   const [error, setError] = useState<string | undefined>()
@@ -60,4 +60,3 @@ export const LoginPage = () => {
     </Stack>
   )
 }
-

@@ -5,8 +5,8 @@ import { useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
-import { changePasswordRequest } from '../lib/api'
-import { useAuth } from '../features/auth/use-auth'
+import { changePasswordRequest } from '@/lib/api'
+import { useAuth } from '@/features/auth/use-auth'
 
 const changePasswordSchema = z
   .object({

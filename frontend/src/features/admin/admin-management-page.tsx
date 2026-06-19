@@ -12,7 +12,7 @@ import {
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
-import { listAdmins, updateAdminRole } from '../lib/api'
+import { listAdmins, updateAdminRole } from '@/lib/api'
 
 const adminRoleSchema = z.object({
   email: z.email('Email is invalid'),

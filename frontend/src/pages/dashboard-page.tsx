@@ -5,7 +5,7 @@ import {
   listCurrentReservations,
   listFloors,
   listReservationHistory,
-} from '../lib/api'
+} from '@/lib/api'
 
 export const DashboardPage = () => {
   const floorsQuery = useQuery({

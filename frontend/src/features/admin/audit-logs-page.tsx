@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { Alert, Paper, Stack, Typography } from '@mui/material'
 
-import { listAuditLogs } from '../lib/api'
+import { listAuditLogs } from '@/lib/api'
 
 export const AuditLogsPage = () => {
   const logsQuery = useQuery({

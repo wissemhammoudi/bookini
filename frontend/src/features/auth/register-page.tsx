@@ -6,9 +6,9 @@ import { Link, Paper, Stack, Typography } from '@mui/material'
 import {
   RegisterForm,
   type RegisterFormValues,
-} from '../features/auth/register-form'
-import { useAuth } from '../features/auth/use-auth'
-import { registerRequest } from '../lib/api'
+} from '@/features/auth/register-form'
+import { useAuth } from '@/features/auth/use-auth'
+import { registerRequest } from '@/lib/api'
 
 export const RegisterPage = () => {
   const [error, setError] = useState<string | undefined>()

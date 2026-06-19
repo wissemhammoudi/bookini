@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { Alert, Grid, Paper, Stack, Typography } from '@mui/material'
 
-import { getAdminDashboard, getStatisticsSummary } from '../lib/api'
+import { getAdminDashboard, getStatisticsSummary } from '@/lib/api'
 
 export const AdminDashboardPage = () => {
   const dashboardQuery = useQuery({

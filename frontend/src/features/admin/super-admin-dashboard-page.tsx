@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { Alert, Grid, Paper, Stack, Typography } from '@mui/material'
 
-import { getSuperAdminSettings, listAdmins } from '../lib/api'
+import { getSuperAdminSettings, listAdmins } from '@/lib/api'
 
 export const SuperAdminDashboardPage = () => {
   const settingsQuery = useQuery({

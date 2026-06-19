@@ -19,7 +19,7 @@ import EventAvailableOutlinedIcon from '@mui/icons-material/EventAvailableOutlin
 import GroupsOutlinedIcon from '@mui/icons-material/GroupsOutlined'
 import BarChartOutlinedIcon from '@mui/icons-material/BarChartOutlined'
 
-import { useAuth } from '../features/auth/use-auth'
+import { useAuth } from '@/features/auth/use-auth'
 
 const featureCards = [
   {
@@ -54,7 +54,7 @@ export const LandingPage = () => {
     const body = encodeURIComponent(
       `Name: ${name}\nEmail: ${email}\n\n${message}`,
     )
-    window.location.href = `mailto:contact@bookini.local?subject=${subject}&body=${body}`
+    window.location.href = `mailto:contact@bookini.com?subject=${subject}&body=${body}`
   }
 
   return (
@@ -365,7 +365,7 @@ export const LandingPage = () => {
 
               <Stack spacing={2}>
                 {[
-                  ['Email', 'contact@bookini.local'],
+                  ['Email', 'contact@bookini.com'],
                   ['Phone', '+216 00 000 000'],
                   ['Office', 'Tunis, Tunisia'],
                 ].map(([label, value]) => (
@@ -441,9 +441,9 @@ export const LandingPage = () => {
       <Box component="footer" sx={{ py: 4, borderTop: '1px solid', borderColor: 'divider' }}>
         <Container maxWidth="lg">
           <Stack
-            direction={{ xs: 'column', md: 'row' }}
+            direction="row"
             spacing={2}
-            sx={{ alignItems: { md: 'center' }, justifyContent: 'space-between' }}
+            sx={{ alignItems: 'center', justifyContent: 'space-between' }}
           >
             <Typography color="text.secondary">
               © 2026 Bookini. Reservation interface, company overview, and contact area.

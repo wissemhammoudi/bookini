@@ -18,7 +18,7 @@ import {
   createActivityRequest,
   listActivitiesByReservation,
   listReservationHistory,
-} from '../lib/api'
+} from '@/lib/api'
 
 const activitySchema = z.object({
   reservation_id: z.string().min(1, 'Please select a reservation'),

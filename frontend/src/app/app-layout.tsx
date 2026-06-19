@@ -12,8 +12,8 @@ import {
 import LightModeOutlinedIcon from '@mui/icons-material/LightModeOutlined'
 import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined'
 
-import { useColorMode } from './use-color-mode'
-import { useAuth } from '../features/auth/use-auth'
+import { useColorMode } from '@/app/use-color-mode'
+import { useAuth } from '@/features/auth/use-auth'
 
 export const AppLayout = () => {
   const { mode, toggleMode } = useColorMode()

@@ -12,9 +12,9 @@ import {
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
-import { apiClient } from '../lib/api-client'
-import { listFloors } from '../lib/api'
-import type { ApiResponse, FloorItem } from '../lib/api-types'
+import { apiClient } from '@/lib/api-client'
+import { listFloors } from '@/lib/api'
+import type { ApiResponse, FloorItem } from '@/lib/api-types'
 
 const createFloorSchema = z.object({
   name: z.string().min(1),
