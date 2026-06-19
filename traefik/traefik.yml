@@ -23,6 +23,8 @@ providers:
 log:
   level: INFO
 
+accessLog: {}
+
 certificatesResolvers:
   letsencrypt:
     acme:
