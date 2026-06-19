@@ -1,6 +1,6 @@
 services:
   traefik:
-    image: traefik:v3.1
+    image: traefik:v2.11
     command:
       - --configFile=/etc/traefik/traefik.yml
     restart: unless-stopped
@@ -27,7 +27,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d bookini"]
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d bookini" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -35,11 +35,11 @@ services:
   redis:
     image: redis:7-alpine
     restart: unless-stopped
-    command: ["redis-server", "--appendonly", "yes"]
+    command: [ "redis-server", "--appendonly", "yes" ]
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -67,7 +67,7 @@ services:
       SEED_ADMIN_PASSWORD: Admin123456!
       SEED_SUPER_ADMIN_EMAIL: superadmin@bookini.local
       SEED_SUPER_ADMIN_PASSWORD: SuperAdmin123456!
-    command: ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
+    command: [ "sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000" ]
     labels:
       - traefik.enable=true
       - traefik.http.routers.backend.rule=Host(`${DOMAIN_NAME}`) && (PathPrefix(`/api`) || PathPrefix(`/metrics`))
@@ -82,7 +82,7 @@ services:
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health', timeout=5)"]
+      test: [ "CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health', timeout=5)" ]
       interval: 20s
       timeout: 5s
       retries: 5
@@ -106,7 +106,7 @@ services:
       backend:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost/health"]
+      test: [ "CMD", "wget", "--spider", "-q", "http://localhost/health" ]
       interval: 20s
       timeout: 5s
       retries: 5
@@ -148,7 +148,7 @@ services:
   loki:
     image: grafana/loki:3.2.0
     restart: unless-stopped
-    command: ["-config.file=/etc/loki/loki-config.yml"]
+    command: [ "-config.file=/etc/loki/loki-config.yml" ]
     volumes:
       - ./monitoring/loki/loki-config.yml:/etc/loki/loki-config.yml:ro
       - loki_data:/loki
@@ -158,7 +158,7 @@ services:
   promtail:
     image: grafana/promtail:3.2.0
     restart: unless-stopped
-    command: ["-config.file=/etc/promtail/promtail-config.yml"]
+    command: [ "-config.file=/etc/promtail/promtail-config.yml" ]
     volumes:
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
