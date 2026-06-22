@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import {
   Alert,
   Box,
@@ -25,30 +26,12 @@ import DownloadIcon from '@mui/icons-material/Download'
 
 import { useColorMode } from '@/app/use-color-mode'
 import { PublicNavbar } from '@/features/public/components/public-navbar'
-
-// Mock booking data - in production, fetch from API
-const MOCK_BOOKINGS: Record<string, any> = {
-  'BK-2024-001': {
-    reference: 'BK-2024-001',
-    roomName: 'Meeting Room A',
-    date: '2024-06-28',
-    startTime: '10:00',
-    endTime: '12:00',
-    guestName: 'John Doe',
-    guestEmail: 'john@example.com',
-    guestPhone: '+216 90 000 000',
-    participants: 4,
-    plan: 'starter',
-    price: 10,
-    status: 'confirmed',
-    notes: 'Client meeting with team',
-  },
-}
+import { getPublicBookingByReference } from '@/lib/api'
 
 /**
  * Booking Confirmation Page
  * Displays booking details and allows searching for existing bookings
- * 
+ *
  * Features:
  * - Display full booking confirmation with reference
  * - Search for bookings by reference
@@ -56,13 +39,20 @@ const MOCK_BOOKINGS: Record<string, any> = {
  * - Support contact information
  */
 export const BookingConfirmationPage = () => {
-  const { reference = 'BK-2024-001' } = useParams()
+  const { reference = '' } = useParams()
   const navigate = useNavigate()
   const { mode } = useColorMode()
   const isLight = mode === 'light'
   const [searchReference, setSearchReference] = useState(reference)
 
-  const booking = MOCK_BOOKINGS[searchReference] || MOCK_BOOKINGS['BK-2024-001']
+  const bookingQuery = useQuery({
+    queryKey: ['public-booking', reference],
+    queryFn: () => getPublicBookingByReference(reference),
+    enabled: Boolean(reference),
+    retry: false,
+  })
+
+  const booking = bookingQuery.data
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -72,23 +62,25 @@ export const BookingConfirmationPage = () => {
   }
 
   const downloadICalendar = () => {
+    if (!booking) return
+
     const event = `BEGIN:VCALENDAR
 VERSION:2.0
 PRODID:-//bookiwa7dek//EN
 BEGIN:VEVENT
-UID:${booking.reference}@bookiwa7dek.com
+UID:${booking.booking_reference}@bookiwa7dek.com
 DTSTAMP:20240622T143000Z
-DTSTART:${booking.date.replace(/-/g, '')}T${booking.startTime.replace(/:/g, '')}00
-DTEND:${booking.date.replace(/-/g, '')}T${booking.endTime.replace(/:/g, '')}00
-SUMMARY:${booking.roomName} - bookiwa7dek Booking
-DESCRIPTION:Booking Reference: ${booking.reference}\\nGuest: ${booking.guestName}\\nParticipants: ${booking.participants}
-LOCATION:${booking.roomName}
+DTSTART:${booking.booking_date.replace(/-/g, '')}T${booking.start_time.replace(/:/g, '')}00
+DTEND:${booking.booking_date.replace(/-/g, '')}T${booking.end_time.replace(/:/g, '')}00
+SUMMARY:${booking.room_name} - bookiwa7dek Booking
+DESCRIPTION:Booking Reference: ${booking.booking_reference}\\nGuest: ${booking.guest_name}\\nParticipants: ${booking.participants}
+LOCATION:${booking.room_name}
 END:VEVENT
 END:VCALENDAR`
 
     const element = document.createElement('a')
     element.setAttribute('href', 'data:text/calendar;charset=utf-8,' + encodeURIComponent(event))
-    element.setAttribute('download', `${booking.reference}.ics`)
+    element.setAttribute('download', `${booking.booking_reference}.ics`)
     element.style.display = 'none'
     document.body.appendChild(element)
     element.click()
@@ -109,6 +101,18 @@ END:VCALENDAR`
       {/* Main Content */}
       <Container maxWidth="md" sx={{ py: { xs: 6, md: 10 } }}>
         <Stack spacing={4}>
+          {bookingQuery.isLoading ? (
+            <Alert severity="info" sx={{ borderRadius: 3 }}>
+              Loading booking details...
+            </Alert>
+          ) : null}
+
+          {bookingQuery.isError ? (
+            <Alert severity="error" sx={{ borderRadius: 3 }}>
+              Booking not found. Please check your reference and try again.
+            </Alert>
+          ) : null}
+
           {/* Success Header */}
           <Box sx={{ textAlign: 'center' }}>
             <Box
@@ -168,7 +172,7 @@ END:VCALENDAR`
           </Paper>
 
           {/* Booking Details Card */}
-          <Paper
+          {booking ? <Paper
             elevation={0}
             sx={{
               border: '2px solid',
@@ -186,12 +190,12 @@ END:VCALENDAR`
                     BOOKING REFERENCE
                   </Typography>
                   <Typography variant="h5" sx={{ fontWeight: 800, fontFamily: 'monospace' }}>
-                    {booking.reference}
+                    {booking.booking_reference}
                   </Typography>
                 </Box>
                 <Chip
                   icon={<CheckCircleIcon />}
-                  label="Confirmed"
+                  label={booking.status}
                   color="success"
                   sx={{ fontWeight: 700 }}
                 />
@@ -212,7 +216,7 @@ END:VCALENDAR`
                         Room Name
                       </Typography>
                       <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                        {booking.roomName}
+                        {booking.room_name}
                       </Typography>
                     </Box>
                   </Stack>
@@ -224,7 +228,7 @@ END:VCALENDAR`
                         Date
                       </Typography>
                       <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                        {new Date(booking.date).toLocaleDateString('en-US', {
+                        {new Date(booking.booking_date).toLocaleDateString('en-US', {
                           weekday: 'long',
                           year: 'numeric',
                           month: 'long',
@@ -241,7 +245,7 @@ END:VCALENDAR`
                         Time
                       </Typography>
                       <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                        {booking.startTime} - {booking.endTime}
+                        {booking.start_time} - {booking.end_time}
                       </Typography>
                     </Box>
                   </Stack>
@@ -263,7 +267,7 @@ END:VCALENDAR`
                         Guest Name
                       </Typography>
                       <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                        {booking.guestName}
+                        {booking.guest_name}
                       </Typography>
                     </Box>
                   </Stack>
@@ -275,7 +279,7 @@ END:VCALENDAR`
                         Email
                       </Typography>
                       <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                        {booking.guestEmail}
+                        {booking.guest_email}
                       </Typography>
                     </Box>
                   </Stack>
@@ -287,7 +291,7 @@ END:VCALENDAR`
                         Phone
                       </Typography>
                       <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                        {booking.guestPhone}
+                        {booking.guest_phone}
                       </Typography>
                     </Box>
                   </Stack>
@@ -330,7 +334,7 @@ END:VCALENDAR`
                 </Stack>
               </Paper>
             </Stack>
-          </Paper>
+          </Paper> : null}
 
           {/* Action Buttons */}
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>

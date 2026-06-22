@@ -52,6 +52,14 @@ class PartnershipRequestCreateRequest(BaseModel):
     description: str = Field(min_length=1, max_length=2000)
 
 
+class ContactRequestCreateRequest(BaseModel):
+    full_name: str = Field(min_length=1, max_length=255)
+    email: EmailStr
+    phone: str = Field(min_length=1, max_length=40)
+    subject: str = Field(min_length=1, max_length=255)
+    message: str = Field(min_length=1, max_length=2000)
+
+
 class PartnershipRequestResponse(BaseModel):
     id: UUID
     company_name: str

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   Alert,
   Box,
@@ -29,8 +29,10 @@ interface BookingDialogProps {
   selectedPlan: string
   isLight: boolean
   onClose: () => void
-  onSubmit: (data: BookingFormData & { roomId: number; roomName: string; planId: string; price: number }) => void
+  onSubmit: (data: BookingFormData & { roomId: number; roomName: string; planId: string; price: number }) => Promise<void> | void
   isLoading?: boolean
+  error?: string | null
+  initialBookingDate?: string | null
 }
 
 export const BookingDialog = ({
@@ -41,18 +43,25 @@ export const BookingDialog = ({
   onClose,
   onSubmit,
   isLoading = false,
+  error,
+  initialBookingDate,
 }: BookingDialogProps) => {
   const { formData, handleInputChange, resetForm } = useBookingForm()
   const { calculatePrice } = usePriceCalculation()
-  const [submitted, setSubmitted] = useState(false)
+
+  useEffect(() => {
+    if (open && initialBookingDate) {
+      handleInputChange('bookingDate', initialBookingDate)
+    }
+  }, [open, initialBookingDate, handleInputChange])
 
   const price = room ? calculatePrice(room.price, formData.startTime, formData.endTime, selectedPlan) : 0
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!room) return
-    
+
     const payload = {
       ...formData,
       roomId: room.id,
@@ -60,15 +69,12 @@ export const BookingDialog = ({
       planId: selectedPlan,
       price,
     }
-    
-    onSubmit(payload)
-    setSubmitted(true)
-    
-    setTimeout(() => {
-      setSubmitted(false)
+
+    const result = await onSubmit(payload)
+    if (result !== false) {
       resetForm()
       onClose()
-    }, 2000)
+    }
   }
 
   return (
@@ -91,18 +97,14 @@ export const BookingDialog = ({
         Book {room?.name}
       </DialogTitle>
 
-      {submitted && (
-        <DialogContent>
-          <Alert severity="success">
-            Booking confirmed! Check your email for confirmation details and your reference number.
-          </Alert>
-        </DialogContent>
-      )}
-
-      {!submitted && (
-        <form onSubmit={handleSubmit}>
-          <DialogContent sx={{ py: 2 }}>
-            <Stack spacing={2.5}>
+      <form onSubmit={handleSubmit}>
+        <DialogContent sx={{ py: 2 }}>
+          <Stack spacing={2.5}>
+            {error ? (
+              <Alert severity="error" sx={{ borderRadius: 2 }}>
+                {error}
+              </Alert>
+            ) : null}
               {/* Date and Time */}
               <Box>
                 <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>
@@ -266,24 +268,23 @@ export const BookingDialog = ({
                   </Stack>
                 </Stack>
               </Paper>
-            </Stack>
-          </DialogContent>
+          </Stack>
+        </DialogContent>
 
-          <DialogActions sx={{ p: 2 }}>
-            <Button onClick={onClose} disabled={isLoading}>
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              variant="contained"
-              sx={{ fontWeight: 700 }}
-              disabled={isLoading}
-            >
-              {isLoading ? 'Confirming...' : 'Confirm Booking'}
-            </Button>
-          </DialogActions>
-        </form>
-      )}
+        <DialogActions sx={{ p: 2 }}>
+          <Button onClick={onClose} disabled={isLoading}>
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            variant="contained"
+            sx={{ fontWeight: 700 }}
+            disabled={isLoading}
+          >
+            {isLoading ? 'Confirming...' : 'Confirm Booking'}
+          </Button>
+        </DialogActions>
+      </form>
     </Dialog>
   )
 }

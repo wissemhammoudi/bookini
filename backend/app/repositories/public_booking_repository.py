@@ -61,17 +61,42 @@ class PublicBookingRepository:
         result = await self.session.execute(stmt)
         return result.scalars().all()
 
+    async def list_by_room_and_date_range(
+        self,
+        room_id: int,
+        start_date: str,
+        end_date: str,
+        statuses: list[PublicBookingStatus] | None = None,
+        limit: int = 500,
+    ) -> list[PublicBooking]:
+        filters = [
+            PublicBooking.room_id == room_id,
+            PublicBooking.booking_date >= start_date,
+            PublicBooking.booking_date <= end_date,
+        ]
+        if statuses:
+            filters.append(PublicBooking.status.in_(statuses))
+
+        stmt = (
+            select(PublicBooking)
+            .where(and_(*filters))
+            .order_by(PublicBooking.booking_date.asc(), PublicBooking.start_time.asc())
+            .limit(limit)
+        )
+        result = await self.session.execute(stmt)
+        return result.scalars().all()
+
     async def update_status(
         self, booking_id: uuid.UUID, status: PublicBookingStatus, admin_notes: str | None = None
     ) -> PublicBooking | None:
         booking = await self.get_by_id(booking_id)
         if not booking:
             return None
-        
+
         booking.status = status
         if admin_notes:
             booking.admin_notes = admin_notes
-        
+
         await self.session.flush()
         return booking
 
@@ -79,7 +104,7 @@ class PublicBookingRepository:
         booking = await self.get_by_id(booking_id)
         if not booking:
             return False
-        
+
         await self.session.delete(booking)
         await self.session.flush()
         return True
