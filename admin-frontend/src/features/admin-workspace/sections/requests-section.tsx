@@ -45,8 +45,8 @@ export const RequestsSection = ({
                     </Box>
                     <StatusChip value={request.status} />
                   </Stack>
-                  <Typography>{request.message}</Typography>
-                  <Typography variant="body2" color="text.secondary">Phone: {request.phone} · {new Date(request.date).toLocaleString()}</Typography>
+                  <Typography sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>{request.message}</Typography>
+                  <Typography variant="body2" color="text.secondary">Phone: {request.phone} · Received {new Date(request.date).toLocaleString()}</Typography>
                   <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end', flexWrap: 'wrap' }}>
                     <Button size="small" startIcon={<VisibilityOutlinedIcon />} onClick={() => onPreviewMessage(`${request.full_name}: ${request.message}`)}>View</Button>
                     <Button size="small" onClick={() => onMarkProcessed(request)}>Mark Processed</Button>
@@ -75,7 +75,7 @@ export const RequestsSection = ({
                     </Box>
                     <StatusChip value={request.status} />
                   </Stack>
-                  <Typography>{request.business_description}</Typography>
+                  <Typography sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>{request.business_description}</Typography>
                   <Typography variant="body2" color="text.secondary">{request.phone} · Requested {new Date(request.requested_date).toLocaleDateString()}</Typography>
                   {request.generated_credentials ? (
                     <Alert severity="success">Credentials: {request.generated_credentials.email} / {request.generated_credentials.temporary_password}</Alert>

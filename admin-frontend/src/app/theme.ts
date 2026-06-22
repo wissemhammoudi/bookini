@@ -58,8 +58,16 @@ export const buildTheme = (mode: 'light' | 'dark') =>
           root: {
             textTransform: 'none',
             fontWeight: 700,
-            borderRadius: 8,
+            borderRadius: 10,
             paddingInline: 16,
+          },
+        },
+      },
+      MuiChip: {
+        styleOverrides: {
+          root: {
+            borderRadius: 999,
+            fontWeight: 600,
           },
         },
       },
@@ -72,7 +80,7 @@ export const buildTheme = (mode: 'light' | 'dark') =>
       MuiOutlinedInput: {
         styleOverrides: {
           root: {
-            borderRadius: 8,
+            borderRadius: 10,
             backgroundColor: mode === 'light' ? '#FFFFFF' : '#101D32',
           },
           notchedOutline: {
@@ -99,6 +107,44 @@ export const buildTheme = (mode: 'light' | 'dark') =>
         styleOverrides: {
           root: {
             borderRadius: 12,
+          },
+        },
+      },
+      MuiTableHead: {
+        styleOverrides: {
+          root: {
+            '& .MuiTableCell-root': {
+              fontWeight: 800,
+              color: mode === 'light' ? '#344054' : '#C9D4E3',
+              borderBottomColor: mode === 'light' ? 'rgba(16, 24, 40, 0.08)' : 'rgba(255, 255, 255, 0.08)',
+            },
+          },
+        },
+      },
+      MuiTableRow: {
+        styleOverrides: {
+          root: {
+            '&:last-child td': {
+              borderBottom: 'none',
+            },
+          },
+        },
+      },
+      MuiTableCell: {
+        styleOverrides: {
+          root: {
+            borderBottomColor: mode === 'light' ? 'rgba(16, 24, 40, 0.06)' : 'rgba(255, 255, 255, 0.06)',
+          },
+        },
+      },
+      MuiListItemButton: {
+        styleOverrides: {
+          root: {
+            '&.Mui-selected': {
+              backgroundColor: mode === 'light' ? 'rgba(0, 89, 179, 0.1)' : 'rgba(0, 89, 179, 0.18)',
+              border: '1px solid',
+              borderColor: mode === 'light' ? 'rgba(0, 89, 179, 0.22)' : 'rgba(51, 122, 204, 0.35)',
+            },
           },
         },
       },

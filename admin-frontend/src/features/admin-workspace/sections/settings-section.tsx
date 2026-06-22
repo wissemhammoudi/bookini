@@ -1,5 +1,5 @@
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
-import { Button, Paper, Stack, Typography } from '@mui/material'
+import { Button, Paper, Stack, Typography, Chip } from '@mui/material'
 import Grid from '@mui/material/Grid'
 
 import { SectionHeader } from '@/features/admin-workspace/admin-workspace-utils'
@@ -21,7 +21,10 @@ export const SettingsSection = ({
     <Grid container spacing={2.5}>
       <Grid size={{ xs: 12, md: 6 }}>
         <Paper sx={{ p: 3, height: '100%', border: '1px solid', borderColor: 'divider', background: 'linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,251,255,0.98))' }}>
-          <Typography variant="h6" sx={{ mb: 2 }}>Profile Management</Typography>
+          <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Typography variant="h6">Profile Management</Typography>
+            <Chip size="small" label="Identity" variant="outlined" />
+          </Stack>
           <Stack spacing={1.25}>
             <Typography><strong>Name:</strong> {settings.profile.full_name}</Typography>
             <Typography><strong>Title:</strong> {settings.profile.title}</Typography>
@@ -32,7 +35,10 @@ export const SettingsSection = ({
       </Grid>
       <Grid size={{ xs: 12, md: 6 }}>
         <Paper sx={{ p: 3, height: '100%', border: '1px solid', borderColor: 'divider', background: 'linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,251,255,0.98))' }}>
-          <Typography variant="h6" sx={{ mb: 2 }}>Notification Settings</Typography>
+          <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Typography variant="h6">Notification Settings</Typography>
+            <Chip size="small" label="Comms" variant="outlined" />
+          </Stack>
           <Stack spacing={1.25}>
             <Typography>Email notifications: {settings.notifications.email_notifications ? 'Enabled' : 'Disabled'}</Typography>
             <Typography>SMS notifications: {settings.notifications.sms_notifications ? 'Enabled' : 'Disabled'}</Typography>
@@ -43,7 +49,10 @@ export const SettingsSection = ({
       </Grid>
       <Grid size={{ xs: 12, md: 6 }}>
         <Paper sx={{ p: 3, height: '100%', border: '1px solid', borderColor: 'divider', background: 'linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,251,255,0.98))' }}>
-          <Typography variant="h6" sx={{ mb: 2 }}>Platform Settings</Typography>
+          <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Typography variant="h6">Platform Settings</Typography>
+            <Chip size="small" label="Platform" variant="outlined" />
+          </Stack>
           <Stack spacing={1.25}>
             <Typography><strong>Platform:</strong> {settings.platform.platform_name}</Typography>
             <Typography><strong>Support:</strong> {settings.platform.support_email}</Typography>
@@ -54,7 +63,10 @@ export const SettingsSection = ({
       </Grid>
       <Grid size={{ xs: 12, md: 6 }}>
         <Paper sx={{ p: 3, height: '100%', border: '1px solid', borderColor: 'divider', background: 'linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,251,255,0.98))' }}>
-          <Typography variant="h6" sx={{ mb: 2 }}>Security Settings</Typography>
+          <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Typography variant="h6">Security Settings</Typography>
+            <Chip size="small" label="Security" color="primary" variant="outlined" />
+          </Stack>
           <Stack spacing={1.25}>
             <Typography><strong>Session timeout:</strong> {settings.security.session_timeout_minutes} minutes</Typography>
             <Typography><strong>Password rotation:</strong> {settings.security.password_rotation_days} days</Typography>
