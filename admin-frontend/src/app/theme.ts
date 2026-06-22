@@ -5,18 +5,18 @@ export const buildTheme = (mode: 'light' | 'dark') =>
     palette: {
       mode,
       primary: {
-        main: '#0059B3',
+        main: '#1171D8',
       },
       secondary: {
-        main: '#00A88F',
+        main: '#2AA88A',
       },
       background:
         mode === 'light'
-          ? { default: '#F5F7FB', paper: '#FFFFFF' }
-          : { default: '#0C1525', paper: '#101D32' },
+          ? { default: '#EFF4FA', paper: '#FFFFFF' }
+          : { default: '#08111F', paper: '#0F1727' },
     },
     shape: {
-      borderRadius: 12,
+      borderRadius: 18,
     },
     typography: {
       fontFamily: ['Public Sans', 'Segoe UI', 'sans-serif'].join(','),
@@ -33,12 +33,21 @@ export const buildTheme = (mode: 'light' | 'dark') =>
           root: {
             textTransform: 'none',
             fontWeight: 600,
+            borderRadius: 14,
           },
         },
       },
       MuiPaper: {
         styleOverrides: {
           root: {
+            backgroundImage: 'none',
+            borderRadius: 20,
+          },
+        },
+      },
+      MuiDrawer: {
+        styleOverrides: {
+          paper: {
             backgroundImage: 'none',
           },
         },

@@ -11,10 +11,16 @@ from app.repositories.audit_log_repository import AuditLogRepository
 from app.repositories.user_repository import UserRepository
 from app.repositories.public_booking_repository import PublicBookingRepository
 from app.repositories.partnership_request_repository import PartnershipRequestRepository
+from app.presentation.admin_workspace_dashboard_routes import router as admin_workspace_dashboard_router
+from app.presentation.admin_workspace_management_routes import router as admin_workspace_management_router
+from app.presentation.admin_workspace_request_routes import router as admin_workspace_request_router
 from app.schemas.admin import AdminRoleUpdateRequest
 from app.schemas.public_booking import PartnershipRequestUpdateRequest
 
 router = APIRouter(prefix="/admin", tags=["admin"])
+router.include_router(admin_workspace_dashboard_router)
+router.include_router(admin_workspace_management_router)
+router.include_router(admin_workspace_request_router)
 
 
 @router.get("/dashboard")
@@ -167,9 +173,9 @@ async def list_public_bookings(
     session: AsyncSession = Depends(get_db_session),
 ) -> dict[str, object]:
     """List all public bookings (SUPER_ADMIN only)"""
-    
+
     repository = PublicBookingRepository(session)
-    
+
     if status:
         try:
             booking_status = PublicBookingStatus(status)
@@ -181,7 +187,7 @@ async def list_public_bookings(
             )
     else:
         bookings = await repository.list_all(skip=skip, limit=limit)
-    
+
     data = [
         {
             "id": str(b.id),
@@ -199,7 +205,7 @@ async def list_public_bookings(
         }
         for b in bookings
     ]
-    
+
     return success_response(
         message="Public bookings retrieved",
         data=data,
@@ -213,7 +219,7 @@ async def get_public_booking(
     session: AsyncSession = Depends(get_db_session),
 ) -> dict[str, object]:
     """Get public booking details (SUPER_ADMIN only)"""
-    
+
     try:
         import uuid
         bid = uuid.UUID(booking_id)
@@ -222,16 +228,16 @@ async def get_public_booking(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid booking ID",
         )
-    
+
     repository = PublicBookingRepository(session)
     booking = await repository.get_by_id(bid)
-    
+
     if not booking:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Booking not found",
         )
-    
+
     return success_response(
         message="Booking retrieved",
         data={
@@ -265,7 +271,7 @@ async def update_booking_status(
     session: AsyncSession = Depends(get_db_session),
 ) -> dict[str, object]:
     """Update public booking status (SUPER_ADMIN only)"""
-    
+
     try:
         import uuid
         bid = uuid.UUID(booking_id)
@@ -274,22 +280,22 @@ async def update_booking_status(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid booking ID",
         )
-    
+
     repository = PublicBookingRepository(session)
     booking = await repository.update_status(
         bid,
         PublicBookingStatus(new_status),
         admin_notes=admin_notes,
     )
-    
+
     if not booking:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Booking not found",
         )
-    
+
     await session.commit()
-    
+
     return success_response(
         message="Booking status updated",
         data={
@@ -312,9 +318,9 @@ async def list_partnership_requests(
     session: AsyncSession = Depends(get_db_session),
 ) -> dict[str, object]:
     """List all partnership requests (SUPER_ADMIN only)"""
-    
+
     repository = PartnershipRequestRepository(session)
-    
+
     if status:
         try:
             req_status = PartnershipRequestStatus(status)
@@ -326,7 +332,7 @@ async def list_partnership_requests(
             )
     else:
         requests = await repository.list_all(skip=skip, limit=limit)
-    
+
     data = [
         {
             "id": str(r.id),
@@ -341,7 +347,7 @@ async def list_partnership_requests(
         }
         for r in requests
     ]
-    
+
     return success_response(
         message="Partnership requests retrieved",
         data=data,
@@ -355,7 +361,7 @@ async def get_partnership_request_admin(
     session: AsyncSession = Depends(get_db_session),
 ) -> dict[str, object]:
     """Get partnership request details (SUPER_ADMIN only)"""
-    
+
     try:
         import uuid
         rid = uuid.UUID(request_id)
@@ -364,16 +370,16 @@ async def get_partnership_request_admin(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid request ID",
         )
-    
+
     repository = PartnershipRequestRepository(session)
     partnership = await repository.get_by_id(rid)
-    
+
     if not partnership:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Partnership request not found",
         )
-    
+
     return success_response(
         message="Partnership request retrieved",
         data={
@@ -401,7 +407,7 @@ async def update_partnership_request(
     session: AsyncSession = Depends(get_db_session),
 ) -> dict[str, object]:
     """Update partnership request status (SUPER_ADMIN only)"""
-    
+
     try:
         import uuid
         rid = uuid.UUID(request_id)
@@ -410,7 +416,7 @@ async def update_partnership_request(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid request ID",
         )
-    
+
     repository = PartnershipRequestRepository(session)
     partnership = await repository.update_status(
         rid,
@@ -418,15 +424,15 @@ async def update_partnership_request(
         admin_id=current_user.id,
         admin_notes=payload.admin_notes,
     )
-    
+
     if not partnership:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Partnership request not found",
         )
-    
+
     await session.commit()
-    
+
     return success_response(
         message="Partnership request updated",
         data={

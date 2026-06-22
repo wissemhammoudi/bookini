@@ -12,8 +12,15 @@ body,
 
 body {
   font-family: 'Public Sans', 'Segoe UI', sans-serif;
+  background: #eff4fa;
+  color: #101828;
 }
 
 a {
   color: inherit;
+  text-decoration: none;
+}
+
+#root {
+  isolation: isolate;
 }

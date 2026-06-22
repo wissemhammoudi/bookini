@@ -44,6 +44,7 @@ class Settings(BaseSettings):
         ]
     )
 
+    seed_super_admin: bool = Field(default=True)
     seed_default_users: bool = Field(default=False)
     seed_user_email: str = Field(default="user@bookiwa7dek.com")
     seed_user_password: str = Field(default="User123456!")

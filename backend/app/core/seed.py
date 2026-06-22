@@ -13,6 +13,58 @@ from app.repositories.user_repository import UserRepository
 logger = get_logger(__name__)
 
 
+async def seed_super_admin_account(
+    session_factory: async_sessionmaker[AsyncSession],
+    settings: Settings,
+) -> None:
+    if not settings.seed_super_admin:
+        return
+
+    full_name = "Default Super Admin"
+    normalized_email = settings.seed_super_admin_email.strip().lower()
+    password_hash = hash_password(settings.seed_super_admin_password)
+
+    async with session_factory() as session:
+        repository = UserRepository(session)
+        existing_user = await repository.get_by_email(normalized_email)
+
+        created = False
+        updated = False
+
+        if existing_user is None:
+            session.add(
+                User(
+                    full_name=full_name,
+                    email=normalized_email,
+                    password_hash=password_hash,
+                    role=UserRole.SUPER_ADMIN,
+                    is_active=True,
+                )
+            )
+            created = True
+        else:
+            if existing_user.full_name != full_name:
+                existing_user.full_name = full_name
+                updated = True
+            if existing_user.role != UserRole.SUPER_ADMIN:
+                existing_user.role = UserRole.SUPER_ADMIN
+                updated = True
+            if not existing_user.is_active:
+                existing_user.is_active = True
+                updated = True
+
+        await session.commit()
+
+    logger.info(
+        "Super admin bootstrap completed",
+        extra={
+            "created": created,
+            "updated": updated,
+            "email": normalized_email,
+        },
+    )
+
+
 async def seed_default_users(
     session_factory: async_sessionmaker[AsyncSession],
     settings: Settings,
@@ -23,12 +75,6 @@ async def seed_default_users(
     default_users: Sequence[tuple[str, str, str, UserRole]] = (
         ("Default User", settings.seed_user_email, settings.seed_user_password, UserRole.USER),
         ("Default Admin", settings.seed_admin_email, settings.seed_admin_password, UserRole.ADMIN),
-        (
-            "Default Super Admin",
-            settings.seed_super_admin_email,
-            settings.seed_super_admin_password,
-            UserRole.SUPER_ADMIN,
-        ),
     )
 
     async with session_factory() as session:

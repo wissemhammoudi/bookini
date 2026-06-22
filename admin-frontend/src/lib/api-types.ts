@@ -4,6 +4,18 @@ export type ApiResponse<T> = {
   data: T
 }
 
+export type UserRole = 'SUPER_ADMIN' | 'ADMIN' | 'USER'
+
+export type ActiveState = 'ACTIVE' | 'SUSPENDED'
+
+export type ReservationWorkflowState =
+  | 'PENDING'
+  | 'APPROVED'
+  | 'REJECTED'
+  | 'CANCELLED'
+
+export type RequestState = 'PENDING' | 'APPROVED' | 'REJECTED' | 'PROCESSED'
+
 export type AuthTokens = {
   access_token: string
   refresh_token: string
@@ -104,4 +116,176 @@ export type AuditLogItem = {
   ip_address: string
   metadata: Record<string, unknown>
   timestamp: string
+}
+
+export type CurrentUserProfile = {
+  id: string
+  full_name: string
+  email: string
+  role: UserRole
+  avatar_url: string | null
+}
+
+export type DashboardStat = {
+  key: string
+  label: string
+  value: number
+  trend: string
+}
+
+export type DashboardChartPoint = {
+  label: string
+  value: number
+}
+
+export type RecentActivity = {
+  id: string
+  title: string
+  description: string
+  timestamp: string
+  type: 'reservation' | 'organization' | 'partnership' | 'contact' | 'user'
+}
+
+export type UserRecord = {
+  id: string
+  profile_image: string | null
+  full_name: string
+  email: string
+  phone: string
+  role: UserRole
+  status: ActiveState
+  created_date: string
+  organization_id: string | null
+}
+
+export type OrganizationRecord = {
+  id: string
+  logo: string | null
+  cover_image: string | null
+  name: string
+  description: string
+  address: string
+  contact_email: string
+  contact_phone: string
+  website: string | null
+  social_links: string[]
+  status: ActiveState
+  created_date: string
+}
+
+export type PlaceRecord = {
+  id: string
+  organization_id: string
+  name: string
+  description: string
+  category: string
+  capacity: number
+  address: string
+  pricing: number
+  availability: string
+  cover_image: string | null
+  gallery: string[]
+  features: string[]
+  status: ActiveState
+  created_date: string
+}
+
+export type FloorRecord = {
+  id: string
+  place_id: string
+  floor_name: string
+  floor_number: number
+  capacity: number
+  description: string
+  blueprint_image: string | null
+  reservation_areas: string[]
+  status: ActiveState
+  created_date: string
+}
+
+export type ReservationRecord = {
+  id: string
+  user_id: string
+  user_name: string
+  place_id: string
+  place_name: string
+  floor_id: string
+  floor_name: string
+  date: string
+  time: string
+  status: ReservationWorkflowState
+  created_date: string
+}
+
+export type ContactRequestRecord = {
+  id: string
+  full_name: string
+  email: string
+  phone: string
+  subject: string
+  message: string
+  date: string
+  status: RequestState
+}
+
+export type PartnershipRequestRecord = {
+  id: string
+  company_name: string
+  contact_person: string
+  email: string
+  phone: string
+  business_description: string
+  requested_date: string
+  status: 'PENDING' | 'APPROVED' | 'REJECTED'
+  generated_credentials: {
+    email: string
+    temporary_password: string
+  } | null
+}
+
+export type AdminWorkspaceSettings = {
+  profile: {
+    full_name: string
+    email: string
+    phone: string
+    title: string
+  }
+  notifications: {
+    email_notifications: boolean
+    sms_notifications: boolean
+    weekly_report: boolean
+    incident_alerts: boolean
+  }
+  platform: {
+    platform_name: string
+    support_email: string
+    timezone: string
+    default_language: string
+  }
+  security: {
+    session_timeout_minutes: number
+    require_mfa_for_admins: boolean
+    password_rotation_days: number
+  }
+}
+
+export type AdminWorkspaceResponse = {
+  role: 'SUPER_ADMIN' | 'ADMIN'
+  dashboard: {
+    stats: DashboardStat[]
+    reservations_by_month: DashboardChartPoint[]
+    most_reserved_places: DashboardChartPoint[]
+    organization_activity: DashboardChartPoint[]
+    recent_activity: RecentActivity[]
+  }
+  collections: {
+    users: UserRecord[]
+    organizations: OrganizationRecord[]
+    places: PlaceRecord[]
+    floors: FloorRecord[]
+    reservations: ReservationRecord[]
+    contact_requests: ContactRequestRecord[]
+    partnership_requests: PartnershipRequestRecord[]
+    settings: AdminWorkspaceSettings
+  }
 }

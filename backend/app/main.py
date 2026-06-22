@@ -10,7 +10,7 @@ from app.api.v1.router import api_v1_router
 from app.core.config import get_settings
 from app.core.exception_handlers import register_exception_handlers
 from app.core.logging_config import get_logger, setup_logging
-from app.core.seed import seed_default_users
+from app.core.seed import seed_default_users, seed_super_admin_account
 from app.infrastructure.session import get_session_factory
 
 REQUEST_COUNT = Counter(
@@ -24,7 +24,7 @@ REQUEST_COUNT = Counter(
 async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
     logger = get_logger(__name__)
     settings = get_settings()
-    
+
     # Initialize MinIO Bucket
     try:
         from app.infrastructure.minio_client import MinioClient
@@ -34,6 +34,7 @@ async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
     except Exception as e:
         logger.error(f"Failed to initialize MinIO bucket: {e}")
 
+    await seed_super_admin_account(get_session_factory(), settings)
     await seed_default_users(get_session_factory(), settings)
     logger.info("Application startup complete")
     yield

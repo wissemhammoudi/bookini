@@ -1,16 +1,15 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Paper, Stack, Typography, Box, IconButton, Avatar } from '@mui/material'
+import { Paper, Stack, Typography, Box, IconButton, Avatar, Chip } from '@mui/material'
 import LightModeOutlinedIcon from '@mui/icons-material/LightModeOutlined'
 import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined'
-import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings'
 
 import { LoginForm, type LoginFormValues } from '@/features/auth/login-form'
 import { useAuth } from '@/features/auth/use-auth'
 import { useColorMode } from '@/app/use-color-mode'
-import { loginRequest } from '@/lib/api'
+import { getCurrentUserProfile, loginRequest } from '@/lib/api'
 
 export const LoginPage = () => {
   const [error, setError] = useState<string | undefined>()
@@ -30,8 +29,15 @@ export const LoginPage = () => {
         refreshToken: tokens.refresh_token,
       })
 
+      const profile = await getCurrentUserProfile()
+      if (profile.role === 'USER') {
+        signOut()
+        setError('This portal is restricted to Super Admin and Organization Admin accounts.')
+        return
+      }
+
       const nextPath =
-        (location.state as { from?: string } | null)?.from ?? '/admin/dashboard'
+        (location.state as { from?: string } | null)?.from ?? '/app/dashboard'
       navigate(nextPath, { replace: true })
     } catch {
       setError('Could not sign in. Please check your credentials and try again.')
@@ -57,19 +63,6 @@ export const LoginPage = () => {
         px: 2,
       }}
     >
-      {/* Back Button */}
-      <Box sx={{ position: 'absolute', top: 16, left: 16 }}>
-        <IconButton
-          onClick={() => navigate('/')}
-          color="inherit"
-          sx={{ border: '1px solid', borderColor: 'divider', backdropFilter: 'blur(4px)' }}
-          title="Go back to home"
-        >
-          <ArrowBackIcon />
-        </IconButton>
-      </Box>
-
-      {/* Floating Theme Toggle */}
       <Box sx={{ position: 'absolute', top: 16, right: 16 }}>
         <IconButton
           onClick={toggleMode}
@@ -114,11 +107,17 @@ export const LoginPage = () => {
 
             <Stack spacing={1}>
               <Typography variant="h5" align="center" sx={{ fontWeight: 700 }}>
-                Welcome back
+                Admin access
               </Typography>
               <Typography color="text.secondary" align="center" variant="body2">
-                Sign in to access the administrative dashboard.
+                Sign in to access the redesigned Bookini administrative workspace.
               </Typography>
+            </Stack>
+
+            <Stack direction="row" spacing={1} justifyContent="center" flexWrap="wrap">
+              <Chip label="Super Admin" />
+              <Chip label="Organization Admin" />
+              <Chip label="Dark / Light Theme" />
             </Stack>
 
             <LoginForm
