@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import {
@@ -14,12 +14,11 @@ import {
 
 import { useColorMode } from '@/app/use-color-mode'
 import { PublicNavbar } from '@/features/public/components/public-navbar'
-import { AVAILABLE_ROOMS } from './constants'
 import { RoomCard } from './components/RoomCard'
 import { BookingDialog } from './components/BookingDialog'
 import type { BookingFormData } from './types'
 import type { Room } from './constants'
-import { createPublicBookingRequest, listPublicBookingCalendarSlots } from '@/lib/api'
+import { createPublicBookingRequest, listPublicBookingCalendarSlots, listPublicRooms } from '@/lib/api'
 
 const WEEK_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
@@ -57,9 +56,14 @@ export const PublicBookingPage = () => {
   const navigate = useNavigate()
   const { mode } = useColorMode()
   const isLight = mode === 'light'
+  const roomsQuery = useQuery({
+    queryKey: ['public-rooms-catalog'],
+    queryFn: listPublicRooms,
+  })
+  const rooms = roomsQuery.data ?? []
 
   const [selectedPlan] = useState('pay-as-you-go')
-  const [selectedRoom, setSelectedRoom] = useState<Room | null>(AVAILABLE_ROOMS[0])
+  const [selectedRoom, setSelectedRoom] = useState<Room | null>(null)
   const [bookingDialogOpen, setBookingDialogOpen] = useState(false)
   const [bookingError, setBookingError] = useState<string | null>(null)
   const [calendarMonth, setCalendarMonth] = useState(() => new Date())
@@ -85,6 +89,12 @@ export const PublicBookingPage = () => {
       }),
     enabled: Boolean(selectedRoom),
   })
+
+  useEffect(() => {
+    if (!selectedRoom && rooms.length > 0) {
+      setSelectedRoom(rooms[0])
+    }
+  }, [rooms, selectedRoom])
 
   const reservedByDate = (calendarSlotsQuery.data ?? []).reduce<Record<string, Array<{ start: string; end: string; status: string }>>>((acc, slot) => {
     const key = slot.booking_date
@@ -212,7 +222,7 @@ export const PublicBookingPage = () => {
                 gap: 3,
               }}
             >
-              {AVAILABLE_ROOMS.map((room) => (
+              {rooms.map((room) => (
                 <Box key={room.id}>
                   <RoomCard
                     room={room}
@@ -261,8 +271,26 @@ export const PublicBookingPage = () => {
                 </Stack>
               </Stack>
 
+              {roomsQuery.isLoading ? (
+                <Alert severity="info" sx={{ borderRadius: 2 }}>
+                  Loading spaces from backend...
+                </Alert>
+              ) : null}
+
+              {roomsQuery.isError ? (
+                <Alert severity="error" sx={{ borderRadius: 2 }}>
+                  Could not load spaces from backend right now.
+                </Alert>
+              ) : null}
+
+              {rooms.length === 0 && !roomsQuery.isLoading ? (
+                <Alert severity="warning" sx={{ borderRadius: 2 }}>
+                  No spaces are available right now.
+                </Alert>
+              ) : null}
+
               <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
-                {AVAILABLE_ROOMS.map((room) => (
+                {rooms.map((room) => (
                   <Chip
                     key={room.id}
                     label={room.name}
@@ -380,7 +408,6 @@ export const PublicBookingPage = () => {
         isLight={isLight}
         onClose={() => {
           setBookingDialogOpen(false)
-          setSelectedRoom(null)
           setBookingError(null)
         }}
         onSubmit={handleBookingSubmit}

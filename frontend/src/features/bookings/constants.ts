@@ -2,7 +2,16 @@
  * Mock data for available rooms
  * In production, this should come from the API via services/roomsService.ts
  */
-export const AVAILABLE_ROOMS = [
+export type Room = {
+  id: number
+  name: string
+  capacity: number
+  price: number
+  amenities: string[]
+  image: string
+}
+
+export const AVAILABLE_ROOMS: Room[] = [
   {
     id: 1,
     name: 'Meeting Room A',
@@ -51,6 +60,4 @@ export const AVAILABLE_ROOMS = [
     amenities: ['WiFi', 'Whiteboard', 'Creative Tools'],
     image: '🎨',
   },
-] as const
-
-export type Room = typeof AVAILABLE_ROOMS[number]
+]

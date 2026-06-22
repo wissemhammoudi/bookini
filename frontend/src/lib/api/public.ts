@@ -16,6 +16,15 @@ export type PublicBookingCreatePayload = {
   price: number
 }
 
+export type PublicRoom = {
+  id: number
+  name: string
+  capacity: number
+  price: number
+  amenities: string[]
+  image: string
+}
+
 export type PublicBookingCreateResponse = {
   id: string
   booking_reference: string
@@ -106,6 +115,11 @@ export const createPublicBookingRequest = async (payload: PublicBookingCreatePay
     '/public/bookings',
     payload,
   )
+  return response.data.data
+}
+
+export const listPublicRooms = async () => {
+  const response = await apiClient.get<ApiResponse<PublicRoom[]>>('/public/rooms')
   return response.data.data
 }
 

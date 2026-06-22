@@ -21,6 +21,57 @@ from app.services.admin_workspace_state_store import AdminWorkspaceStateStore
 
 router = APIRouter(prefix="/public", tags=["public"])
 
+PUBLIC_ROOMS_CATALOG = [
+    {
+        "id": 1,
+        "name": "Meeting Room A",
+        "capacity": 6,
+        "price": 5,
+        "amenities": ["WiFi", "Projector", "Whiteboard"],
+        "image": "🏢",
+    },
+    {
+        "id": 2,
+        "name": "Conference Room B",
+        "capacity": 12,
+        "price": 8,
+        "amenities": ["WiFi", "Projector", "Video Call", "Whiteboard"],
+        "image": "🏛",
+    },
+    {
+        "id": 3,
+        "name": "Collaboration Space",
+        "capacity": 8,
+        "price": 6,
+        "amenities": ["WiFi", "Whiteboard", "Modular Furniture"],
+        "image": "🤝",
+    },
+    {
+        "id": 4,
+        "name": "Executive Suite",
+        "capacity": 4,
+        "price": 10,
+        "amenities": ["WiFi", "Mini Bar", "Premium Furniture"],
+        "image": "🎩",
+    },
+    {
+        "id": 5,
+        "name": "Training Room",
+        "capacity": 20,
+        "price": 12,
+        "amenities": ["WiFi", "Projector", "Video Call", "Whiteboard", "AV Equipment"],
+        "image": "📚",
+    },
+    {
+        "id": 6,
+        "name": "Creative Studio",
+        "capacity": 5,
+        "price": 7,
+        "amenities": ["WiFi", "Whiteboard", "Creative Tools"],
+        "image": "🎨",
+    },
+]
+
 
 def _time_to_minutes(value: str) -> int:
     hour, minute = value.split(":")
@@ -40,6 +91,16 @@ def generate_booking_reference() -> str:
     timestamp = datetime.now().strftime("%Y")
     unique_id = str(uuid.uuid4())[:5].upper()
     return f"BK-{timestamp}-{unique_id}"
+
+
+@router.get("/rooms")
+async def list_public_rooms() -> dict[str, object]:
+    """List public room/space catalog used by booking UI."""
+
+    return success_response(
+        message="Public rooms retrieved",
+        data=PUBLIC_ROOMS_CATALOG,
+    )
 
 
 @router.post("/bookings")
