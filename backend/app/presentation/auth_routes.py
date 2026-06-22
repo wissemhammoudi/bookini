@@ -39,6 +39,19 @@ def _client_ip(request: Request) -> str:
     return "unknown"
 
 
+def _user_profile_response(user: User) -> dict[str, object]:
+    avatar_url = user.avatar_url
+    if avatar_url and getattr(user, "updated_at", None):
+        avatar_url = f"{avatar_url}?t={int(user.updated_at.timestamp())}"
+    return {
+        "id": str(user.id),
+        "full_name": user.full_name,
+        "email": user.email,
+        "role": user.role,
+        "avatar_url": avatar_url,
+    }
+
+
 @router.post("/register")
 async def register(
     payload: RegisterRequest,
@@ -172,13 +185,7 @@ async def get_me(
 ) -> dict[str, object]:
     return success_response(
         message="Profile retrieved successfully",
-        data={
-            "id": str(current_user.id),
-            "full_name": current_user.full_name,
-            "email": current_user.email,
-            "role": current_user.role,
-            "avatar_url": current_user.avatar_url,
-        },
+        data=_user_profile_response(current_user),
     )
 
 
@@ -196,13 +203,7 @@ async def update_profile(
     )
     return success_response(
         message="Profile updated successfully",
-        data={
-            "id": str(updated_user.id),
-            "full_name": updated_user.full_name,
-            "email": updated_user.email,
-            "role": updated_user.role,
-            "avatar_url": updated_user.avatar_url,
-        },
+        data=_user_profile_response(updated_user),
     )
 
 
@@ -237,13 +238,7 @@ async def upload_avatar(
 
     return success_response(
         message="Avatar uploaded successfully",
-        data={
-            "id": str(updated_user.id),
-            "full_name": updated_user.full_name,
-            "email": updated_user.email,
-            "role": updated_user.role,
-            "avatar_url": updated_user.avatar_url,
-        },
+        data=_user_profile_response(updated_user),
     )
 
 

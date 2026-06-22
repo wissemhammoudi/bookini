@@ -1,8 +1,11 @@
+import { useState } from 'react'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import {
+  Alert,
   Box,
   CircularProgress,
   Grid,
+  Snackbar,
   Stack,
   Typography,
 } from '@mui/material'
@@ -26,16 +29,38 @@ const getFullAvatarUrl = (url: string | null | undefined) => {
 }
 
 export const ProfilePage = () => {
+  const [toast, setToast] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
+    open: false,
+    message: '',
+    severity: 'success',
+  })
+
+  const handleCloseToast = () => {
+    setToast((prev) => ({ ...prev, open: false }))
+  }
+
   const { data: profile, refetch, isLoading } = useQuery({
     queryKey: ['profile'],
     queryFn: getProfileRequest,
   })
 
-  const { mutate: uploadAvatar } = useMutation({
+  const { mutate: uploadAvatar, isPending: isUploading } = useMutation({
     mutationFn: uploadAvatarRequest,
     onSuccess: () => {
       refetch()
       window.dispatchEvent(new Event('avatar_updated'))
+      setToast({
+        open: true,
+        message: 'Profile avatar updated successfully!',
+        severity: 'success',
+      })
+    },
+    onError: (error: any) => {
+      setToast({
+        open: true,
+        message: error.response?.data?.message || error.message || 'Failed to upload avatar',
+        severity: 'error',
+      })
     },
   })
 
@@ -43,6 +68,7 @@ export const ProfilePage = () => {
     const file = e.target.files?.[0]
     if (file) {
       uploadAvatar(file)
+      e.target.value = ''
     }
   }
 
@@ -67,6 +93,7 @@ export const ProfilePage = () => {
             profile={profile}
             avatar={getFullAvatarUrl(profile?.avatar_url) || null}
             onAvatarChange={handleAvatarChange}
+            isUploading={isUploading}
           />
         </Grid>
 
@@ -81,6 +108,17 @@ export const ProfilePage = () => {
           </Stack>
         </Grid>
       </Grid>
+
+      <Snackbar
+        open={toast.open}
+        autoHideDuration={6000}
+        onClose={handleCloseToast}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert onClose={handleCloseToast} severity={toast.severity} sx={{ width: '100%', borderRadius: 2 }}>
+          {toast.message}
+        </Alert>
+      </Snackbar>
     </Stack>
   )
 }

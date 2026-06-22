@@ -1,4 +1,4 @@
-import { Avatar, Box, Card, IconButton, Stack, Typography, alpha } from '@mui/material'
+import { Avatar, Box, Card, CircularProgress, IconButton, Stack, Typography, alpha } from '@mui/material'
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera'
 import BadgeIcon from '@mui/icons-material/Badge'
 
@@ -13,9 +13,15 @@ type ProfileAvatarCardProps = {
   profile: { full_name: string; email: string; role: string } | undefined
   avatar: string | null
   onAvatarChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+  isUploading?: boolean
 }
 
-export const ProfileAvatarCard = ({ profile, avatar, onAvatarChange }: ProfileAvatarCardProps) => {
+export const ProfileAvatarCard = ({
+  profile,
+  avatar,
+  onAvatarChange,
+  isUploading = false,
+}: ProfileAvatarCardProps) => {
   return (
     <Card
       elevation={0}
@@ -43,8 +49,28 @@ export const ProfileAvatarCard = ({ profile, avatar, onAvatarChange }: ProfileAv
           >
             {profile ? getInitials(profile.full_name) : 'U'}
           </Avatar>
+          {isUploading && (
+            <Box
+              sx={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: 120,
+                height: 120,
+                borderRadius: '50%',
+                bgcolor: 'rgba(0, 0, 0, 0.4)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 1,
+              }}
+            >
+              <CircularProgress size={32} sx={{ color: '#ffffff' }} />
+            </Box>
+          )}
           <IconButton
             component="label"
+            disabled={isUploading}
             sx={{
               position: 'absolute',
               bottom: 0,
@@ -55,6 +81,10 @@ export const ProfileAvatarCard = ({ profile, avatar, onAvatarChange }: ProfileAv
               '&:hover': {
                 bgcolor: 'primary.dark',
               },
+              '&.Mui-disabled': {
+                bgcolor: 'action.disabledBackground',
+                color: 'action.disabled',
+              },
             }}
             size="small"
           >
@@ -63,6 +93,7 @@ export const ProfileAvatarCard = ({ profile, avatar, onAvatarChange }: ProfileAv
               type="file"
               accept="image/*"
               hidden
+              disabled={isUploading}
               onChange={onAvatarChange}
             />
           </IconButton>
