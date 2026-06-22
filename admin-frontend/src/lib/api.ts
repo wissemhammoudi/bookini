@@ -402,6 +402,7 @@ export const uploadImageRequest = async (file: File) => {
     '/auth/upload',
     formData,
     {
+      timeout: 60000,
       headers: {
         'Content-Type': undefined,
       },
