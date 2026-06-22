@@ -29,3 +29,12 @@ export interface BookingConfirmation {
   guestName: string
   price: number
 }
+
+export interface SubscriptionPlan {
+  id: string
+  name: string
+  price: number | string
+  period: string
+  recommended?: boolean
+  features: string[]
+}

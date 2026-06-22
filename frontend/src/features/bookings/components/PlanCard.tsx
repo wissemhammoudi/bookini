@@ -12,7 +12,7 @@ import {
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import StarIcon from '@mui/icons-material/Star'
 
-import type { SubscriptionPlan } from '../constants'
+import type { SubscriptionPlan } from '../types'
 
 interface PlanCardProps {
   plan: SubscriptionPlan
