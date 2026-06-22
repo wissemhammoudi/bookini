@@ -57,7 +57,7 @@ async def create_booking(
         "notes": request.notes,
         "price": request.price,
         "status": PublicBookingStatus.PENDING,
-        "metadata": {"user_agent": "web", "source": "public_booking"},
+        "metadata_payload": {"user_agent": "web", "source": "public_booking"},
     }
     
     booking = await repository.create(booking_data)

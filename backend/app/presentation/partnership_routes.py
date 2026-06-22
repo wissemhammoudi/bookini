@@ -34,7 +34,7 @@ async def create_partnership_request(
         "expected_users": request.expected_users,
         "description": request.description,
         "status": PartnershipRequestStatus.PENDING,
-        "metadata": {"source": "web_form"},
+        "metadata_payload": {"source": "web_form"},
     }
     
     partnership = await repository.create(request_data)

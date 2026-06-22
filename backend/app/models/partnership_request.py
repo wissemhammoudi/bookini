@@ -42,7 +42,9 @@ class PartnershipRequest(TimestampMixin, Base):
     )
     
     # Metadata
-    metadata: Mapped[dict] = mapped_column(JSON, nullable=False, default={})
+    metadata_payload: Mapped[dict] = mapped_column(
+        "metadata", JSON, nullable=False, default=dict
+    )
 
     __table_args__ = (
         Index("ix_partnership_email", "contact_email"),

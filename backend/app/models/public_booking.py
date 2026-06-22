@@ -49,7 +49,9 @@ class PublicBooking(TimestampMixin, Base):
     admin_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     
     # Metadata
-    metadata: Mapped[dict] = mapped_column(JSON, nullable=False, default={})
+    metadata_payload: Mapped[dict] = mapped_column(
+        "metadata", JSON, nullable=False, default=dict
+    )
 
     __table_args__ = (
         Index("ix_public_bookings_date", "booking_date"),
