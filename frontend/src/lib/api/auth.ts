@@ -74,6 +74,11 @@ export const uploadAvatarRequest = async (file: File) => {
   const response = await apiClient.post<ApiResponse<{ id: string; full_name: string; email: string; role: string; avatar_url: string | null }>>(
     '/auth/me/avatar',
     formData,
+    {
+      headers: {
+        'Content-Type': undefined,
+      },
+    },
   )
   return response.data.data
 }

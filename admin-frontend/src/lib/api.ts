@@ -401,6 +401,11 @@ export const uploadImageRequest = async (file: File) => {
   const response = await apiClient.post<ApiResponse<{ url: string }>>(
     '/auth/upload',
     formData,
+    {
+      headers: {
+        'Content-Type': undefined,
+      },
+    },
   )
   return unwrap(response.data)
 }
