@@ -17,7 +17,7 @@ export const DashboardSection = ({
       title="Dashboard"
       description="Track performance, supply, demand, and operational activity across the platform."
     />
-    <Paper sx={{ p: 3, border: '1px solid', borderColor: 'divider', background: alpha('#0F6FDB', 0.03) }}>
+    <Paper sx={{ p: 3, border: '1px solid', borderColor: 'divider', background: alpha('#0059B3', 0.03) }}>
       <Stack direction={{ xs: 'column', lg: 'row' }} spacing={2} sx={{ justifyContent: 'space-between', alignItems: { xs: 'flex-start', lg: 'center' } }}>
         <Box>
           <Typography variant="overline" color="primary.main" sx={{ fontWeight: 800, letterSpacing: '0.12em' }}>

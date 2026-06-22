@@ -154,13 +154,13 @@ export const LoginPage = () => {
             <Stack spacing={2}>
               <Divider />
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                <Paper sx={{ flex: 1, p: 2.25, borderRadius: 3, background: alpha('#1171d8', isLight ? 0.06 : 0.15) }} elevation={0}>
+                <Paper sx={{ flex: 1, p: 2.25, borderRadius: 3, background: alpha('#0059B3', isLight ? 0.06 : 0.15) }} elevation={0}>
                   <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, display: 'block' }}>
                     Access
                   </Typography>
                   <Typography sx={{ fontWeight: 800 }}>Secure sign-in</Typography>
                 </Paper>
-                <Paper sx={{ flex: 1, p: 2.25, borderRadius: 3, background: alpha('#1ea88a', isLight ? 0.06 : 0.14) }} elevation={0}>
+                <Paper sx={{ flex: 1, p: 2.25, borderRadius: 3, background: alpha('#00A88F', isLight ? 0.06 : 0.14) }} elevation={0}>
                   <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, display: 'block' }}>
                     Coverage
                   </Typography>

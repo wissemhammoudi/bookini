@@ -107,7 +107,7 @@ const dialogPaperSx = {
     border: '1px solid',
     borderColor: 'divider',
     backgroundImage: 'none',
-    background: 'linear-gradient(180deg, #FFFFFF 0%, #F7FAFF 100%)',
+    background: (theme: any) => theme.palette.mode === 'light' ? 'linear-gradient(180deg, #FFFFFF 0%, #F7FAFF 100%)' : 'linear-gradient(180deg, #101D32 0%, #0C1525 100%)',
     boxShadow: '0 28px 70px rgba(16, 24, 40, 0.16)',
   },
 }
@@ -121,7 +121,7 @@ const dialogActionsSx = {
   py: 2.5,
   borderTop: '1px solid',
   borderColor: 'divider',
-  backgroundColor: alpha('#0F6FDB', 0.02),
+  backgroundColor: alpha('#0059B3', 0.02),
 }
 
 const DialogHeading = ({
@@ -634,7 +634,7 @@ export const SettingsDialog = ({
           })
         })}>
           {error ? <Alert severity="error" sx={{ borderRadius: 2 }}>{error}</Alert> : null}
-          <Paper sx={{ p: 2.5, border: '1px solid', borderColor: 'divider', backgroundColor: alpha('#0F6FDB', 0.025) }}>
+          <Paper sx={{ p: 2.5, border: '1px solid', borderColor: 'divider', backgroundColor: alpha('#0059B3', 0.025) }}>
             <Stack spacing={2}>
               <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>Profile & platform</Typography>
               <Grid container spacing={2}>
@@ -671,7 +671,7 @@ export const SettingsDialog = ({
               </Grid>
             </Stack>
           </Paper>
-          <Paper sx={{ p: 2.5, border: '1px solid', borderColor: 'divider', backgroundColor: alpha('#1EA88A', 0.025) }}>
+          <Paper sx={{ p: 2.5, border: '1px solid', borderColor: 'divider', backgroundColor: alpha('#00A88F', 0.025) }}>
             <Stack spacing={2}>
               <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>Alerts & security</Typography>
               <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} sx={{ flexWrap: 'wrap' }}>

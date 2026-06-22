@@ -61,7 +61,7 @@ export const PlacesSection = ({
                   <Grid size={{ xs: 12 }}><Typography variant="body2" color="text.secondary">Address</Typography><Typography>{place.address}</Typography></Grid>
                 </Grid>
                 <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
-                  {place.features.map((feature) => <Chip key={feature} label={feature} variant="outlined" sx={{ backgroundColor: alpha('#0F6FDB', 0.04) }} />)}
+                  {place.features.map((feature) => <Chip key={feature} label={feature} variant="outlined" sx={{ backgroundColor: alpha('#0059B3', 0.04) }} />)}
                 </Stack>
                 <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end', flexWrap: 'wrap' }}>
                   <Button startIcon={<VisibilityOutlinedIcon />} onClick={onViewReservations}>View Reservations</Button>

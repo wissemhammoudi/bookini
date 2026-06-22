@@ -253,7 +253,7 @@ export const AdminWorkspacePage = () => {
   }
 
   const drawer = (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', p: 2, background: mode === 'light' ? 'linear-gradient(180deg, #ffffff 0%, #f7faff 100%)' : 'linear-gradient(180deg, #0b1320 0%, #09111d 100%)' }}>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', p: 2, background: mode === 'light' ? 'linear-gradient(180deg, #FFFFFF 0%, #F5F7FB 100%)' : 'linear-gradient(180deg, #101D32 0%, #0C1525 100%)' }}>
       <Stack spacing={1.5} sx={{ px: 1.5, py: 2 }}>
         <Typography variant="overline" color="primary.main">Bookini Platform</Typography>
         <Typography variant="h5" sx={{ fontWeight: 900 }}>Admin Console</Typography>
@@ -276,7 +276,7 @@ export const AdminWorkspacePage = () => {
           </ListItemButton>
         ))}
       </List>
-      <Paper sx={{ p: 2, borderRadius: 4, background: 'linear-gradient(145deg, rgba(15,111,219,0.16), rgba(30,168,138,0.14))' }}>
+      <Paper sx={{ p: 2, borderRadius: 4, background: 'linear-gradient(145deg, rgba(0, 89, 179, 0.16), rgba(0, 168, 143, 0.14))' }}>
         <Typography variant="subtitle2">Signed in as</Typography>
         <Typography variant="h6">{workspace.settings.profile.full_name}</Typography>
         <Typography color="text.secondary">{data.role === 'SUPER_ADMIN' ? 'Super Admin' : 'Organization Admin'}</Typography>
@@ -285,7 +285,7 @@ export const AdminWorkspacePage = () => {
   )
 
   return (
-    <Box sx={{ minHeight: '100vh', background: mode === 'light' ? 'linear-gradient(180deg, #edf3fb 0%, #f7fafc 100%)' : 'linear-gradient(180deg, #08111f 0%, #0f1727 100%)' }}>
+    <Box sx={{ minHeight: '100vh', background: mode === 'light' ? 'linear-gradient(180deg, #F5F7FB 0%, #FFFFFF 100%)' : 'linear-gradient(180deg, #0C1525 0%, #101D32 100%)' }}>
       <AppBar
         position="fixed"
         color="transparent"
@@ -296,7 +296,7 @@ export const AdminWorkspacePage = () => {
           backdropFilter: 'blur(18px)',
           borderBottom: '1px solid',
           borderColor: 'divider',
-          backgroundColor: theme.palette.mode === 'light' ? 'rgba(255,255,255,0.8)' : 'rgba(8,17,31,0.8)',
+          backgroundColor: theme.palette.mode === 'light' ? 'rgba(255,255,255,0.8)' : 'rgba(12, 21, 37, 0.8)',
         }}
       >
         <Toolbar sx={{ gap: 2, minHeight: 78, flexWrap: 'wrap', py: 1.25 }}>
@@ -324,7 +324,7 @@ export const AdminWorkspacePage = () => {
       </Box>
 
       <Box component="main" sx={{ flexGrow: 1, ml: { lg: `${drawerWidth}px` }, p: { xs: 2, md: 3 }, pt: { xs: 11.5, md: 13 } }}>
-        <Paper sx={{ p: 3, mb: 3, border: '1px solid', borderColor: 'divider', background: mode === 'light' ? 'linear-gradient(135deg, #ffffff 0%, #f7faff 100%)' : 'linear-gradient(135deg, rgba(16,29,50,0.95) 0%, rgba(10,14,26,0.95) 100%)' }}>
+        <Paper sx={{ p: 3, mb: 3, border: '1px solid', borderColor: 'divider', background: mode === 'light' ? 'linear-gradient(135deg, #FFFFFF 0%, #F5F7FB 100%)' : 'linear-gradient(135deg, rgba(16, 29, 50, 0.95) 0%, rgba(12, 21, 37, 0.95) 100%)' }}>
           <Stack direction={{ xs: 'column', lg: 'row' }} spacing={2} sx={{ justifyContent: 'space-between', alignItems: { xs: 'flex-start', lg: 'center' } }}>
             <Box>
               <Typography variant="overline" color="primary.main" sx={{ fontWeight: 800, letterSpacing: '0.12em' }}>

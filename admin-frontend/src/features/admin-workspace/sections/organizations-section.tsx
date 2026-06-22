@@ -55,7 +55,7 @@ export const OrganizationsSection = ({
                 <Typography variant="body2">{organization.contact_phone}</Typography>
                 <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
                   {organization.social_links.map((link) => (
-                    <Chip key={link} label={new URL(link).hostname} variant="outlined" sx={{ backgroundColor: alpha('#0F6FDB', 0.04) }} />
+                    <Chip key={link} label={new URL(link).hostname} variant="outlined" sx={{ backgroundColor: alpha('#0059B3', 0.04) }} />
                   ))}
                 </Stack>
                 <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end', flexWrap: 'wrap' }}>

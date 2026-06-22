@@ -150,6 +150,44 @@ async def create_booking(
     )
 
 
+@router.get("/bookings/calendar")
+async def list_booking_calendar_slots(
+    room_id: int = Query(ge=1),
+    start_date: str = Query(pattern=r"^\d{4}-\d{2}-\d{2}$"),
+    end_date: str = Query(pattern=r"^\d{4}-\d{2}-\d{2}$"),
+    session: AsyncSession = Depends(get_db_session),
+) -> dict[str, object]:
+    """Expose booked time slots by room and date range for public calendar rendering."""
+
+    if end_date < start_date:
+        raise ValidationException("end_date must be greater than or equal to start_date")
+
+    repository = PublicBookingRepository(session)
+    bookings = await repository.list_by_room_and_date_range(
+        room_id=room_id,
+        start_date=start_date,
+        end_date=end_date,
+        statuses=[PublicBookingStatus.PENDING, PublicBookingStatus.CONFIRMED],
+    )
+
+    return success_response(
+        message="Calendar slots retrieved",
+        data=[
+            {
+                "id": str(booking.id),
+                "booking_reference": booking.booking_reference,
+                "room_id": booking.room_id,
+                "room_name": booking.room_name,
+                "booking_date": booking.booking_date,
+                "start_time": booking.start_time,
+                "end_time": booking.end_time,
+                "status": booking.status.value,
+            }
+            for booking in bookings
+        ],
+    )
+
+
 @router.get("/bookings/{reference}")
 async def get_booking(
     reference: str,
@@ -209,44 +247,6 @@ async def list_bookings_by_email(
                 "price": b.price,
             }
             for b in bookings
-        ],
-    )
-
-
-@router.get("/bookings/calendar")
-async def list_booking_calendar_slots(
-    room_id: int = Query(ge=1),
-    start_date: str = Query(pattern=r"^\d{4}-\d{2}-\d{2}$"),
-    end_date: str = Query(pattern=r"^\d{4}-\d{2}-\d{2}$"),
-    session: AsyncSession = Depends(get_db_session),
-) -> dict[str, object]:
-    """Expose booked time slots by room and date range for public calendar rendering."""
-
-    if end_date < start_date:
-        raise ValidationException("end_date must be greater than or equal to start_date")
-
-    repository = PublicBookingRepository(session)
-    bookings = await repository.list_by_room_and_date_range(
-        room_id=room_id,
-        start_date=start_date,
-        end_date=end_date,
-        statuses=[PublicBookingStatus.PENDING, PublicBookingStatus.CONFIRMED],
-    )
-
-    return success_response(
-        message="Calendar slots retrieved",
-        data=[
-            {
-                "id": str(booking.id),
-                "booking_reference": booking.booking_reference,
-                "room_id": booking.room_id,
-                "room_name": booking.room_name,
-                "booking_date": booking.booking_date,
-                "start_time": booking.start_time,
-                "end_time": booking.end_time,
-                "status": booking.status.value,
-            }
-            for booking in bookings
         ],
     )
 

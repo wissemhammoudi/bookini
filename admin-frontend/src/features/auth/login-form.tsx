@@ -118,12 +118,12 @@ export const LoginForm = ({ error, isLoading = false, onSubmit }: LoginFormProps
           py: 1.5,
           borderRadius: 2,
           fontWeight: 800,
-          background: 'linear-gradient(135deg, #0F6FDB 0%, #1EA88A 100%)',
-          boxShadow: '0 12px 24px rgba(15, 111, 219, 0.28)',
+          background: 'linear-gradient(135deg, #0059B3 0%, #00A88F 100%)',
+          boxShadow: '0 12px 24px rgba(0, 89, 179, 0.28)',
           transition: 'all 0.2s',
           '&:hover': {
             transform: 'translateY(-1px)',
-            boxShadow: '0 16px 28px rgba(15, 111, 219, 0.34)',
+            boxShadow: '0 16px 28px rgba(0, 89, 179, 0.34)',
           },
         }}
       >

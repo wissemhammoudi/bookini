@@ -5,14 +5,14 @@ export const buildTheme = (mode: 'light' | 'dark') =>
     palette: {
       mode,
       primary: {
-        main: '#0F6FDB',
-        light: '#4A9EFF',
-        dark: '#0A4D9A',
+        main: '#0059B3',
+        light: '#337acc',
+        dark: '#003e7e',
       },
       secondary: {
-        main: '#1EA88A',
-        light: '#58D0B5',
-        dark: '#14745F',
+        main: '#00A88F',
+        light: '#33b9a5',
+        dark: '#007564',
       },
       success: {
         main: '#1F9D6A',
@@ -25,15 +25,15 @@ export const buildTheme = (mode: 'light' | 'dark') =>
       },
       background:
         mode === 'light'
-          ? { default: '#EDF3FA', paper: '#FFFFFF' }
-          : { default: '#07111E', paper: '#0E1727' },
+          ? { default: '#F5F7FB', paper: '#FFFFFF' }
+          : { default: '#0C1525', paper: '#101D32' },
       text:
         mode === 'light'
           ? { primary: '#101828', secondary: '#5B6472' }
           : { primary: '#E5EEF9', secondary: '#98A6B7' },
     },
     shape: {
-      borderRadius: 18,
+      borderRadius: 12,
     },
     typography: {
       fontFamily: ['Inter', 'Public Sans', 'Segoe UI', 'sans-serif'].join(','),
@@ -58,7 +58,7 @@ export const buildTheme = (mode: 'light' | 'dark') =>
           root: {
             textTransform: 'none',
             fontWeight: 700,
-            borderRadius: 14,
+            borderRadius: 8,
             paddingInline: 16,
           },
         },
@@ -72,8 +72,8 @@ export const buildTheme = (mode: 'light' | 'dark') =>
       MuiOutlinedInput: {
         styleOverrides: {
           root: {
-            borderRadius: 14,
-            backgroundColor: mode === 'light' ? '#FFFFFF' : '#0B1320',
+            borderRadius: 8,
+            backgroundColor: mode === 'light' ? '#FFFFFF' : '#101D32',
           },
           notchedOutline: {
             borderColor: mode === 'light' ? 'rgba(16, 24, 40, 0.12)' : 'rgba(255, 255, 255, 0.08)',
@@ -91,14 +91,14 @@ export const buildTheme = (mode: 'light' | 'dark') =>
         styleOverrides: {
           root: {
             backgroundImage: 'none',
-            borderRadius: 20,
+            borderRadius: 12,
           },
         },
       },
       MuiCard: {
         styleOverrides: {
           root: {
-            borderRadius: 20,
+            borderRadius: 12,
           },
         },
       },
@@ -113,7 +113,7 @@ export const buildTheme = (mode: 'light' | 'dark') =>
         styleOverrides: {
           paper: {
             backgroundImage: 'none',
-            backgroundColor: mode === 'light' ? '#FFFFFF' : '#0B1320',
+            backgroundColor: mode === 'light' ? '#FFFFFF' : '#101D32',
           },
         },
       },

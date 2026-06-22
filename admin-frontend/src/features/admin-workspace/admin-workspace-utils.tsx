@@ -65,9 +65,9 @@ export const EmptyState = ({
   action?: React.ReactNode
   icon?: React.ReactNode
 }) => (
-  <Paper sx={{ p: 5, textAlign: 'center', border: '1px dashed', borderColor: 'divider', background: `linear-gradient(180deg, ${alpha('#0F6FDB', 0.035)} 0%, ${alpha('#1EA88A', 0.03)} 100%)` }}>
+  <Paper sx={{ p: 5, textAlign: 'center', border: '1px dashed', borderColor: 'divider', background: `linear-gradient(180deg, ${alpha('#0059B3', 0.035)} 0%, ${alpha('#00A88F', 0.03)} 100%)` }}>
     <Stack spacing={2} sx={{ alignItems: 'center' }}>
-      <Box sx={{ width: 56, height: 56, display: 'grid', placeItems: 'center', borderRadius: '50%', backgroundColor: alpha('#0F6FDB', 0.12), color: 'primary.main' }}>
+      <Box sx={{ width: 56, height: 56, display: 'grid', placeItems: 'center', borderRadius: '50%', backgroundColor: alpha('#0059B3', 0.12), color: 'primary.main' }}>
         {icon ?? <InboxOutlinedIcon />}
       </Box>
       <Box>
@@ -95,7 +95,7 @@ export const LoadingState = ({
       p: 4,
       border: '1px solid',
       borderColor: 'divider',
-      background: `linear-gradient(180deg, ${alpha('#0F6FDB', 0.05)} 0%, ${alpha('#1EA88A', 0.035)} 100%)`,
+      background: `linear-gradient(180deg, ${alpha('#0059B3', 0.05)} 0%, ${alpha('#00A88F', 0.035)} 100%)`,
     }}
   >
     <Stack spacing={2.25} sx={{ alignItems: 'center', textAlign: 'center' }}>
@@ -106,7 +106,7 @@ export const LoadingState = ({
           borderRadius: '50%',
           display: 'grid',
           placeItems: 'center',
-          backgroundColor: alpha('#0F6FDB', 0.12),
+          backgroundColor: alpha('#0059B3', 0.12),
         }}
       >
         <CircularProgress size={32} />
@@ -141,7 +141,7 @@ export const ChartCard = ({
   const max = Math.max(...points.map((point) => point.value), 1)
 
   return (
-    <Paper sx={{ p: 3, height: '100%', border: '1px solid', borderColor: 'divider', background: 'linear-gradient(180deg, rgba(255,255,255,0.98), rgba(245,249,255,0.98))' }}>
+    <Paper sx={{ p: 3, height: '100%', border: '1px solid', borderColor: 'divider', background: (theme) => theme.palette.mode === 'light' ? 'linear-gradient(180deg, rgba(255,255,255,0.98), rgba(245,249,255,0.98))' : 'linear-gradient(180deg, rgba(16,29,50,0.98), rgba(12,21,37,0.98))' }}>
       <Typography variant="h6" sx={{ mb: 2, fontWeight: 800 }}>
         {title}
       </Typography>
@@ -157,8 +157,8 @@ export const ChartCard = ({
                 minHeight: 12,
                 height: `${(point.value / max) * 120 + 20}px`,
                 borderRadius: 3,
-                background: 'linear-gradient(180deg, #0F6FDB 0%, #1EA88A 100%)',
-                boxShadow: '0 12px 24px rgba(15, 111, 219, 0.18)',
+                background: 'linear-gradient(180deg, #0059B3 0%, #00A88F 100%)',
+                boxShadow: '0 12px 24px rgba(0, 89, 179, 0.18)',
               }}
             />
             <Typography variant="caption" align="center">

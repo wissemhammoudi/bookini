@@ -80,7 +80,7 @@ export function FloorsSection({
                     <Typography variant="body2">Capacity: {floor.capacity}</Typography>
                     <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
                       {floor.reservation_areas.map((area) => (
-                        <Chip key={area} label={area} variant="outlined" sx={{ backgroundColor: alpha('#0F6FDB', 0.04) }} />
+                        <Chip key={area} label={area} variant="outlined" sx={{ backgroundColor: alpha('#0059B3', 0.04) }} />
                       ))}
                     </Stack>
                     <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end', flexWrap: 'wrap' }}>
