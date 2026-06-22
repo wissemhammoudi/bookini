@@ -58,9 +58,9 @@ async def seed_super_admin_account(
     logger.info(
         "Super admin bootstrap completed",
         extra={
-            "created": created,
-            "updated": updated,
-            "email": normalized_email,
+            "seed_created": created,
+            "seed_updated": updated,
+            "seed_email": normalized_email,
         },
     )
 
