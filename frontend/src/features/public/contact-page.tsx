@@ -64,7 +64,7 @@ export const ContactPage = () => {
 
             <Grid container spacing={5} sx={{ alignItems: 'flex-start' }}>
               {/* Contact Information (Left Column) */}
-              <Grid item xs={12} md={5}>
+              <Grid xs={12} md={5}>
                 <Stack spacing={4}>
                   <Box>
                     <Typography variant="h5" sx={{ fontWeight: 800, mb: 1.5 }}>
@@ -149,7 +149,7 @@ export const ContactPage = () => {
               </Grid>
 
               {/* Message Form (Right Column) */}
-              <Grid item xs={12} md={7}>
+              <Grid xs={12} md={7}>
                 <Paper
                   elevation={0}
                   sx={{
