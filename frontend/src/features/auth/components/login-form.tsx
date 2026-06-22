@@ -142,4 +142,3 @@ export const LoginForm = ({ error, isLoading = false, onSubmit }: LoginFormProps
     </Stack>
   )
 }
-

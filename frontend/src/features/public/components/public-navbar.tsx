@@ -19,7 +19,7 @@ import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined'
 import MenuIcon from '@mui/icons-material/Menu'
 
 import { useColorMode } from '@/app/use-color-mode'
-import { useAuth } from '@/features/auth/use-auth'
+import { useAuth } from '@/features/auth'
 
 interface PublicNavbarProps {
   isLight: boolean

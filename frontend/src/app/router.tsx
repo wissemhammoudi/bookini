@@ -2,15 +2,17 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 
 import { AppLayout } from '@/app/app-layout'
-import { ProtectedRoute } from '@/features/auth/protected-route'
+import {
+  LoginPage,
+  RegisterPage,
+  ForgotPasswordPage,
+  ProfilePage,
+  ProtectedRoute,
+} from '@/features/auth'
 import { DashboardPage } from '@/pages/dashboard-page'
-import { LoginPage } from '@/features/auth/login-page'
 import { NotFoundPage } from '@/pages/not-found-page'
 import { LandingPage, AboutPage, ContactPage, ReservationsInfoPage } from '@/features/public'
 import { PublicBookingPage, BookingConfirmationPage } from '@/features/bookings'
-import { RegisterPage } from '@/features/auth/register-page'
-import { ForgotPasswordPage } from '@/features/auth/forgot-password-page'
-import { ProfilePage } from '@/features/auth/profile-page'
 
 export const AppRouter = () => {
   return (

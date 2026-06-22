@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 
 import { LoginPage } from './login-page'
-import { AuthProvider } from '@/features/auth/auth-context'
+import { AuthProvider } from './auth-context'
 
 const createWrapper = () => {
   const client = new QueryClient({

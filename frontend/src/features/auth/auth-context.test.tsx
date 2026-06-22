@@ -1,7 +1,7 @@
 import { renderHook, act } from '@testing-library/react'
 
 import { AuthProvider } from './auth-context'
-import { useAuth } from './use-auth'
+import { useAuth } from './hooks'
 
 describe('AuthProvider', () => {
   beforeEach(() => {

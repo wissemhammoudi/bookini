@@ -9,8 +9,7 @@ import {
 
 import { useColorMode } from '@/app/use-color-mode'
 import { PublicNavbar } from '@/features/public/components/public-navbar'
-import { SUBSCRIPTION_PLANS, AVAILABLE_ROOMS } from './constants'
-import { PlanCard } from './components/PlanCard'
+import { AVAILABLE_ROOMS } from './constants'
 import { RoomCard } from './components/RoomCard'
 import { BookingDialog } from './components/BookingDialog'
 import type { BookingFormData } from './types'
@@ -29,7 +28,7 @@ import type { Room } from './constants'
 export const PublicBookingPage = () => {
   const { mode } = useColorMode()
   const isLight = mode === 'light'
-  
+
   const [selectedPlan, setSelectedPlan] = useState('pay-as-you-go')
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null)
   const [bookingDialogOpen, setBookingDialogOpen] = useState(false)
@@ -67,34 +66,6 @@ export const PublicBookingPage = () => {
               Choose a subscription plan that works for you, then select from our available rooms and spaces.
             </Typography>
           </Box>
-
-          {/* Plans Section */}
-          <Box>
-            <Typography variant="h4" sx={{ fontWeight: 800, mb: 3 }}>
-              Subscription Plans
-            </Typography>
-
-            <Box
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: { xs: '1fr', md: 'repeat(3, minmax(0, 1fr))' },
-                gap: 3,
-              }}
-            >
-              {SUBSCRIPTION_PLANS.map((plan) => (
-                <Box key={plan.id}>
-                  <PlanCard
-                    plan={plan}
-                    isSelected={selectedPlan === plan.id}
-                    onSelect={setSelectedPlan}
-                    isLight={isLight}
-                  />
-                </Box>
-              ))}
-            </Box>
-          </Box>
-
-          <Divider sx={{ borderColor: isLight ? 'rgba(0, 89, 179, 0.08)' : 'rgba(255, 255, 255, 0.05)' }} />
 
           {/* Rooms Section */}
           <Box>

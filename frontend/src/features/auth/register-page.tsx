@@ -1,16 +1,15 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { Link as RouterLink, useNavigate } from 'react-router-dom'
-import { Link, Paper, Stack, Typography, Box, IconButton, Avatar } from '@mui/material'
-import LightModeOutlinedIcon from '@mui/icons-material/LightModeOutlined'
-import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined'
-import MeetingRoomIcon from '@mui/icons-material/MeetingRoom'
+import { Link, Paper, Stack, Typography, Box } from '@mui/material'
 
 import {
   RegisterForm,
   type RegisterFormValues,
-} from '@/features/auth/register-form'
-import { useAuth } from '@/features/auth/use-auth'
+  AuthBranding,
+  ThemeToggle,
+} from './components'
+import { useAuth } from './hooks'
 import { useColorMode } from '@/app/use-color-mode'
 import { registerRequest } from '@/lib/api'
 
@@ -18,7 +17,7 @@ export const RegisterPage = () => {
   const [error, setError] = useState<string | undefined>()
   const navigate = useNavigate()
   const { signIn } = useAuth()
-  const { mode, toggleMode } = useColorMode()
+  const { mode } = useColorMode()
   const registerMutation = useMutation({ mutationFn: registerRequest })
 
   const handleSubmit = async (values: RegisterFormValues) => {
@@ -60,15 +59,7 @@ export const RegisterPage = () => {
       }}
     >
       {/* Floating Theme Toggle */}
-      <Box sx={{ position: 'absolute', top: 16, right: 16 }}>
-        <IconButton
-          onClick={toggleMode}
-          color="inherit"
-          sx={{ border: '1px solid', borderColor: 'divider', backdropFilter: 'blur(4px)' }}
-        >
-          {isLight ? <DarkModeOutlinedIcon /> : <LightModeOutlinedIcon />}
-        </IconButton>
-      </Box>
+      <ThemeToggle />
 
       <Stack spacing={3} sx={{ width: '100%', maxWidth: 480, alignItems: 'center' }}>
         <Paper
@@ -86,21 +77,7 @@ export const RegisterPage = () => {
         >
           <Stack spacing={3.5}>
             {/* Logo and Branding */}
-            <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', alignSelf: 'center' }}>
-              <Avatar
-                sx={{
-                  bgcolor: 'primary.main',
-                  width: 40,
-                  height: 40,
-                  boxShadow: '0 4px 10px rgba(0, 89, 179, 0.3)',
-                }}
-              >
-                <MeetingRoomIcon sx={{ color: '#ffffff' }} />
-              </Avatar>
-              <Typography variant="h5" sx={{ fontWeight: 800 }}>
-                bookiwa7dek
-              </Typography>
-            </Stack>
+            <AuthBranding />
 
             <Stack spacing={1}>
               <Typography variant="h5" align="center" sx={{ fontWeight: 700 }}>
@@ -138,4 +115,3 @@ export const RegisterPage = () => {
     </Box>
   )
 }
-

@@ -16,6 +16,7 @@ from app.schemas.auth import (
     RefreshTokenRequest,
     RegisterRequest,
     RequestPasswordResetRequest,
+    UpdateProfileRequest,
 )
 from app.services.audit_log_service import AuditLogService
 from app.services.auth_service import AuthService
@@ -163,3 +164,42 @@ async def change_password(
         new_password=payload.new_password,
     )
     return success_response(message="Password changed successfully", data={})
+
+
+@router.get("/me")
+async def get_me(
+    current_user: User = Depends(get_current_user),
+) -> dict[str, object]:
+    return success_response(
+        message="Profile retrieved successfully",
+        data={
+            "id": str(current_user.id),
+            "full_name": current_user.full_name,
+            "email": current_user.email,
+            "role": current_user.role,
+        },
+    )
+
+
+@router.put("/profile")
+async def update_profile(
+    payload: UpdateProfileRequest,
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+) -> dict[str, object]:
+    service = _service_from_session(session)
+    updated_user = await service.update_profile(
+        user=current_user,
+        full_name=payload.full_name,
+        email=payload.email,
+    )
+    return success_response(
+        message="Profile updated successfully",
+        data={
+            "id": str(updated_user.id),
+            "full_name": updated_user.full_name,
+            "email": updated_user.email,
+            "role": updated_user.role,
+        },
+    )
+

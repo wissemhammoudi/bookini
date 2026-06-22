@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-import { getStoredAccessToken } from '../features/auth/auth-storage'
+import { getStoredAccessToken } from '@/features/auth'
 
 export const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL ?? (import.meta.env.DEV ? 'http://localhost:8000/api/v1' : '/api/v1'),

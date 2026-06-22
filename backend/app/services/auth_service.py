@@ -103,3 +103,21 @@ class AuthService:
             "refresh_token": create_refresh_token(user_id),
             "token_type": "bearer",
         }
+
+    async def update_profile(
+        self,
+        user: User,
+        full_name: str,
+        email: str,
+    ) -> User:
+        if email != user.email:
+            existing = await self._user_repository.get_by_email(email)
+            if existing:
+                raise AppException(status_code=409, message="Email already in use")
+
+        user.full_name = full_name
+        user.email = email
+        await self._user_repository._session.commit()
+        await self._user_repository._session.refresh(user)
+        return user
+
