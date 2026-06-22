@@ -59,7 +59,7 @@ export const RoomCard = ({ room, isLight, isSelected = false, onBookNow, actionL
         <CardMedia
           component="img"
           height="200"
-          image={room.cover_image}
+          image={room.cover_image ?? undefined}
           alt={room.name}
           sx={{
             objectFit: 'cover',
