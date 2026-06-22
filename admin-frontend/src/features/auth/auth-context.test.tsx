@@ -25,15 +25,15 @@ describe('AuthProvider', () => {
     })
 
     expect(result.current.isAuthenticated).toBe(true)
-    expect(window.localStorage.getItem('bookiwa7dek_access_token')).toBe('access-token')
-    expect(window.localStorage.getItem('bookiwa7dek_refresh_token')).toBe('refresh-token')
+    expect(window.localStorage.getItem('bookiwa7dek_admin_access_token')).toBe('access-token')
+    expect(window.localStorage.getItem('bookiwa7dek_admin_refresh_token')).toBe('refresh-token')
 
     act(() => {
       result.current.signOut()
     })
 
     expect(result.current.isAuthenticated).toBe(false)
-    expect(window.localStorage.getItem('bookiwa7dek_access_token')).toBeNull()
-    expect(window.localStorage.getItem('bookiwa7dek_refresh_token')).toBeNull()
+    expect(window.localStorage.getItem('bookiwa7dek_admin_access_token')).toBeNull()
+    expect(window.localStorage.getItem('bookiwa7dek_admin_refresh_token')).toBeNull()
   })
 })

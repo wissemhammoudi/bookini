@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { Link as RouterLink } from 'react-router-dom'
 import {
   alpha,
-  AppBar,
   Box,
   Button,
   Card,
@@ -14,6 +13,7 @@ import {
   TextField,
   Toolbar,
   Typography,
+  AppBar,
 } from '@mui/material'
 import EventAvailableOutlinedIcon from '@mui/icons-material/EventAvailableOutlined'
 import GroupsOutlinedIcon from '@mui/icons-material/GroupsOutlined'
@@ -50,11 +50,11 @@ export const LandingPage = () => {
 
   function handleContactSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    const subject = encodeURIComponent(`Bookini contact from ${name || 'visitor'}`)
+    const subject = encodeURIComponent(`bookiwa7dek contact from ${name || 'visitor'}`)
     const body = encodeURIComponent(
       `Name: ${name}\nEmail: ${email}\n\n${message}`,
     )
-    window.location.href = `mailto:contact@bookini.com?subject=${subject}&body=${body}`
+    window.location.href = `mailto:contact@bookiwa7dek.com?subject=${subject}&body=${body}`
   }
 
   return (
@@ -77,7 +77,7 @@ export const LandingPage = () => {
           >
             <Stack spacing={0.25}>
               <Typography variant="h6" sx={{ fontWeight: 800, letterSpacing: '-0.02em' }}>
-                Bookini
+                bookiwa7dek
               </Typography>
               <Typography variant="caption" color="text.secondary">
                 Smart floor reservation platform
@@ -135,7 +135,7 @@ export const LandingPage = () => {
                   fontWeight: 700,
                 }}
               >
-                Bookini workspace platform
+                bookiwa7dek workspace platform
               </Typography>
               <Typography
                 variant="h2"
@@ -144,7 +144,7 @@ export const LandingPage = () => {
                 Describe your company, manage rooms, and keep teams in sync.
               </Typography>
               <Typography variant="h6" color="text.secondary" sx={{ maxWidth: 720 }}>
-                Bookini helps organizations publish a clean company interface, present services,
+                bookiwa7dek helps organizations publish a clean company interface, present services,
                 support contact requests, and run reservations with clear roles for users, admins,
                 and super admins.
               </Typography>
@@ -201,7 +201,7 @@ export const LandingPage = () => {
             >
               <Stack spacing={2}>
                 <Typography variant="overline" color="primary.main" sx={{ fontWeight: 700 }}>
-                  About Bookini
+                  About bookiwa7dek
                 </Typography>
                 <Typography variant="h5" sx={{ fontWeight: 800 }}>
                   Everything your company needs in one clean public interface.
@@ -305,7 +305,7 @@ export const LandingPage = () => {
             <Stack spacing={3}>
               <Stack spacing={1} sx={{ maxWidth: 760 }}>
                 <Typography variant="overline" color="primary.main" sx={{ fontWeight: 700 }}>
-                  Why teams use Bookini
+                  Why teams use bookiwa7dek
                 </Typography>
                 <Typography variant="h4" sx={{ fontWeight: 800 }}>
                   A structured experience for visitors, users, admins, and operations.
@@ -356,7 +356,7 @@ export const LandingPage = () => {
                   Contact us
                 </Typography>
                 <Typography variant="h4" sx={{ fontWeight: 800 }}>
-                  Talk to the Bookini team.
+                  Talk to the bookiwa7dek team.
                 </Typography>
                 <Typography color="text.secondary">
                   For company inquiries, demos, or support, use the form or reach us directly.
@@ -365,7 +365,7 @@ export const LandingPage = () => {
 
               <Stack spacing={2}>
                 {[
-                  ['Email', 'contact@bookini.com'],
+                  ['Email', 'contact@bookiwa7dek.com'],
                   ['Phone', '+216 00 000 000'],
                   ['Office', 'Tunis, Tunisia'],
                 ].map(([label, value]) => (
@@ -446,7 +446,7 @@ export const LandingPage = () => {
             sx={{ alignItems: 'center', justifyContent: 'space-between' }}
           >
             <Typography color="text.secondary">
-              © 2026 Bookini. Reservation interface, company overview, and contact area.
+              © 2026 bookiwa7dek. Reservation interface, company overview, and contact area.
             </Typography>
             <Stack direction="row" spacing={2}>
               <Button href="#about" color="inherit">

@@ -14,8 +14,8 @@ from app.core.seed import seed_default_users
 from app.infrastructure.session import get_session_factory
 
 REQUEST_COUNT = Counter(
-    "bookini_http_requests_total",
-    "Total HTTP requests processed by Bookini API",
+    "bookiwa7dek_http_requests_total",
+    "Total HTTP requests processed by bookiwa7dek API",
     ["method", "path", "status_code"],
 )
 

@@ -1,5 +1,5 @@
-export const ACCESS_TOKEN_KEY = 'bookiwa7dek_access_token'
-export const REFRESH_TOKEN_KEY = 'bookiwa7dek_refresh_token'
+export const ACCESS_TOKEN_KEY = 'bookiwa7dek_admin_access_token'
+export const REFRESH_TOKEN_KEY = 'bookiwa7dek_admin_refresh_token'
 
 export const getStoredAccessToken = () =>
   window.localStorage.getItem(ACCESS_TOKEN_KEY)

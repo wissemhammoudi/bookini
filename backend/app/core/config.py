@@ -37,17 +37,19 @@ class Settings(BaseSettings):
         default_factory=lambda: [
             "http://localhost:5173",
             "http://127.0.0.1:5173",
+            "http://localhost:5174",
+            "http://127.0.0.1:5174",
             "http://localhost",
             "http://127.0.0.1",
         ]
     )
 
     seed_default_users: bool = Field(default=False)
-    seed_user_email: str = Field(default="user@bookini.com")
+    seed_user_email: str = Field(default="user@bookiwa7dek.com")
     seed_user_password: str = Field(default="User123456!")
-    seed_admin_email: str = Field(default="admin@bookini.com")
+    seed_admin_email: str = Field(default="admin@bookiwa7dek.com")
     seed_admin_password: str = Field(default="Admin123456!")
-    seed_super_admin_email: str = Field(default="superadmin@bookini.com")
+    seed_super_admin_email: str = Field(default="superadmin@bookiwa7dek.com")
     seed_super_admin_password: str = Field(default="SuperAdmin123456!")
 
 

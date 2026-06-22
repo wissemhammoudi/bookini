@@ -1,11 +1,12 @@
-# Bookini
+# bookiwa7dek
 
 Smart Floor Reservation System delivered incrementally across 12 weeks.
 
 ## Stack
 
 - Backend: FastAPI, SQLAlchemy async, Alembic, Pytest, Ruff
-- Frontend: React, TypeScript, Vite, MUI, React Query, React Hook Form, Zod
+- User Frontend: React, TypeScript, Vite, MUI, React Query, React Hook Form, Zod
+- Admin Frontend: React, TypeScript, Vite, MUI, React Query, React Hook Form, Zod
 - Infra: Docker Compose, Traefik v3, Postgres, Redis
 - Observability: Prometheus, Grafana, Loki, Promtail, cAdvisor, node-exporter
 
@@ -23,7 +24,7 @@ python -m pytest
 uvicorn app.main:app --reload
 ```
 
-### Frontend
+### User Frontend
 
 ```bash
 cd frontend
@@ -34,6 +35,17 @@ npm run build
 npm run dev
 ```
 
+### Admin Frontend
+
+```bash
+cd admin-frontend
+npm install
+npm run lint
+npm run test
+npm run build
+npm run dev -- --port 5174
+```
+
 ## Full Container Stack
 
 ```bash
@@ -42,7 +54,8 @@ docker compose up -d --build
 
 Main endpoints:
 
-- App via Traefik: <https://localhost>
+- User App via Traefik: <https://localhost>
+- Admin App via Traefik: <https://admin.localhost>
 - Backend API: <https://localhost/api/v1>
 - Backend metrics: <https://localhost/metrics>
 - Traefik dashboard: <http://localhost:8080>
@@ -69,16 +82,23 @@ cd backend
 python -m pytest
 ```
 
-### Frontend
+### Frontend (User & Admin)
 
 - Unit tests for auth provider behavior
 - Critical UI flow test for protected-route redirect
 - Form validation tests for login
 
-Run:
+Run User Frontend tests:
 
 ```bash
 cd frontend
+npm run test
+```
+
+Run Admin Frontend tests:
+
+```bash
+cd admin-frontend
 npm run test
 ```
 
@@ -87,7 +107,8 @@ npm run test
 GitHub Actions workflow:
 
 - Backend lint + test + pip-audit
-- Frontend lint + vitest + build + npm audit
+- User Frontend lint + vitest + build + npm audit
+- Admin Frontend lint + vitest + build
 
 See:
 

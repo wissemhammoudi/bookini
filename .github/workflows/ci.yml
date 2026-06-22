@@ -70,9 +70,36 @@ jobs:
       - name: Security scan (npm audit)
         run: npm audit --audit-level=high
 
+  admin-frontend-quality:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: admin-frontend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit/UI tests
+        run: npm run test
+
+      - name: Build
+        run: npm run build
+
   deploy:
     name: Deploy to Production VPS
-    needs: [backend-quality, frontend-quality]
+    needs: [backend-quality, frontend-quality, admin-frontend-quality]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master' && github.event_name == 'push'
     steps:

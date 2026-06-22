@@ -7,7 +7,7 @@ scrape_configs:
     static_configs:
       - targets: ["prometheus:9090"]
 
-  - job_name: bookini-backend
+  - job_name: bookiwa7dek-backend
     metrics_path: /metrics
     static_configs:
       - targets: ["backend:8000"]

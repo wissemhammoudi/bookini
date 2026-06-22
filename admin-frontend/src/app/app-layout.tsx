@@ -25,30 +25,40 @@ export const AppLayout = () => {
         <Toolbar sx={{ borderBottom: '1px solid', borderColor: 'divider' }}>
           <Container
             maxWidth="lg"
-            sx={{ display: 'flex', justifyContent: 'space-between' }}
+            sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
           >
-            <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
-              <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                bookiwa7dek
+            <Stack direction="row" spacing={2} sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
+              <Typography variant="h6" sx={{ fontWeight: 700, mr: 2 }}>
+                bookiwa7dek Admin
               </Typography>
-              <Button component={RouterLink} to="/dashboard" color="inherit">
-                Dashboard
-              </Button>
-              <Button component={RouterLink} to="/rooms" color="inherit">
-                Rooms
-              </Button>
-              <Button component={RouterLink} to="/reservations/new" color="inherit">
-                Create
-              </Button>
-              <Button component={RouterLink} to="/reservations" color="inherit">
-                My reservations
-              </Button>
-              <Button component={RouterLink} to="/activities" color="inherit">
-                Activities
-              </Button>
-              <Button component={RouterLink} to="/profile" color="inherit">
-                Profile
-              </Button>
+              {isAuthenticated && (
+                <>
+                  <Button component={RouterLink} to="/admin/dashboard" color="inherit">
+                    Dashboard
+                  </Button>
+                  <Button component={RouterLink} to="/admin/floors" color="inherit">
+                    Floors
+                  </Button>
+                  <Button component={RouterLink} to="/admin/reservations" color="inherit">
+                    Reservations
+                  </Button>
+                  <Button component={RouterLink} to="/admin/occupancy" color="inherit">
+                    Occupancy
+                  </Button>
+                  <Button component={RouterLink} to="/admin/statistics" color="inherit">
+                    Stats
+                  </Button>
+                  <Button component={RouterLink} to="/super-admin/dashboard" color="inherit">
+                    Super Admin
+                  </Button>
+                  <Button component={RouterLink} to="/super-admin/admins" color="inherit">
+                    Manage Admins
+                  </Button>
+                  <Button component={RouterLink} to="/super-admin/audit-logs" color="inherit">
+                    Audit Logs
+                  </Button>
+                </>
+              )}
             </Stack>
 
             <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>

@@ -1,9 +1,9 @@
 apiVersion: 1
 
 providers:
-  - name: Bookini Dashboards
+  - name: bookiwa7dek Dashboards
     orgId: 1
-    folder: Bookini
+    folder: bookiwa7dek
     type: file
     disableDeletion: false
     updateIntervalSeconds: 30
