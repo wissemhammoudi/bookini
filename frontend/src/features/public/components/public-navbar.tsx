@@ -16,6 +16,7 @@ import {
 } from '@mui/material'
 import LightModeOutlinedIcon from '@mui/icons-material/LightModeOutlined'
 import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined'
+import MenuIcon from '@mui/icons-material/Menu'
 
 import { useColorMode } from '@/app/use-color-mode'
 import { useAuth } from '@/features/auth/use-auth'
@@ -61,6 +62,9 @@ export const PublicNavbar = ({ isLight }: PublicNavbarProps) => {
   const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null)
   const menuOpen = Boolean(menuAnchorEl)
 
+  const [mobileAnchorEl, setMobileAnchorEl] = useState<null | HTMLElement>(null)
+  const mobileOpen = Boolean(mobileAnchorEl)
+
   const userLabel = useMemo(() => getSubFromToken(token), [token])
   const avatarText = useMemo(() => getInitials(userLabel), [userLabel])
 
@@ -70,6 +74,14 @@ export const PublicNavbar = ({ isLight }: PublicNavbarProps) => {
 
   const handleCloseMenu = () => {
     setMenuAnchorEl(null)
+  }
+
+  const handleOpenMobileMenu = (event: React.MouseEvent<HTMLElement>) => {
+    setMobileAnchorEl(event.currentTarget)
+  }
+
+  const handleCloseMobileMenu = () => {
+    setMobileAnchorEl(null)
   }
 
   const handleSignOut = () => {
@@ -96,31 +108,79 @@ export const PublicNavbar = ({ isLight }: PublicNavbarProps) => {
           sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
         >
           <Stack direction="row" spacing={3} sx={{ alignItems: 'center' }}>
-            <Typography
-              component={RouterLink}
-              to="/"
-              sx={{
-                textDecoration: 'none',
-                color: 'inherit',
-                fontSize: '1.1rem',
-                fontWeight: 800,
-              }}
-            >
-              bookiwa7dek
-            </Typography>
+            <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+              <IconButton
+                color="inherit"
+                onClick={handleOpenMobileMenu}
+                sx={{ display: { xs: 'flex', md: 'none' }, mr: 0.5 }}
+                size="small"
+              >
+                <MenuIcon />
+              </IconButton>
+              <Typography
+                component={RouterLink}
+                to="/"
+                sx={{
+                  textDecoration: 'none',
+                  color: 'inherit',
+                  fontSize: '1.1rem',
+                  fontWeight: 800,
+                }}
+              >
+                bookiwa7dek
+              </Typography>
+            </Stack>
 
+            {/* Desktop Navigation Links */}
             <Stack direction="row" spacing={1} sx={{ display: { xs: 'none', md: 'flex' } }}>
               <Button component={RouterLink} to="/about" color="inherit">
                 About
               </Button>
               <Button component={RouterLink} to="/reservations-info" color="inherit">
-                Reservation
+                How It Works
+              </Button>
+              <Button component={RouterLink} to="/book" color="inherit">
+                Book Space
               </Button>
               <Button component={RouterLink} to="/contact" color="inherit">
                 Contact
               </Button>
             </Stack>
           </Stack>
+
+          {/* Mobile Menu */}
+          <Menu
+            anchorEl={mobileAnchorEl}
+            open={mobileOpen}
+            onClose={handleCloseMobileMenu}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+            transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+            slotProps={{
+              paper: {
+                sx: {
+                  mt: 1,
+                  minWidth: 200,
+                  border: '1px solid',
+                  borderColor: isLight
+                    ? 'rgba(0, 89, 179, 0.08)'
+                    : 'rgba(255, 255, 255, 0.08)',
+                },
+              },
+            }}
+          >
+            <MenuItem component={RouterLink} to="/about" onClick={handleCloseMobileMenu}>
+              About
+            </MenuItem>
+            <MenuItem component={RouterLink} to="/reservations-info" onClick={handleCloseMobileMenu}>
+              How It Works
+            </MenuItem>
+            <MenuItem component={RouterLink} to="/book" onClick={handleCloseMobileMenu}>
+              Book Space
+            </MenuItem>
+            <MenuItem component={RouterLink} to="/contact" onClick={handleCloseMobileMenu}>
+              Contact
+            </MenuItem>
+          </Menu>
 
           <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
             <IconButton onClick={toggleMode} color="inherit" size="small">
@@ -193,3 +253,4 @@ export const PublicNavbar = ({ isLight }: PublicNavbarProps) => {
     </AppBar>
   )
 }
+
