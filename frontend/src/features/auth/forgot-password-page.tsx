@@ -27,7 +27,7 @@ import KeyIcon from '@mui/icons-material/Key'
 import Visibility from '@mui/icons-material/Visibility'
 import VisibilityOff from '@mui/icons-material/VisibilityOff'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline'
+import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined'
 
 import { useColorMode } from '@/app/use-color-mode'
 import { requestPasswordReset, confirmPasswordReset } from '@/lib/api'
@@ -387,7 +387,7 @@ export const ForgotPasswordPage = () => {
             {step === 'success' && (
               <Stack spacing={3.5} sx={{ alignItems: 'center', py: 2 }}>
                 <Avatar sx={{ bgcolor: 'success.light', width: 64, height: 64 }}>
-                  <CheckCircleOutlineIcon sx={{ color: 'success.main', fontSize: 36 }} />
+                  <CheckCircleOutlinedIcon sx={{ color: 'success.main', fontSize: 36 }} />
                 </Avatar>
                 <Stack spacing={1} sx={{ textAlign: 'center' }}>
                   <Typography variant="h5" sx={{ fontWeight: 700 }}>
@@ -411,7 +411,7 @@ export const ForgotPasswordPage = () => {
             )}
 
             {step !== 'success' && (
-              <Stack direction="row" justifyContent="center" sx={{ mt: 1 }}>
+              <Stack direction="row" sx={{ justifyContent: 'center', mt: 1 }}>
                 <Link
                   component={RouterLink}
                   to="/login"
