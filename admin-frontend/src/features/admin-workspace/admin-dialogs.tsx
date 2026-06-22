@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import {
   Alert,
@@ -20,6 +21,8 @@ import {
 } from '@mui/material'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
+
+import { uploadImageRequest } from '@/lib/api'
 
 import type {
   AdminWorkspaceSettings,
@@ -376,7 +379,10 @@ export const PlaceDialog = ({
   title,
   value,
 }: PlaceDialogProps) => {
-  const { handleSubmit, register, reset, formState: { errors } } = useForm<PlaceFormValues>({
+  const [isUploadingCover, setIsUploadingCover] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+
+  const { handleSubmit, register, reset, setValue, formState: { errors } } = useForm<PlaceFormValues>({
     resolver: zodResolver(placeSchema),
     values: {
       organization_id: value?.organization_id ?? organizations[0]?.id ?? '',
@@ -393,6 +399,22 @@ export const PlaceDialog = ({
       status: value?.status ?? 'ACTIVE',
     },
   })
+
+  const handleCoverImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setIsUploadingCover(true)
+    setUploadError(null)
+    try {
+      const response = await uploadImageRequest(file)
+      setValue('cover_image', response.url)
+    } catch (err: any) {
+      setUploadError(err.response?.data?.message || err.message || 'Failed to upload image')
+    } finally {
+      setIsUploadingCover(false)
+      e.target.value = ''
+    }
+  }
 
   const handleClose = () => {
     reset()
@@ -417,7 +439,7 @@ export const PlaceDialog = ({
             features: formValues.features.split(',').map((item: string) => item.trim()).filter(Boolean),
           })
         })}>
-          {error ? <Alert severity="error" sx={{ borderRadius: 2 }}>{error}</Alert> : null}
+          {(error || uploadError) ? <Alert severity="error" sx={{ borderRadius: 2 }}>{error || uploadError}</Alert> : null}
           <Grid container spacing={2}>
             <Grid size={{ xs: 12, md: 6 }}>
               <TextField fullWidth select label="Organization" defaultValue={value?.organization_id ?? organizations[0]?.id ?? ''} {...register('organization_id')} error={Boolean(errors.organization_id)} helperText={errors.organization_id?.message}>
@@ -442,7 +464,31 @@ export const PlaceDialog = ({
           <TextField label="Address" {...register('address')} error={Boolean(errors.address)} helperText={errors.address?.message} />
           <TextField label="Availability" {...register('availability')} error={Boolean(errors.availability)} helperText={errors.availability?.message} />
           <TextField label="Description" multiline minRows={3} {...register('description')} error={Boolean(errors.description)} helperText={errors.description?.message} />
-          <TextField label="Cover Image URL" {...register('cover_image')} error={Boolean(errors.cover_image)} helperText={errors.cover_image?.message ?? 'Optional'} />
+          
+          <Stack direction="row" spacing={1.5} sx={{ alignItems: 'flex-start' }}>
+            <TextField
+              label="Cover Image URL"
+              {...register('cover_image')}
+              error={Boolean(errors.cover_image)}
+              helperText={errors.cover_image?.message ?? 'Optional URL or upload an image'}
+              fullWidth
+            />
+            <Button
+              variant="outlined"
+              component="label"
+              disabled={isUploadingCover}
+              sx={{ height: 40, mt: 0.5, whiteSpace: 'nowrap' }}
+            >
+              {isUploadingCover ? 'Uploading...' : 'Upload File'}
+              <input
+                type="file"
+                accept="image/*"
+                hidden
+                onChange={handleCoverImageUpload}
+              />
+            </Button>
+          </Stack>
+
           <TextField label="Gallery URLs" {...register('gallery')} error={Boolean(errors.gallery)} helperText={errors.gallery?.message ?? 'Comma separated URLs'} />
           <TextField label="Feature Tags" {...register('features')} error={Boolean(errors.features)} helperText={errors.features?.message ?? 'Comma separated values'} />
           <TextField select label="Status" defaultValue={value?.status ?? 'ACTIVE'} {...register('status')} error={Boolean(errors.status)} helperText={errors.status?.message}>
@@ -487,7 +533,10 @@ export const FloorDialog = ({
   title,
   value,
 }: FloorDialogProps) => {
-  const { handleSubmit, register, reset, formState: { errors } } = useForm<FloorFormValues>({
+  const [isUploadingBlueprint, setIsUploadingBlueprint] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+
+  const { handleSubmit, register, reset, setValue, formState: { errors } } = useForm<FloorFormValues>({
     resolver: zodResolver(floorSchema),
     values: {
       place_id: value?.place_id ?? places[0]?.id ?? '',
@@ -500,6 +549,22 @@ export const FloorDialog = ({
       status: value?.status ?? 'ACTIVE',
     },
   })
+
+  const handleBlueprintUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setIsUploadingBlueprint(true)
+    setUploadError(null)
+    try {
+      const response = await uploadImageRequest(file)
+      setValue('blueprint_image', response.url)
+    } catch (err: any) {
+      setUploadError(err.response?.data?.message || err.message || 'Failed to upload blueprint')
+    } finally {
+      setIsUploadingBlueprint(false)
+      e.target.value = ''
+    }
+  }
 
   const handleClose = () => {
     reset()
@@ -523,7 +588,7 @@ export const FloorDialog = ({
             reservation_areas: formValues.reservation_areas.split(',').map((item: string) => item.trim()).filter(Boolean),
           })
         })}>
-          {error ? <Alert severity="error" sx={{ borderRadius: 2 }}>{error}</Alert> : null}
+          {(error || uploadError) ? <Alert severity="error" sx={{ borderRadius: 2 }}>{error || uploadError}</Alert> : null}
           <TextField select label="Place" defaultValue={value?.place_id ?? places[0]?.id ?? ''} {...register('place_id')} error={Boolean(errors.place_id)} helperText={errors.place_id?.message}>
             {places.map((place) => (
               <MenuItem key={place.id} value={place.id}>{place.name}</MenuItem>
@@ -539,7 +604,31 @@ export const FloorDialog = ({
             </Grid>
           </Grid>
           <TextField label="Description" multiline minRows={3} {...register('description')} error={Boolean(errors.description)} helperText={errors.description?.message} />
-          <TextField label="Blueprint URL" {...register('blueprint_image')} error={Boolean(errors.blueprint_image)} helperText={errors.blueprint_image?.message ?? 'Optional'} />
+          
+          <Stack direction="row" spacing={1.5} sx={{ alignItems: 'flex-start' }}>
+            <TextField
+              label="Blueprint URL"
+              {...register('blueprint_image')}
+              error={Boolean(errors.blueprint_image)}
+              helperText={errors.blueprint_image?.message ?? 'Optional URL or upload blueprint'}
+              fullWidth
+            />
+            <Button
+              variant="outlined"
+              component="label"
+              disabled={isUploadingBlueprint}
+              sx={{ height: 40, mt: 0.5, whiteSpace: 'nowrap' }}
+            >
+              {isUploadingBlueprint ? 'Uploading...' : 'Upload File'}
+              <input
+                type="file"
+                accept="image/*"
+                hidden
+                onChange={handleBlueprintUpload}
+              />
+            </Button>
+          </Stack>
+
           <TextField label="Reservation Areas" {...register('reservation_areas')} error={Boolean(errors.reservation_areas)} helperText={errors.reservation_areas?.message ?? 'Comma separated values'} />
           <TextField select label="Status" defaultValue={value?.status ?? 'ACTIVE'} {...register('status')} error={Boolean(errors.status)} helperText={errors.status?.message}>
             <MenuItem value="ACTIVE">Active</MenuItem>

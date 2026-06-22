@@ -394,3 +394,13 @@ export const updateWorkspaceSettings = async (payload: AdminWorkspaceSettings) =
   const response = await apiClient.put<ApiResponse<AdminWorkspaceSettings>>('/admin/workspace/settings', payload)
   return unwrap(response.data)
 }
+
+export const uploadImageRequest = async (file: File) => {
+  const formData = new FormData()
+  formData.append('file', file)
+  const response = await apiClient.post<ApiResponse<{ url: string }>>(
+    '/auth/upload',
+    formData,
+  )
+  return unwrap(response.data)
+}

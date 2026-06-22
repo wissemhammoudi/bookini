@@ -242,6 +242,38 @@ async def upload_avatar(
     )
 
 
+@router.post("/upload")
+async def upload_file(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+) -> dict[str, object]:
+    if not file.content_type or not file.content_type.startswith("image/"):
+        from fastapi import HTTPException
+        raise HTTPException(status_code=400, detail="Uploaded file must be an image")
+
+    import os
+    import uuid
+    file_ext = os.path.splitext(file.filename)[1] if file.filename else ".jpg"
+    if not file_ext:
+        file_ext = ".jpg"
+    object_name = f"uploads/{uuid.uuid4()}{file_ext}"
+
+    file_data = await file.read()
+    from app.infrastructure.minio_client import MinioClient
+    minio_client = MinioClient()
+    minio_client.upload_file(
+        file_data=file_data,
+        object_name=object_name,
+        content_type=file.content_type
+    )
+
+    file_url = f"/api/v1/auth/uploads/{object_name}"
+    return success_response(
+        message="File uploaded successfully",
+        data={"url": file_url},
+    )
+
+
 @router.get("/uploads/{filename:path}")
 async def get_upload(filename: str):
     from app.infrastructure.minio_client import MinioClient
