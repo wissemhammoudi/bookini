@@ -8,6 +8,7 @@ import { NotFoundPage } from '@/pages/not-found-page'
 import { LandingPage } from '@/pages/landing-page'
 import { ReservationsPage } from '@/features/reservations/reservations-page'
 import { RegisterPage } from '@/features/auth/register-page'
+import { ForgotPasswordPage } from '@/features/auth/forgot-password-page'
 import { AvailableRoomsPage } from '@/features/floors/available-rooms-page'
 import { CreateReservationPage } from '@/features/reservations/create-reservation-page'
 import { ActivitiesPage } from '@/features/activities/activities-page'
@@ -20,6 +21,7 @@ export const AppRouter = () => {
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
         <Route element={<ProtectedRoute />}>
           <Route element={<AppLayout />}>

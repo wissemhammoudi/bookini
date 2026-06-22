@@ -175,3 +175,23 @@ export const updateAdminRole = async (payload: {
   >('/admin/admins/role', payload)
   return unwrap(response.data)
 }
+
+export const requestPasswordReset = async (payload: { email: string }) => {
+  const response = await apiClient.post<ApiResponse<{ reset_token?: string }>>(
+    '/auth/password-reset/request',
+    payload,
+  )
+  return unwrap(response.data)
+}
+
+export const confirmPasswordReset = async (payload: {
+  token: string
+  new_password: string
+}) => {
+  const response = await apiClient.post<ApiResponse<Record<string, never>>>(
+    '/auth/password-reset/confirm',
+    payload,
+  )
+  return unwrap(response.data)
+}
+
