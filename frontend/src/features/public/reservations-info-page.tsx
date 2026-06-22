@@ -14,6 +14,7 @@ import {
   AccordionSummary,
   AccordionDetails,
   Button,
+  Chip,
 } from '@mui/material'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import SearchIcon from '@mui/icons-material/Search'
@@ -24,7 +25,7 @@ import CelebrationIcon from '@mui/icons-material/Celebration'
 import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium'
 import CorporateFareIcon from '@mui/icons-material/CorporateFare'
 import PersonIcon from '@mui/icons-material/Person'
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline'
+import HelpIcon from '@mui/icons-material/Help'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 
 import { useColorMode } from '@/app/use-color-mode'
@@ -318,7 +319,7 @@ export const ReservationsInfoPage = () => {
       {/* FAQ Section */}
       <Container maxWidth="md" sx={{ mb: 12 }}>
         <Stack spacing={2} sx={{ mb: 6, textAlign: 'center' }}>
-          <HelpOutlineIcon sx={{ fontSize: '3rem', color: 'primary.main', mx: 'auto', opacity: 0.8 }} />
+          <HelpIcon sx={{ fontSize: '3rem', color: 'primary.main', mx: 'auto', opacity: 0.8 }} />
           <Typography variant="h3" sx={{ fontWeight: 900 }}>
             Frequently Asked Questions
           </Typography>

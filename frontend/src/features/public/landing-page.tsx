@@ -14,8 +14,8 @@ import {
   Grid,
   TextField,
   MenuItem,
-  Rating,
   Avatar,
+  InputAdornment,
 } from '@mui/material'
 import SearchIcon from '@mui/icons-material/Search'
 import LocationOnIcon from '@mui/icons-material/LocationOn'
