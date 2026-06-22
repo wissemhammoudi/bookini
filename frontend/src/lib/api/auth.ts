@@ -51,7 +51,7 @@ export const confirmPasswordReset = async (payload: {
 }
 
 export const getProfileRequest = async () => {
-  const response = await apiClient.get<ApiResponse<{ id: string; full_name: string; email: string; role: string }>>(
+  const response = await apiClient.get<ApiResponse<{ id: string; full_name: string; email: string; role: string; avatar_url: string | null }>>(
     '/auth/me',
   )
   return response.data.data
@@ -61,9 +61,24 @@ export const updateProfileRequest = async (payload: {
   full_name: string
   email: string
 }) => {
-  const response = await apiClient.put<ApiResponse<{ id: string; full_name: string; email: string; role: string }>>(
+  const response = await apiClient.put<ApiResponse<{ id: string; full_name: string; email: string; role: string; avatar_url: string | null }>>(
     '/auth/profile',
     payload,
+  )
+  return response.data.data
+}
+
+export const uploadAvatarRequest = async (file: File) => {
+  const formData = new FormData()
+  formData.append('file', file)
+  const response = await apiClient.post<ApiResponse<{ id: string; full_name: string; email: string; role: string; avatar_url: string | null }>>(
+    '/auth/me/avatar',
+    formData,
+    {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    },
   )
   return response.data.data
 }

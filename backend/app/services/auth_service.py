@@ -121,3 +121,13 @@ class AuthService:
         await self._user_repository._session.refresh(user)
         return user
 
+    async def update_avatar(
+        self,
+        user: User,
+        avatar_url: str | None,
+    ) -> User:
+        user.avatar_url = avatar_url
+        await self._user_repository._session.commit()
+        await self._user_repository._session.refresh(user)
+        return user
+

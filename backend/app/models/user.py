@@ -25,6 +25,7 @@ class User(TimestampMixin, Base):
         default=UserRole.USER,
     )
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    avatar_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
 
     reservations = relationship("Reservation", back_populates="user")
     audit_logs = relationship("AuditLog", back_populates="user")

@@ -56,36 +56,41 @@ const getInitials = (value: string) => {
   return `${parts[0][0] || ''}${parts[1][0] || ''}`.toUpperCase()
 }
 
+const getFullAvatarUrl = (url: string | null | undefined) => {
+  if (!url) return undefined
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+    return url
+  }
+  const apiBase = import.meta.env.VITE_API_BASE_URL ?? (import.meta.env.DEV ? 'http://localhost:8000/api/v1' : '/api/v1')
+  if (url.startsWith('/api/v1')) {
+    if (import.meta.env.DEV) {
+      return `http://localhost:8000${url}`
+    }
+    return url
+  }
+  return `${apiBase}${url.startsWith('/') ? '' : '/'}${url}`
+}
+
 export const PublicNavbar = ({ isLight }: PublicNavbarProps) => {
   const { mode, toggleMode } = useColorMode()
   const { isAuthenticated, signOut, token } = useAuth()
   const navigate = useNavigate()
 
-  const { data: profile } = useQuery({
+  const { data: profile, refetch } = useQuery({
     queryKey: ['profile'],
     queryFn: getProfileRequest,
     enabled: isAuthenticated,
   })
 
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (profile?.id) {
-      setAvatarUrl(localStorage.getItem(`avatar_${profile.id}`))
-    } else {
-      setAvatarUrl(null)
-    }
-  }, [profile?.id])
-
   useEffect(() => {
     const handleUpdate = () => {
-      if (profile?.id) {
-        setAvatarUrl(localStorage.getItem(`avatar_${profile.id}`))
-      }
+      refetch()
     }
     window.addEventListener('avatar_updated', handleUpdate)
     return () => window.removeEventListener('avatar_updated', handleUpdate)
-  }, [profile?.id])
+  }, [refetch])
+
+  const avatarUrl = useMemo(() => getFullAvatarUrl(profile?.avatar_url), [profile?.avatar_url])
 
   const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null)
   const menuOpen = Boolean(menuAnchorEl)

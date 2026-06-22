@@ -1,5 +1,4 @@
-import { useEffect, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation } from '@tanstack/react-query'
 import {
   Box,
   CircularProgress,
@@ -8,8 +7,23 @@ import {
   Typography,
 } from '@mui/material'
 
-import { getProfileRequest } from '@/lib/api'
+import { getProfileRequest, uploadAvatarRequest } from '@/lib/api'
 import { ProfileAvatarCard, PersonalDetailsForm, ChangePasswordForm } from './components'
+
+const getFullAvatarUrl = (url: string | null | undefined) => {
+  if (!url) return undefined
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+    return url
+  }
+  const apiBase = import.meta.env.VITE_API_BASE_URL ?? (import.meta.env.DEV ? 'http://localhost:8000/api/v1' : '/api/v1')
+  if (url.startsWith('/api/v1')) {
+    if (import.meta.env.DEV) {
+      return `http://localhost:8000${url}`
+    }
+    return url
+  }
+  return `${apiBase}${url.startsWith('/') ? '' : '/'}${url}`
+}
 
 export const ProfilePage = () => {
   const { data: profile, refetch, isLoading } = useQuery({
@@ -17,28 +31,18 @@ export const ProfilePage = () => {
     queryFn: getProfileRequest,
   })
 
-  const [avatar, setAvatar] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (profile?.id) {
-      const stored = localStorage.getItem(`avatar_${profile.id}`)
-      if (stored) {
-        setAvatar(stored)
-      }
-    }
-  }, [profile?.id])
+  const { mutate: uploadAvatar } = useMutation({
+    mutationFn: uploadAvatarRequest,
+    onSuccess: () => {
+      refetch()
+      window.dispatchEvent(new Event('avatar_updated'))
+    },
+  })
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file && profile?.id) {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        const base64 = reader.result as string
-        localStorage.setItem(`avatar_${profile.id}`, base64)
-        setAvatar(base64)
-        window.dispatchEvent(new Event('avatar_updated'))
-      }
-      reader.readAsDataURL(file)
+    if (file) {
+      uploadAvatar(file)
     }
   }
 
@@ -61,7 +65,7 @@ export const ProfilePage = () => {
         <Grid size={{ xs: 12, md: 4 }}>
           <ProfileAvatarCard
             profile={profile}
-            avatar={avatar}
+            avatar={getFullAvatarUrl(profile?.avatar_url) || null}
             onAvatarChange={handleAvatarChange}
           />
         </Grid>

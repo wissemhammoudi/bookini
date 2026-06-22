@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, File, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.responses import success_response
@@ -177,6 +177,7 @@ async def get_me(
             "full_name": current_user.full_name,
             "email": current_user.email,
             "role": current_user.role,
+            "avatar_url": current_user.avatar_url,
         },
     )
 
@@ -200,6 +201,75 @@ async def update_profile(
             "full_name": updated_user.full_name,
             "email": updated_user.email,
             "role": updated_user.role,
+            "avatar_url": updated_user.avatar_url,
         },
     )
+
+
+@router.post("/me/avatar")
+async def upload_avatar(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+) -> dict[str, object]:
+    if not file.content_type or not file.content_type.startswith("image/"):
+        from fastapi import HTTPException
+        raise HTTPException(status_code=400, detail="Uploaded file must be an image")
+
+    import os
+    file_ext = os.path.splitext(file.filename)[1] if file.filename else ".jpg"
+    if not file_ext:
+        file_ext = ".jpg"
+    object_name = f"avatars/{current_user.id}{file_ext}"
+
+    file_data = await file.read()
+    from app.infrastructure.minio_client import MinioClient
+    minio_client = MinioClient()
+    minio_client.upload_file(
+        file_data=file_data,
+        object_name=object_name,
+        content_type=file.content_type
+    )
+
+    avatar_url = f"/api/v1/auth/uploads/{object_name}"
+    service = _service_from_session(session)
+    updated_user = await service.update_avatar(user=current_user, avatar_url=avatar_url)
+
+    return success_response(
+        message="Avatar uploaded successfully",
+        data={
+            "id": str(updated_user.id),
+            "full_name": updated_user.full_name,
+            "email": updated_user.email,
+            "role": updated_user.role,
+            "avatar_url": updated_user.avatar_url,
+        },
+    )
+
+
+@router.get("/uploads/{filename:path}")
+async def get_upload(filename: str):
+    from app.infrastructure.minio_client import MinioClient
+    from fastapi.responses import StreamingResponse
+    import io
+
+    minio_client = MinioClient()
+    try:
+        file_bytes = minio_client.get_file(filename)
+        content_type = "image/jpeg"
+        if filename.endswith(".png"):
+            content_type = "image/png"
+        elif filename.endswith(".gif"):
+            content_type = "image/gif"
+        elif filename.endswith(".webp"):
+            content_type = "image/webp"
+        elif filename.endswith(".svg"):
+            content_type = "image/svg+xml"
+        elif filename.endswith(".mp4"):
+            content_type = "video/mp4"
+
+        return StreamingResponse(io.BytesIO(file_bytes), media_type=content_type)
+    except Exception:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="File not found")
 

@@ -41,6 +41,23 @@ services:
       timeout: 5s
       retries: 5
 
+  minio:
+    image: minio/minio:RELEASE.2024-08-03T04-33-23Z
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - minio_data:/data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   backend:
     build:
       context: ./backend
@@ -63,6 +80,11 @@ services:
       SEED_ADMIN_PASSWORD: Admin123456!
       SEED_SUPER_ADMIN_EMAIL: superadmin@bookiwa7dek.com
       SEED_SUPER_ADMIN_PASSWORD: SuperAdmin123456!
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+      MINIO_BUCKET: bookini
+      MINIO_SECURE: "false"
     command: ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
     labels:
       - traefik.enable=true
@@ -76,11 +98,14 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      minio:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health', timeout=5)"]
       interval: 20s
       timeout: 5s
       retries: 5
+
 
   frontend:
     build:
@@ -202,3 +227,4 @@ volumes:
   prometheus_data:
   grafana_data:
   loki_data:
+  minio_data:

@@ -24,6 +24,16 @@ REQUEST_COUNT = Counter(
 async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
     logger = get_logger(__name__)
     settings = get_settings()
+    
+    # Initialize MinIO Bucket
+    try:
+        from app.infrastructure.minio_client import MinioClient
+        minio_client = MinioClient()
+        minio_client.ensure_bucket_exists()
+        logger.info("MinIO bucket initialization complete")
+    except Exception as e:
+        logger.error(f"Failed to initialize MinIO bucket: {e}")
+
     await seed_default_users(get_session_factory(), settings)
     logger.info("Application startup complete")
     yield

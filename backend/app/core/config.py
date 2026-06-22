@@ -52,6 +52,12 @@ class Settings(BaseSettings):
     seed_super_admin_email: str = Field(default="superadmin@bookiwa7dek.com")
     seed_super_admin_password: str = Field(default="SuperAdmin123456!")
 
+    minio_endpoint: str = Field(default="minio:9000")
+    minio_access_key: str = Field(default="minioadmin")
+    minio_secret_key: str = Field(default="minioadmin")
+    minio_bucket: str = Field(default="bookini")
+    minio_secure: bool = Field(default=False)
+
 
 @lru_cache
 def get_settings() -> Settings:
