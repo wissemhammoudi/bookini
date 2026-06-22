@@ -15,7 +15,7 @@ export const LoginPage = () => {
   const [error, setError] = useState<string | undefined>()
   const navigate = useNavigate()
   const location = useLocation()
-  const { signIn } = useAuth()
+  const { signIn, signOut } = useAuth()
   const { mode, toggleMode } = useColorMode()
   const loginMutation = useMutation({ mutationFn: loginRequest })
 
@@ -114,7 +114,7 @@ export const LoginPage = () => {
               </Typography>
             </Stack>
 
-            <Stack direction="row" spacing={1} justifyContent="center" flexWrap="wrap">
+            <Stack direction="row" spacing={1} sx={{ justifyContent: 'center', flexWrap: 'wrap' }}>
               <Chip label="Super Admin" />
               <Chip label="Organization Admin" />
               <Chip label="Dark / Light Theme" />

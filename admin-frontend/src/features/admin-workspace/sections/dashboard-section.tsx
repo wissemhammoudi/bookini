@@ -42,13 +42,13 @@ export const DashboardSection = ({
             key={item.id}
             direction={{ xs: 'column', md: 'row' }}
             spacing={1.5}
-            justifyContent="space-between"
+            sx={{ justifyContent: 'space-between' }}
           >
             <Box>
-              <Typography fontWeight={700}>{item.title}</Typography>
+              <Typography sx={{ fontWeight: 700 }}>{item.title}</Typography>
               <Typography color="text.secondary">{item.description}</Typography>
             </Box>
-            <Stack direction="row" spacing={1} alignItems="center">
+            <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
               <StatusChip value={item.type.toUpperCase()} />
               <Typography variant="body2" color="text.secondary">
                 {new Date(item.timestamp).toLocaleString()}

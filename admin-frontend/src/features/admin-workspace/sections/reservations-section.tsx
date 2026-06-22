@@ -63,7 +63,7 @@ export const ReservationsSection = ({
                 <TableCell>{reservation.time}</TableCell>
                 <TableCell><StatusChip value={reservation.status} /></TableCell>
                 <TableCell align="right">
-                  <Stack direction="row" spacing={1} justifyContent="flex-end">
+                  <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
                     <Button size="small" onClick={() => onApprove(reservation)}>Approve</Button>
                     <Button size="small" color="warning" onClick={() => onReject(reservation)}>Reject</Button>
                     <Button size="small" color="error" onClick={() => onCancel(reservation)}>Cancel</Button>

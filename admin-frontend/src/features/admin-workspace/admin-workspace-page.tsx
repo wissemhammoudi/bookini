@@ -130,10 +130,10 @@ export const AdminWorkspacePage = () => {
   const closeDialog = () => setDialogState(null)
 
   const actionMutation = useMutation({
-    mutationFn: async (callback: () => Promise<void>) => callback(),
+    mutationFn: async (callback: () => Promise<unknown>) => callback(),
   })
 
-  const handleMutation = async (callback: () => Promise<void>, successMessage: string) => {
+  const handleMutation = async (callback: () => Promise<unknown>, successMessage: string) => {
     try {
       await actionMutation.mutateAsync(callback)
       await invalidateWorkspace()
@@ -227,7 +227,7 @@ export const AdminWorkspacePage = () => {
   if (isLoading) {
     return (
       <Box sx={{ minHeight: '100vh', display: 'grid', placeItems: 'center' }}>
-        <Stack spacing={2} alignItems="center">
+        <Stack spacing={2} sx={{ alignItems: 'center' }}>
           <CircularProgress />
           <Typography color="text.secondary">Loading admin workspace...</Typography>
         </Stack>

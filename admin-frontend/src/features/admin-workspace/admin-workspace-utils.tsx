@@ -20,8 +20,10 @@ export const SectionHeader = ({
   <Stack
     direction={{ xs: 'column', md: 'row' }}
     spacing={2}
-    justifyContent="space-between"
-    alignItems={{ xs: 'flex-start', md: 'center' }}
+    sx={{
+      justifyContent: 'space-between',
+      alignItems: { xs: 'flex-start', md: 'center' },
+    }}
   >
     <Box>
       <Typography variant="h4" sx={{ fontSize: { xs: '1.7rem', md: '2rem' } }}>
@@ -73,7 +75,7 @@ export const ChartCard = ({
       <Typography variant="h6" sx={{ mb: 2 }}>
         {title}
       </Typography>
-      <Stack direction="row" spacing={1.5} alignItems="flex-end" sx={{ minHeight: 180 }}>
+      <Stack direction="row" spacing={1.5} sx={{ alignItems: 'flex-end', minHeight: 180 }}>
         {points.map((point) => (
           <Stack key={point.label} spacing={1} sx={{ flex: 1, alignItems: 'center', minWidth: 0 }}>
             <Typography variant="caption" color="text.secondary">

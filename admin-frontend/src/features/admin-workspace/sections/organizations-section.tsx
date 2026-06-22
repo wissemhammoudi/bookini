@@ -42,8 +42,8 @@ export const OrganizationsSection = ({
           <Grid key={organization.id} size={{ xs: 12, lg: 6 }}>
             <Paper sx={{ p: 3, height: '100%' }}>
               <Stack spacing={2}>
-                <Stack direction="row" spacing={2} alignItems="center">
-                  <Avatar src={organization.logo} sx={{ width: 56, height: 56 }} />
+                <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
+                  <Avatar src={organization.logo || undefined} sx={{ width: 56, height: 56 }} />
                   <Box sx={{ flex: 1 }}>
                     <Typography variant="h6">{organization.name}</Typography>
                     <Typography color="text.secondary">{organization.contact_email}</Typography>
@@ -53,12 +53,12 @@ export const OrganizationsSection = ({
                 <Typography color="text.secondary">{organization.description}</Typography>
                 <Typography variant="body2">{organization.address}</Typography>
                 <Typography variant="body2">{organization.contact_phone}</Typography>
-                <Stack direction="row" spacing={1} flexWrap="wrap">
+                <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
                   {organization.social_links.map((link) => (
                     <Chip key={link} label={new URL(link).hostname} />
                   ))}
                 </Stack>
-                <Stack direction="row" spacing={1} justifyContent="flex-end">
+                <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
                   <Button startIcon={<EditOutlinedIcon />} onClick={() => onEditOrganization(organization)}>Edit</Button>
                   <Button startIcon={organization.status === 'ACTIVE' ? <BlockOutlinedIcon /> : <CheckCircleOutlineOutlinedIcon />} onClick={() => onToggleOrganizationStatus(organization)}>
                     {organization.status === 'ACTIVE' ? 'Suspend' : 'Activate'}

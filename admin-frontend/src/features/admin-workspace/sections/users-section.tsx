@@ -86,7 +86,7 @@ export const UsersSection = ({
           <TableBody>
             {users.map((user) => (
               <TableRow key={user.id} hover>
-                <TableCell><Avatar src={user.profile_image} alt={user.full_name} /></TableCell>
+                <TableCell><Avatar src={user.profile_image || undefined} alt={user.full_name} /></TableCell>
                 <TableCell>{user.full_name}</TableCell>
                 <TableCell>{user.email}</TableCell>
                 <TableCell>{user.phone}</TableCell>
@@ -94,7 +94,7 @@ export const UsersSection = ({
                 <TableCell><StatusChip value={user.status} /></TableCell>
                 <TableCell>{new Date(user.created_date).toLocaleDateString()}</TableCell>
                 <TableCell align="right">
-                  <Stack direction="row" spacing={1} justifyContent="flex-end">
+                  <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
                     <IconButton onClick={() => onEditUser(user)}><EditOutlinedIcon /></IconButton>
                     <IconButton onClick={() => onToggleUserStatus(user)}>
                       {user.status === 'ACTIVE' ? <BlockOutlinedIcon /> : <CheckCircleOutlineOutlinedIcon />}

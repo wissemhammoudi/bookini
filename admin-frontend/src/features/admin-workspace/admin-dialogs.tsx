@@ -42,7 +42,7 @@ const organizationSchema = z.object({
   website: z.url('Valid website URL required').or(z.literal('')),
   logo: z.url('Valid logo URL required').or(z.literal('')),
   cover_image: z.url('Valid cover image URL required').or(z.literal('')),
-  social_links: z.string().default(''),
+  social_links: z.string(),
   status: z.enum(['ACTIVE', 'SUSPENDED']),
 })
 
@@ -51,24 +51,24 @@ const placeSchema = z.object({
   name: z.string().min(2, 'Name is required'),
   description: z.string().min(10, 'Description is required'),
   category: z.string().min(2, 'Category is required'),
-  capacity: z.coerce.number().int().min(1, 'Capacity must be at least 1'),
+  capacity: z.number().int().min(1, 'Capacity must be at least 1'),
   address: z.string().min(5, 'Address is required'),
-  pricing: z.coerce.number().min(0, 'Pricing must be positive'),
+  pricing: z.number().min(0, 'Pricing must be positive'),
   availability: z.string().min(2, 'Availability is required'),
   cover_image: z.url('Valid cover image URL required').or(z.literal('')),
-  gallery: z.string().default(''),
-  features: z.string().default(''),
+  gallery: z.string(),
+  features: z.string(),
   status: z.enum(['ACTIVE', 'SUSPENDED']),
 })
 
 const floorSchema = z.object({
   place_id: z.string().min(1, 'Place is required'),
   floor_name: z.string().min(2, 'Floor name is required'),
-  floor_number: z.coerce.number().int().min(0, 'Floor number must be 0 or more'),
-  capacity: z.coerce.number().int().min(1, 'Capacity must be at least 1'),
+  floor_number: z.number().int().min(0, 'Floor number must be 0 or more'),
+  capacity: z.number().int().min(1, 'Capacity must be at least 1'),
   description: z.string().min(5, 'Description is required'),
   blueprint_image: z.url('Valid blueprint URL required').or(z.literal('')),
-  reservation_areas: z.string().default(''),
+  reservation_areas: z.string(),
   status: z.enum(['ACTIVE', 'SUSPENDED']),
 })
 
@@ -81,8 +81,8 @@ const settingsSchema = z.object({
   support_email: z.email('Valid support email is required'),
   timezone: z.string().min(2, 'Timezone is required'),
   default_language: z.string().min(2, 'Language is required'),
-  session_timeout_minutes: z.coerce.number().int().min(5),
-  password_rotation_days: z.coerce.number().int().min(30),
+  session_timeout_minutes: z.number().int().min(5),
+  password_rotation_days: z.number().int().min(30),
   email_notifications: z.boolean(),
   sms_notifications: z.boolean(),
   weekly_report: z.boolean(),
@@ -244,7 +244,7 @@ export const OrganizationDialog = ({
             cover_image: formValues.cover_image || undefined,
             social_links: formValues.social_links
               .split(',')
-              .map((item) => item.trim())
+              .map((item: string) => item.trim())
               .filter(Boolean),
           })
         })}>
@@ -345,8 +345,8 @@ export const PlaceDialog = ({
           await onSubmit({
             ...formValues,
             cover_image: formValues.cover_image || undefined,
-            gallery: formValues.gallery.split(',').map((item) => item.trim()).filter(Boolean),
-            features: formValues.features.split(',').map((item) => item.trim()).filter(Boolean),
+            gallery: formValues.gallery.split(',').map((item: string) => item.trim()).filter(Boolean),
+            features: formValues.features.split(',').map((item: string) => item.trim()).filter(Boolean),
           })
         })}>
           {error ? <Alert severity="error">{error}</Alert> : null}
@@ -365,10 +365,10 @@ export const PlaceDialog = ({
               <TextField fullWidth label="Name" {...register('name')} error={Boolean(errors.name)} helperText={errors.name?.message} />
             </Grid>
             <Grid size={{ xs: 12, md: 3 }}>
-              <TextField fullWidth type="number" label="Capacity" {...register('capacity')} error={Boolean(errors.capacity)} helperText={errors.capacity?.message} />
+              <TextField fullWidth type="number" label="Capacity" {...register('capacity', { valueAsNumber: true })} error={Boolean(errors.capacity)} helperText={errors.capacity?.message} />
             </Grid>
             <Grid size={{ xs: 12, md: 3 }}>
-              <TextField fullWidth type="number" label="Pricing" {...register('pricing')} error={Boolean(errors.pricing)} helperText={errors.pricing?.message} />
+              <TextField fullWidth type="number" label="Pricing" {...register('pricing', { valueAsNumber: true })} error={Boolean(errors.pricing)} helperText={errors.pricing?.message} />
             </Grid>
           </Grid>
           <TextField label="Address" {...register('address')} error={Boolean(errors.address)} helperText={errors.address?.message} />
@@ -446,7 +446,7 @@ export const FloorDialog = ({
           await onSubmit({
             ...formValues,
             blueprint_image: formValues.blueprint_image || undefined,
-            reservation_areas: formValues.reservation_areas.split(',').map((item) => item.trim()).filter(Boolean),
+            reservation_areas: formValues.reservation_areas.split(',').map((item: string) => item.trim()).filter(Boolean),
           })
         })}>
           {error ? <Alert severity="error">{error}</Alert> : null}
@@ -458,10 +458,10 @@ export const FloorDialog = ({
           <TextField label="Floor Name" {...register('floor_name')} error={Boolean(errors.floor_name)} helperText={errors.floor_name?.message} />
           <Grid container spacing={2}>
             <Grid size={{ xs: 12, md: 6 }}>
-              <TextField fullWidth type="number" label="Floor Number" {...register('floor_number')} error={Boolean(errors.floor_number)} helperText={errors.floor_number?.message} />
+              <TextField fullWidth type="number" label="Floor Number" {...register('floor_number', { valueAsNumber: true })} error={Boolean(errors.floor_number)} helperText={errors.floor_number?.message} />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
-              <TextField fullWidth type="number" label="Capacity" {...register('capacity')} error={Boolean(errors.capacity)} helperText={errors.capacity?.message} />
+              <TextField fullWidth type="number" label="Capacity" {...register('capacity', { valueAsNumber: true })} error={Boolean(errors.capacity)} helperText={errors.capacity?.message} />
             </Grid>
           </Grid>
           <TextField label="Description" multiline minRows={3} {...register('description')} error={Boolean(errors.description)} helperText={errors.description?.message} />
@@ -580,10 +580,10 @@ export const SettingsDialog = ({
               <TextField fullWidth label="Default Language" {...register('default_language')} error={Boolean(errors.default_language)} helperText={errors.default_language?.message} />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
-              <TextField fullWidth type="number" label="Session Timeout (minutes)" {...register('session_timeout_minutes')} error={Boolean(errors.session_timeout_minutes)} helperText={errors.session_timeout_minutes?.message} />
+              <TextField fullWidth type="number" label="Session Timeout (minutes)" {...register('session_timeout_minutes', { valueAsNumber: true })} error={Boolean(errors.session_timeout_minutes)} helperText={errors.session_timeout_minutes?.message} />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
-              <TextField fullWidth type="number" label="Password Rotation (days)" {...register('password_rotation_days')} error={Boolean(errors.password_rotation_days)} helperText={errors.password_rotation_days?.message} />
+              <TextField fullWidth type="number" label="Password Rotation (days)" {...register('password_rotation_days', { valueAsNumber: true })} error={Boolean(errors.password_rotation_days)} helperText={errors.password_rotation_days?.message} />
             </Grid>
           </Grid>
           <FormControlLabel control={<Switch {...register('email_notifications')} defaultChecked={value.notifications.email_notifications} />} label="Email notifications" />

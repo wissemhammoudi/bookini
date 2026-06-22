@@ -42,9 +42,9 @@ export const PlacesSection = ({
             <Paper sx={{ p: 3, height: '100%' }}>
               <Stack spacing={2}>
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                  <Avatar src={place.cover_image} variant="rounded" sx={{ width: 96, height: 96, borderRadius: 4 }} />
+                  <Avatar src={place.cover_image || undefined} variant="rounded" sx={{ width: 96, height: 96, borderRadius: 4 }} />
                   <Box sx={{ flex: 1 }}>
-                    <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={1}>
+                    <Stack direction="row" spacing={1} sx={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
                       <Box>
                         <Typography variant="h6">{place.name}</Typography>
                         <Typography color="text.secondary">{place.category}</Typography>
@@ -60,10 +60,10 @@ export const PlacesSection = ({
                   <Grid size={{ xs: 12 }}><Typography variant="body2" color="text.secondary">Availability</Typography><Typography>{place.availability}</Typography></Grid>
                   <Grid size={{ xs: 12 }}><Typography variant="body2" color="text.secondary">Address</Typography><Typography>{place.address}</Typography></Grid>
                 </Grid>
-                <Stack direction="row" spacing={1} flexWrap="wrap">
+                <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
                   {place.features.map((feature) => <Chip key={feature} label={feature} />)}
                 </Stack>
-                <Stack direction="row" spacing={1} justifyContent="flex-end">
+                <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
                   <Button startIcon={<VisibilityOutlinedIcon />} onClick={onViewReservations}>View Reservations</Button>
                   <Button startIcon={<EditOutlinedIcon />} onClick={() => onEditPlace(place)}>Edit</Button>
                   <Button color="error" startIcon={<DeleteOutlineOutlinedIcon />} onClick={() => onDeletePlace(place)}>Delete</Button>

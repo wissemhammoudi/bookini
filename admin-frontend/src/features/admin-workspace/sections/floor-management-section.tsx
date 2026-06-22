@@ -60,12 +60,12 @@ export function FloorsSection({
                   <Stack spacing={2}>
                     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
                       <Avatar
-                        src={floor.blueprint_image}
+                        src={floor.blueprint_image || undefined}
                         variant="rounded"
                         sx={{ width: 96, height: 96, borderRadius: 4 }}
                       />
                       <Box sx={{ flex: 1 }}>
-                        <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+                        <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
                           <Box>
                             <Typography variant="h6">{floor.floor_name}</Typography>
                             <Typography color="text.secondary">
@@ -78,12 +78,12 @@ export function FloorsSection({
                       </Box>
                     </Stack>
                     <Typography variant="body2">Capacity: {floor.capacity}</Typography>
-                    <Stack direction="row" spacing={1} flexWrap="wrap">
+                    <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
                       {floor.reservation_areas.map((area) => (
                         <Chip key={area} label={area} />
                       ))}
                     </Stack>
-                    <Stack direction="row" spacing={1} justifyContent="flex-end">
+                    <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
                       <Button startIcon={<EditOutlinedIcon />} onClick={() => onEditFloor(floor)}>
                         Edit
                       </Button>
