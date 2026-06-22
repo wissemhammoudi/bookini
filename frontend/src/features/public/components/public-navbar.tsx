@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link as RouterLink, useNavigate } from 'react-router-dom'
 import {
   AppBar,
@@ -17,9 +17,11 @@ import {
 import LightModeOutlinedIcon from '@mui/icons-material/LightModeOutlined'
 import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined'
 import MenuIcon from '@mui/icons-material/Menu'
+import { useQuery } from '@tanstack/react-query'
 
 import { useColorMode } from '@/app/use-color-mode'
 import { useAuth } from '@/features/auth'
+import { getProfileRequest } from '@/lib/api'
 
 interface PublicNavbarProps {
   isLight: boolean
@@ -58,6 +60,32 @@ export const PublicNavbar = ({ isLight }: PublicNavbarProps) => {
   const { mode, toggleMode } = useColorMode()
   const { isAuthenticated, signOut, token } = useAuth()
   const navigate = useNavigate()
+
+  const { data: profile } = useQuery({
+    queryKey: ['profile'],
+    queryFn: getProfileRequest,
+    enabled: isAuthenticated,
+  })
+
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (profile?.id) {
+      setAvatarUrl(localStorage.getItem(`avatar_${profile.id}`))
+    } else {
+      setAvatarUrl(null)
+    }
+  }, [profile?.id])
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      if (profile?.id) {
+        setAvatarUrl(localStorage.getItem(`avatar_${profile.id}`))
+      }
+    }
+    window.addEventListener('avatar_updated', handleUpdate)
+    return () => window.removeEventListener('avatar_updated', handleUpdate)
+  }, [profile?.id])
 
   const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null)
   const menuOpen = Boolean(menuAnchorEl)
@@ -195,6 +223,7 @@ export const PublicNavbar = ({ isLight }: PublicNavbarProps) => {
               <>
                 <IconButton onClick={handleOpenMenu} sx={{ p: 0.25 }}>
                   <Avatar
+                    src={avatarUrl || undefined}
                     sx={{
                       width: 36,
                       height: 36,

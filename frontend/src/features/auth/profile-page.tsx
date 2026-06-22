@@ -36,6 +36,7 @@ export const ProfilePage = () => {
         const base64 = reader.result as string
         localStorage.setItem(`avatar_${profile.id}`, base64)
         setAvatar(base64)
+        window.dispatchEvent(new Event('avatar_updated'))
       }
       reader.readAsDataURL(file)
     }
