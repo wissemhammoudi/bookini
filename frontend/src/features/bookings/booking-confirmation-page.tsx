@@ -7,6 +7,7 @@ import {
   Button,
   Container,
   Divider,
+  Grid,
   Paper,
   Stack,
   TextField,
@@ -14,6 +15,7 @@ import {
   Chip,
   alpha,
 } from '@mui/material'
+import VerifiedOutlinedIcon from '@mui/icons-material/VerifiedOutlined'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import EventIcon from '@mui/icons-material/Event'
 import AccessTimeIcon from '@mui/icons-material/AccessTime'
@@ -99,7 +101,7 @@ END:VCALENDAR`
       <PublicNavbar isLight={isLight} />
 
       {/* Main Content */}
-      <Container maxWidth="md" sx={{ py: { xs: 6, md: 10 } }}>
+      <Container maxWidth="lg" sx={{ py: { xs: 6, md: 10 } }}>
         <Stack spacing={4}>
           {bookingQuery.isLoading ? (
             <Alert severity="info" sx={{ borderRadius: 3 }}>
@@ -113,30 +115,65 @@ END:VCALENDAR`
             </Alert>
           ) : null}
 
-          {/* Success Header */}
-          <Box sx={{ textAlign: 'center' }}>
-            <Box
-              sx={{
-                width: 64,
-                height: 64,
-                borderRadius: '50%',
-                display: 'grid',
-                placeItems: 'center',
-                bgcolor: 'success.main',
-                mx: 'auto',
-                mb: 2,
-                boxShadow: '0 4px 12px rgba(76, 175, 80, 0.3)',
-              }}
-            >
-              <CheckCircleIcon sx={{ fontSize: '2rem', color: '#fff' }} />
-            </Box>
-            <Typography variant="h3" sx={{ fontWeight: 900, mb: 1 }}>
-              Booking Confirmed!
-            </Typography>
-            <Typography color="text.secondary">
-              Your reservation has been successfully booked. Check your email for details.
-            </Typography>
-          </Box>
+          <Paper
+            elevation={0}
+            sx={{
+              p: { xs: 3, md: 4 },
+              borderRadius: 4,
+              border: '1px solid',
+              borderColor: isLight ? 'rgba(0, 89, 179, 0.1)' : 'rgba(255, 255, 255, 0.08)',
+              background: isLight
+                ? 'linear-gradient(135deg, #ffffff 0%, #f6fbff 100%)'
+                : 'linear-gradient(135deg, rgba(16,29,50,0.94) 0%, rgba(10,14,26,0.92) 100%)',
+            }}
+          >
+            <Stack spacing={2.5}>
+              <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ justifyContent: 'space-between', alignItems: { xs: 'flex-start', md: 'center' } }}>
+                <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
+                  <Box
+                    sx={{
+                      width: 64,
+                      height: 64,
+                      borderRadius: '50%',
+                      display: 'grid',
+                      placeItems: 'center',
+                      bgcolor: 'success.main',
+                      boxShadow: '0 8px 18px rgba(76, 175, 80, 0.28)',
+                    }}
+                  >
+                    <VerifiedOutlinedIcon sx={{ fontSize: '2rem', color: '#fff' }} />
+                  </Box>
+                  <Box>
+                    <Typography variant="overline" color="text.secondary" sx={{ lineHeight: 1 }}>
+                      Booking status
+                    </Typography>
+                    <Typography variant="h3" sx={{ fontWeight: 900, mb: 0.5, letterSpacing: '-0.03em' }}>
+                      Booking Confirmed
+                    </Typography>
+                    <Typography color="text.secondary">
+                      Your reservation is locked in. Use the reference below to revisit this booking anytime.
+                    </Typography>
+                  </Box>
+                </Stack>
+
+                <Chip
+                  icon={<CheckCircleIcon />}
+                  label="Confirmed"
+                  color="success"
+                  sx={{ fontWeight: 800, px: 1 }}
+                />
+              </Stack>
+
+              {booking ? (
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ flexWrap: 'wrap', gap: 1 }}>
+                  <Chip label={booking.booking_reference} variant="outlined" sx={{ fontWeight: 800 }} />
+                  <Chip label={booking.room_name} variant="outlined" />
+                  <Chip label={new Date(booking.booking_date).toLocaleDateString()} variant="outlined" />
+                  <Chip label={`${booking.start_time} - ${booking.end_time}`} variant="outlined" />
+                </Stack>
+              ) : null}
+            </Stack>
+          </Paper>
 
           {/* Search Section */}
           <Paper
@@ -151,8 +188,8 @@ END:VCALENDAR`
           >
             <form onSubmit={handleSearch}>
               <Stack spacing={2}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-                  View Another Booking
+                <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
+                  Find Another Booking
                 </Typography>
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ alignItems: 'flex-end' }}>
                   <TextField
@@ -172,196 +209,201 @@ END:VCALENDAR`
           </Paper>
 
           {/* Booking Details Card */}
-          {booking ? <Paper
-            elevation={0}
-            sx={{
-              border: '2px solid',
-              borderColor: 'success.main',
-              borderRadius: 3,
-              background: isLight ? '#ffffff' : alpha('#0a0e1a', 0.5),
-              p: 4,
-            }}
-          >
-            <Stack spacing={3}>
-              {/* Reference & Status */}
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ justifyContent: 'space-between', alignItems: 'start' }}>
-                <Box>
-                  <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, display: 'block', mb: 0.5 }}>
-                    BOOKING REFERENCE
-                  </Typography>
-                  <Typography variant="h5" sx={{ fontWeight: 800, fontFamily: 'monospace' }}>
-                    {booking.booking_reference}
-                  </Typography>
-                </Box>
-                <Chip
-                  icon={<CheckCircleIcon />}
-                  label={booking.status}
-                  color="success"
-                  sx={{ fontWeight: 700 }}
-                />
-              </Stack>
-
-              <Divider sx={{ borderColor: isLight ? 'rgba(0, 89, 179, 0.08)' : 'rgba(255, 255, 255, 0.05)' }} />
-
-              {/* Room Details */}
-              <Box>
-                <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2 }}>
-                  Room Details
-                </Typography>
-                <Stack spacing={1.5}>
-                  <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
-                    <LocationOnIcon sx={{ color: 'primary.main', flexShrink: 0 }} />
+          {booking ? (
+            <Grid container spacing={3}>
+              <Grid size={{ xs: 12, md: 7 }}>
+                <Paper
+                  elevation={0}
+                  sx={{
+                    border: '1px solid',
+                    borderColor: isLight ? 'rgba(0, 89, 179, 0.08)' : 'rgba(255, 255, 255, 0.06)',
+                    borderRadius: 3,
+                    background: isLight ? '#ffffff' : alpha('#0a0e1a', 0.5),
+                    p: 4,
+                    height: '100%',
+                  }}
+                >
+                  <Stack spacing={3}>
                     <Box>
-                      <Typography variant="caption" color="text.secondary">
-                        Room Name
+                      <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 2 }}>
+                        Space Details
                       </Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                        {booking.room_name}
+                      <Stack spacing={2}>
+                        <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
+                          <LocationOnIcon sx={{ color: 'primary.main', flexShrink: 0 }} />
+                          <Box>
+                            <Typography variant="caption" color="text.secondary">
+                              Room Name
+                            </Typography>
+                            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                              {booking.room_name}
+                            </Typography>
+                          </Box>
+                        </Stack>
+
+                        <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
+                          <EventIcon sx={{ color: 'primary.main', flexShrink: 0 }} />
+                          <Box>
+                            <Typography variant="caption" color="text.secondary">
+                              Date
+                            </Typography>
+                            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                              {new Date(booking.booking_date).toLocaleDateString('en-US', {
+                                weekday: 'long',
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                              })}
+                            </Typography>
+                          </Box>
+                        </Stack>
+
+                        <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
+                          <AccessTimeIcon sx={{ color: 'primary.main', flexShrink: 0 }} />
+                          <Box>
+                            <Typography variant="caption" color="text.secondary">
+                              Time
+                            </Typography>
+                            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                              {booking.start_time} - {booking.end_time}
+                            </Typography>
+                          </Box>
+                        </Stack>
+                      </Stack>
+                    </Box>
+
+                    <Divider sx={{ borderColor: isLight ? 'rgba(0, 89, 179, 0.08)' : 'rgba(255, 255, 255, 0.05)' }} />
+
+                    <Box>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 2 }}>
+                        Price Summary
                       </Typography>
+                      <Paper
+                        elevation={0}
+                        sx={{
+                          p: 2.5,
+                          borderRadius: 2,
+                          border: '1px solid',
+                          borderColor: 'primary.main',
+                          background: alpha('primary.main', 0.05),
+                        }}
+                      >
+                        <Stack direction="row" spacing={2} sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
+                          <Stack direction="row" spacing={0.5} sx={{ alignItems: 'baseline' }}>
+                            <AttachMoneyIcon sx={{ fontSize: '1.3rem', color: 'primary.main' }} />
+                            <Typography sx={{ fontWeight: 700 }}>Total Amount</Typography>
+                          </Stack>
+                          <Typography variant="h4" sx={{ fontWeight: 800, color: 'primary.main' }}>
+                            €{booking.price.toFixed(2)}
+                          </Typography>
+                        </Stack>
+                      </Paper>
                     </Box>
                   </Stack>
+                </Paper>
+              </Grid>
 
-                  <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
-                    <EventIcon sx={{ color: 'primary.main', flexShrink: 0 }} />
+              <Grid size={{ xs: 12, md: 5 }}>
+                <Paper
+                  elevation={0}
+                  sx={{
+                    border: '1px solid',
+                    borderColor: isLight ? 'rgba(0, 89, 179, 0.08)' : 'rgba(255, 255, 255, 0.06)',
+                    borderRadius: 3,
+                    background: isLight ? '#ffffff' : alpha('#0a0e1a', 0.5),
+                    p: 4,
+                    height: '100%',
+                  }}
+                >
+                  <Stack spacing={3}>
                     <Box>
-                      <Typography variant="caption" color="text.secondary">
-                        Date
+                      <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 2 }}>
+                        Guest Information
                       </Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                        {new Date(booking.booking_date).toLocaleDateString('en-US', {
-                          weekday: 'long',
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
-                        })}
+                      <Stack spacing={1.75}>
+                        <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
+                          <PersonIcon sx={{ color: 'primary.main', flexShrink: 0 }} />
+                          <Box>
+                            <Typography variant="caption" color="text.secondary">
+                              Guest Name
+                            </Typography>
+                            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                              {booking.guest_name}
+                            </Typography>
+                          </Box>
+                        </Stack>
+
+                        <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
+                          <EmailIcon sx={{ color: 'primary.main', flexShrink: 0 }} />
+                          <Box>
+                            <Typography variant="caption" color="text.secondary">
+                              Email
+                            </Typography>
+                            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                              {booking.guest_email}
+                            </Typography>
+                          </Box>
+                        </Stack>
+
+                        <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
+                          <PhoneIcon sx={{ color: 'primary.main', flexShrink: 0 }} />
+                          <Box>
+                            <Typography variant="caption" color="text.secondary">
+                              Phone
+                            </Typography>
+                            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                              {booking.guest_phone}
+                            </Typography>
+                          </Box>
+                        </Stack>
+
+                        <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
+                          <PersonIcon sx={{ color: 'primary.main', flexShrink: 0 }} />
+                          <Box>
+                            <Typography variant="caption" color="text.secondary">
+                              Participants
+                            </Typography>
+                            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                              {booking.participants} people
+                            </Typography>
+                          </Box>
+                        </Stack>
+                      </Stack>
+                    </Box>
+
+                    <Divider sx={{ borderColor: isLight ? 'rgba(0, 89, 179, 0.08)' : 'rgba(255, 255, 255, 0.05)' }} />
+
+                    <Box>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 1.5 }}>
+                        Quick Actions
                       </Typography>
+                      <Stack spacing={1.5}>
+                        <Button
+                          variant="contained"
+                          endIcon={<DownloadIcon />}
+                          onClick={downloadICalendar}
+                          sx={{ fontWeight: 800 }}
+                        >
+                          Download iCalendar
+                        </Button>
+                        <Button href="/" variant="outlined" sx={{ fontWeight: 800 }}>
+                          Back to Home
+                        </Button>
+                      </Stack>
                     </Box>
                   </Stack>
-
-                  <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
-                    <AccessTimeIcon sx={{ color: 'primary.main', flexShrink: 0 }} />
-                    <Box>
-                      <Typography variant="caption" color="text.secondary">
-                        Time
-                      </Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                        {booking.start_time} - {booking.end_time}
-                      </Typography>
-                    </Box>
-                  </Stack>
-                </Stack>
-              </Box>
-
-              <Divider sx={{ borderColor: isLight ? 'rgba(0, 89, 179, 0.08)' : 'rgba(255, 255, 255, 0.05)' }} />
-
-              {/* Guest Information */}
-              <Box>
-                <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2 }}>
-                  Guest Information
-                </Typography>
-                <Stack spacing={1.5}>
-                  <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
-                    <PersonIcon sx={{ color: 'primary.main', flexShrink: 0 }} />
-                    <Box>
-                      <Typography variant="caption" color="text.secondary">
-                        Guest Name
-                      </Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                        {booking.guest_name}
-                      </Typography>
-                    </Box>
-                  </Stack>
-
-                  <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
-                    <EmailIcon sx={{ color: 'primary.main', flexShrink: 0 }} />
-                    <Box>
-                      <Typography variant="caption" color="text.secondary">
-                        Email
-                      </Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                        {booking.guest_email}
-                      </Typography>
-                    </Box>
-                  </Stack>
-
-                  <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
-                    <PhoneIcon sx={{ color: 'primary.main', flexShrink: 0 }} />
-                    <Box>
-                      <Typography variant="caption" color="text.secondary">
-                        Phone
-                      </Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                        {booking.guest_phone}
-                      </Typography>
-                    </Box>
-                  </Stack>
-
-                  <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
-                    <PersonIcon sx={{ color: 'primary.main', flexShrink: 0 }} />
-                    <Box>
-                      <Typography variant="caption" color="text.secondary">
-                        Participants
-                      </Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                        {booking.participants} people
-                      </Typography>
-                    </Box>
-                  </Stack>
-                </Stack>
-              </Box>
-
-              <Divider sx={{ borderColor: isLight ? 'rgba(0, 89, 179, 0.08)' : 'rgba(255, 255, 255, 0.05)' }} />
-
-              {/* Price Summary */}
-              <Paper
-                elevation={0}
-                sx={{
-                  p: 2.5,
-                  borderRadius: 2,
-                  border: '1px solid',
-                  borderColor: 'primary.main',
-                  background: alpha('primary.main', 0.05),
-                }}
-              >
-                <Stack direction="row" spacing={2} sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Stack direction="row" spacing={0.5} sx={{ alignItems: 'baseline' }}>
-                    <AttachMoneyIcon sx={{ fontSize: '1.3rem', color: 'primary.main' }} />
-                    <Typography sx={{ fontWeight: 700 }}>Total Amount:</Typography>
-                  </Stack>
-                  <Typography variant="h4" sx={{ fontWeight: 800, color: 'primary.main' }}>
-                    €{booking.price.toFixed(2)}
-                  </Typography>
-                </Stack>
-              </Paper>
-            </Stack>
-          </Paper> : null}
-
-          {/* Action Buttons */}
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-            <Button
-              variant="contained"
-              endIcon={<DownloadIcon />}
-              onClick={downloadICalendar}
-              sx={{ fontWeight: 700 }}
-            >
-              Download iCalendar
-            </Button>
-            <Button
-              href="/"
-              variant="outlined"
-              sx={{ fontWeight: 700 }}
-            >
-              Back to Home
-            </Button>
-          </Stack>
+                </Paper>
+              </Grid>
+            </Grid>
+          ) : null}
 
           {/* Support Info */}
           <Alert severity="info" sx={{ borderRadius: 3 }}>
-            <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
+            <Typography variant="body2" sx={{ fontWeight: 700, mb: 0.5 }}>
               Questions about your booking?
             </Typography>
             <Typography variant="body2" color="inherit">
-              Contact our support team at support@bookiwa7dek.com or call +216 00 000 000
+              Contact support@bookiwa7dek.com or call +216 00 000 000 if you need changes or assistance.
             </Typography>
           </Alert>
         </Stack>

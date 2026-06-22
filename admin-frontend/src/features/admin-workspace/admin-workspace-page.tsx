@@ -18,6 +18,7 @@ import {
   Stack,
   Toolbar,
   Typography,
+  Chip,
   useMediaQuery,
   useTheme,
 } from '@mui/material'
@@ -72,6 +73,7 @@ import {
   updateWorkspaceUser,
   updateWorkspaceUserStatus,
 } from '@/lib/api'
+import { LoadingState } from '@/features/admin-workspace/admin-workspace-utils'
 
 export const AdminWorkspacePage = () => {
   const location = useLocation()
@@ -226,11 +228,10 @@ export const AdminWorkspacePage = () => {
 
   if (isLoading) {
     return (
-      <Box sx={{ minHeight: '100vh', display: 'grid', placeItems: 'center' }}>
-        <Stack spacing={2} sx={{ alignItems: 'center' }}>
-          <CircularProgress />
-          <Typography color="text.secondary">Loading admin workspace...</Typography>
-        </Stack>
+      <Box sx={{ minHeight: '100vh', display: 'grid', placeItems: 'center', p: 2 }}>
+        <Box sx={{ width: '100%', maxWidth: 520 }}>
+          <LoadingState />
+        </Box>
       </Box>
     )
   }
@@ -253,14 +254,14 @@ export const AdminWorkspacePage = () => {
   }
 
   const drawer = (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', p: 2 }}>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', p: 2, background: mode === 'light' ? 'linear-gradient(180deg, #ffffff 0%, #f7faff 100%)' : 'linear-gradient(180deg, #0b1320 0%, #09111d 100%)' }}>
       <Stack spacing={1.5} sx={{ px: 1.5, py: 2 }}>
         <Typography variant="overline" color="primary.main">Bookini Platform</Typography>
-        <Typography variant="h5">Admin Console</Typography>
+        <Typography variant="h5" sx={{ fontWeight: 900 }}>Admin Console</Typography>
         <Typography color="text.secondary">{sectionConfig.caption}</Typography>
       </Stack>
       <Divider sx={{ my: 1.5 }} />
-      <List sx={{ flex: 1 }}>
+      <List sx={{ flex: 1, px: 0.5 }}>
         {allowedSections.map((section) => (
           <ListItemButton
             key={section.key}
@@ -276,7 +277,7 @@ export const AdminWorkspacePage = () => {
           </ListItemButton>
         ))}
       </List>
-      <Paper sx={{ p: 2, borderRadius: 4, background: 'linear-gradient(145deg, rgba(17,113,216,0.16), rgba(57,179,162,0.14))' }}>
+      <Paper sx={{ p: 2, borderRadius: 4, background: 'linear-gradient(145deg, rgba(15,111,219,0.16), rgba(30,168,138,0.14))' }}>
         <Typography variant="subtitle2">Signed in as</Typography>
         <Typography variant="h6">{workspace.settings.profile.full_name}</Typography>
         <Typography color="text.secondary">{data.role === 'SUPER_ADMIN' ? 'Super Admin' : 'Organization Admin'}</Typography>
@@ -296,23 +297,26 @@ export const AdminWorkspacePage = () => {
           backdropFilter: 'blur(18px)',
           borderBottom: '1px solid',
           borderColor: 'divider',
-          backgroundColor: theme.palette.mode === 'light' ? 'rgba(255,255,255,0.72)' : 'rgba(8,17,31,0.78)',
+          backgroundColor: theme.palette.mode === 'light' ? 'rgba(255,255,255,0.8)' : 'rgba(8,17,31,0.8)',
         }}
       >
-        <Toolbar sx={{ gap: 2 }}>
+        <Toolbar sx={{ gap: 2, minHeight: 78, flexWrap: 'wrap', py: 1.25 }}>
           {!isDesktop ? <IconButton onClick={() => setMobileOpen(true)}><MenuOutlinedIcon /></IconButton> : null}
-          <Box sx={{ flex: 1 }}>
-            <Typography variant="h6">{sectionConfig.label}</Typography>
+          <Box sx={{ flex: 1, minWidth: { xs: '100%', md: 0 } }}>
+            <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 0.25, flexWrap: 'wrap' }}>
+              <Typography variant="h6" sx={{ fontWeight: 900 }}>{sectionConfig.label}</Typography>
+              <Chip size="small" label={data.role === 'SUPER_ADMIN' ? 'Super Admin' : 'Organization Admin'} variant="outlined" />
+            </Stack>
             <Typography variant="body2" color="text.secondary">{sectionConfig.caption}</Typography>
           </Box>
           <IconButton onClick={toggleMode}>{mode === 'light' ? <DarkModeOutlinedIcon /> : <LightModeOutlinedIcon />}</IconButton>
-          <Avatar>{workspace.settings.profile.full_name.slice(0, 1)}</Avatar>
-          <Button variant="outlined" startIcon={<LogoutOutlinedIcon />} onClick={signOut}>Sign out</Button>
+          <Avatar sx={{ bgcolor: 'primary.main', fontWeight: 800 }}>{workspace.settings.profile.full_name.slice(0, 1)}</Avatar>
+          <Button variant="outlined" startIcon={<LogoutOutlinedIcon />} onClick={signOut} sx={{ ml: { xs: 0, sm: 'auto', lg: 0 } }}>Sign out</Button>
         </Toolbar>
       </AppBar>
 
       <Box component="nav" sx={{ width: { lg: drawerWidth }, flexShrink: { lg: 0 } }}>
-        <Drawer variant="temporary" open={mobileOpen} onClose={() => setMobileOpen(false)} ModalProps={{ keepMounted: true }} sx={{ display: { xs: 'block', lg: 'none' }, '& .MuiDrawer-paper': { width: drawerWidth, boxSizing: 'border-box' } }}>
+        <Drawer variant="temporary" open={mobileOpen} onClose={() => setMobileOpen(false)} ModalProps={{ keepMounted: true }} sx={{ display: { xs: 'block', lg: 'none' }, '& .MuiDrawer-paper': { width: { xs: '100vw', sm: drawerWidth }, maxWidth: drawerWidth, boxSizing: 'border-box' } }}>
           {drawer}
         </Drawer>
         <Drawer variant="permanent" open sx={{ display: { xs: 'none', lg: 'block' }, '& .MuiDrawer-paper': { width: drawerWidth, boxSizing: 'border-box', borderRight: '1px solid', borderColor: 'divider' } }}>
@@ -320,7 +324,27 @@ export const AdminWorkspacePage = () => {
         </Drawer>
       </Box>
 
-      <Box component="main" sx={{ flexGrow: 1, ml: { lg: `${drawerWidth}px` }, p: { xs: 2, md: 3 }, pt: { xs: 12, md: 13 } }}>
+      <Box component="main" sx={{ flexGrow: 1, ml: { lg: `${drawerWidth}px` }, p: { xs: 2, md: 3 }, pt: { xs: 11.5, md: 13 } }}>
+        <Paper sx={{ p: 3, mb: 3, border: '1px solid', borderColor: 'divider', background: mode === 'light' ? 'linear-gradient(135deg, #ffffff 0%, #f7faff 100%)' : 'linear-gradient(135deg, rgba(16,29,50,0.95) 0%, rgba(10,14,26,0.95) 100%)' }}>
+          <Stack direction={{ xs: 'column', lg: 'row' }} spacing={2} sx={{ justifyContent: 'space-between', alignItems: { xs: 'flex-start', lg: 'center' } }}>
+            <Box>
+              <Typography variant="overline" color="primary.main" sx={{ fontWeight: 800, letterSpacing: '0.12em' }}>
+                Workspace Overview
+              </Typography>
+              <Typography variant="h4" sx={{ fontWeight: 900, mb: 0.5 }}>
+                {workspace.settings.profile.full_name}
+              </Typography>
+              <Typography color="text.secondary">
+                {data.role === 'SUPER_ADMIN' ? 'Full platform control with organization, place, and request management.' : 'Focused operations across places, floors, reservations, and settings.'}
+              </Typography>
+            </Box>
+            <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
+              <Chip label={`${workspace.users.length} users`} variant="outlined" />
+              <Chip label={`${workspace.organizations.length} organizations`} variant="outlined" />
+              <Chip label={`${workspace.reservations.length} reservations`} variant="outlined" />
+            </Stack>
+          </Stack>
+        </Paper>
         {currentSection === 'dashboard' ? <DashboardSection workspaceData={data} /> : null}
         {currentSection === 'users' ? (
           <UsersSection

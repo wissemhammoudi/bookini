@@ -1,5 +1,5 @@
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
-import { Button, Paper, Stack, Typography } from '@mui/material'
+import { Button, Paper, Stack, Typography, alpha } from '@mui/material'
 import Grid from '@mui/material/Grid'
 
 import { SectionHeader } from '@/features/admin-workspace/admin-workspace-utils'
@@ -20,7 +20,7 @@ export const SettingsSection = ({
     />
     <Grid container spacing={2.5}>
       <Grid size={{ xs: 12, md: 6 }}>
-        <Paper sx={{ p: 3, height: '100%' }}>
+        <Paper sx={{ p: 3, height: '100%', border: '1px solid', borderColor: 'divider', background: 'linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,251,255,0.98))' }}>
           <Typography variant="h6" sx={{ mb: 2 }}>Profile Management</Typography>
           <Stack spacing={1.25}>
             <Typography><strong>Name:</strong> {settings.profile.full_name}</Typography>
@@ -31,7 +31,7 @@ export const SettingsSection = ({
         </Paper>
       </Grid>
       <Grid size={{ xs: 12, md: 6 }}>
-        <Paper sx={{ p: 3, height: '100%' }}>
+        <Paper sx={{ p: 3, height: '100%', border: '1px solid', borderColor: 'divider', background: 'linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,251,255,0.98))' }}>
           <Typography variant="h6" sx={{ mb: 2 }}>Notification Settings</Typography>
           <Stack spacing={1.25}>
             <Typography>Email notifications: {settings.notifications.email_notifications ? 'Enabled' : 'Disabled'}</Typography>
@@ -42,7 +42,7 @@ export const SettingsSection = ({
         </Paper>
       </Grid>
       <Grid size={{ xs: 12, md: 6 }}>
-        <Paper sx={{ p: 3, height: '100%' }}>
+        <Paper sx={{ p: 3, height: '100%', border: '1px solid', borderColor: 'divider', background: 'linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,251,255,0.98))' }}>
           <Typography variant="h6" sx={{ mb: 2 }}>Platform Settings</Typography>
           <Stack spacing={1.25}>
             <Typography><strong>Platform:</strong> {settings.platform.platform_name}</Typography>
@@ -53,7 +53,7 @@ export const SettingsSection = ({
         </Paper>
       </Grid>
       <Grid size={{ xs: 12, md: 6 }}>
-        <Paper sx={{ p: 3, height: '100%' }}>
+        <Paper sx={{ p: 3, height: '100%', border: '1px solid', borderColor: 'divider', background: 'linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,251,255,0.98))' }}>
           <Typography variant="h6" sx={{ mb: 2 }}>Security Settings</Typography>
           <Stack spacing={1.25}>
             <Typography><strong>Session timeout:</strong> {settings.security.session_timeout_minutes} minutes</Typography>

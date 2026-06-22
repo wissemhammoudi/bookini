@@ -7,10 +7,15 @@ import {
   Button,
   Chip,
   Container,
+  Divider,
   Paper,
   Stack,
   Typography,
 } from '@mui/material'
+import MeetingRoomOutlinedIcon from '@mui/icons-material/MeetingRoomOutlined'
+import EventAvailableOutlinedIcon from '@mui/icons-material/EventAvailableOutlined'
+import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew'
+import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos'
 
 import { useColorMode } from '@/app/use-color-mode'
 import { PublicNavbar } from '@/features/public/components/public-navbar'
@@ -155,7 +160,7 @@ export const PublicBookingPage = () => {
         setBookingError(
           `This time is already reserved (${conflictingSlot.start_time} - ${conflictingSlot.end_time}). Please choose another slot.`,
         )
-        return
+        return false
       }
 
       const created = await createBookingMutation.mutateAsync({
@@ -174,8 +179,10 @@ export const PublicBookingPage = () => {
       })
 
       navigate(`/booking-confirmation/${created.booking_reference}`)
+      return true
     } catch {
       setBookingError('Could not complete your booking. Please verify your details and try again.')
+      return false
     }
   }
 
@@ -194,14 +201,40 @@ export const PublicBookingPage = () => {
       <Container maxWidth="lg" sx={{ py: { xs: 6, md: 10 } }}>
         <Stack spacing={8}>
           {/* Header */}
-          <Box>
-            <Typography variant="h2" sx={{ fontWeight: 900, letterSpacing: '-0.04em' }}>
-              Book Your Perfect Space
-            </Typography>
-            <Typography variant="h6" color="text.secondary" sx={{ mt: 2, maxWidth: 600 }}>
-              Choose a subscription plan that works for you, then select from our available rooms and spaces.
-            </Typography>
-          </Box>
+          <Paper
+            elevation={0}
+            sx={{
+              p: { xs: 3, md: 4 },
+              borderRadius: 3,
+              border: '1px solid',
+              borderColor: isLight ? 'rgba(0, 89, 179, 0.1)' : 'rgba(255, 255, 255, 0.08)',
+              background: isLight
+                ? 'linear-gradient(120deg, #ffffff 0%, #f7fbff 100%)'
+                : 'linear-gradient(120deg, rgba(16,29,50,0.88) 0%, rgba(10,14,26,0.9) 100%)',
+            }}
+          >
+            <Stack spacing={2}>
+              <Chip
+                icon={<EventAvailableOutlinedIcon />}
+                label="Live Availability"
+                color="primary"
+                variant="outlined"
+                sx={{ alignSelf: 'flex-start', fontWeight: 700 }}
+              />
+              <Typography variant="h2" sx={{ fontWeight: 900, letterSpacing: '-0.03em' }}>
+                Professional Space Booking
+              </Typography>
+              <Typography variant="h6" color="text.secondary" sx={{ maxWidth: 760 }}>
+                Explore our curated spaces, review real-time calendar availability, and submit your booking request in a few clicks.
+              </Typography>
+
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.25}>
+                <Chip label={`${rooms.length} spaces available`} color="primary" variant="filled" />
+                <Chip label="Calendar synced with backend" variant="outlined" />
+                <Chip label="Conflict checks enabled" variant="outlined" />
+              </Stack>
+            </Stack>
+          </Paper>
 
           {bookingError ? (
             <Alert severity="error" sx={{ borderRadius: 2 }}>
@@ -211,14 +244,17 @@ export const PublicBookingPage = () => {
 
           {/* Rooms Section */}
           <Box>
-            <Typography variant="h4" sx={{ fontWeight: 800, mb: 3 }}>
-              Available Rooms
+            <Typography variant="h4" sx={{ fontWeight: 800, mb: 1 }}>
+              Available Spaces
+            </Typography>
+            <Typography color="text.secondary" sx={{ mb: 3 }}>
+              Select a space to view its schedule and open the reservation form.
             </Typography>
 
             <Box
               sx={{
                 display: 'grid',
-                gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))' },
+                gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))', xl: 'repeat(3, minmax(0, 1fr))' },
                 gap: 3,
               }}
             >
@@ -227,6 +263,7 @@ export const PublicBookingPage = () => {
                   <RoomCard
                     room={room}
                     isLight={isLight}
+                    isSelected={selectedRoom?.id === room.id}
                     onBookNow={handleRoomSelect}
                   />
                 </Box>
@@ -259,17 +296,49 @@ export const PublicBookingPage = () => {
                   <Button
                     variant="outlined"
                     onClick={() => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1))}
+                    startIcon={<ArrowBackIosNewIcon fontSize="small" />}
                   >
                     Prev
                   </Button>
                   <Button
                     variant="outlined"
                     onClick={() => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1))}
+                    endIcon={<ArrowForwardIosIcon fontSize="small" />}
                   >
                     Next
                   </Button>
                 </Stack>
               </Stack>
+
+              {selectedRoom ? (
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 2,
+                    borderRadius: 2,
+                    border: '1px solid',
+                    borderColor: isLight ? 'rgba(0, 89, 179, 0.16)' : 'rgba(255, 255, 255, 0.16)',
+                    background: isLight ? '#f9fcff' : 'rgba(16, 29, 50, 0.55)',
+                  }}
+                >
+                  <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ justifyContent: 'space-between', alignItems: { xs: 'flex-start', md: 'center' } }}>
+                    <Stack direction="row" spacing={1.25} sx={{ alignItems: 'center' }}>
+                      <MeetingRoomOutlinedIcon color="primary" />
+                      <Box>
+                        <Typography sx={{ fontWeight: 800 }}>{selectedRoom.name}</Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Capacity {selectedRoom.capacity} • €{selectedRoom.price}/hour
+                        </Typography>
+                      </Box>
+                    </Stack>
+                    <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
+                      {selectedRoom.amenities.slice(0, 3).map((item) => (
+                        <Chip key={item} label={item} size="small" variant="outlined" />
+                      ))}
+                    </Stack>
+                  </Stack>
+                </Paper>
+              ) : null}
 
               {roomsQuery.isLoading ? (
                 <Alert severity="info" sx={{ borderRadius: 2 }}>
@@ -304,6 +373,14 @@ export const PublicBookingPage = () => {
               <Typography variant="h6" sx={{ fontWeight: 700 }}>
                 {monthLabel}
               </Typography>
+
+              <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
+                <Chip label="Available" size="small" variant="outlined" />
+                <Chip label="Reserved slots" size="small" color="primary" variant="outlined" />
+                <Chip label="Click any date to request" size="small" variant="outlined" />
+              </Stack>
+
+              <Divider />
 
               {calendarSlotsQuery.isError ? (
                 <Alert severity="error" sx={{ borderRadius: 2 }}>
@@ -347,6 +424,7 @@ export const PublicBookingPage = () => {
                         flexDirection: 'column',
                         p: 1,
                         textTransform: 'none',
+                        borderRadius: 2,
                       }}
                     >
                       <Typography variant="body2" sx={{ fontWeight: 700 }}>

@@ -1,10 +1,13 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Paper, Stack, Typography, Box, IconButton, Avatar, Chip } from '@mui/material'
+import { Paper, Stack, Typography, Box, IconButton, Avatar, Chip, Grid, Divider, alpha } from '@mui/material'
 import LightModeOutlinedIcon from '@mui/icons-material/LightModeOutlined'
 import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined'
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings'
+import WorkspacePremiumOutlinedIcon from '@mui/icons-material/WorkspacePremiumOutlined'
+import VerifiedUserOutlinedIcon from '@mui/icons-material/VerifiedUserOutlined'
+import InsightsOutlinedIcon from '@mui/icons-material/InsightsOutlined'
 
 import { LoginForm, type LoginFormValues } from '@/features/auth/login-form'
 import { useAuth } from '@/features/auth/use-auth'
@@ -51,16 +54,26 @@ export const LoginPage = () => {
       sx={{
         minHeight: '100vh',
         width: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
+        display: 'grid',
+        placeItems: 'center',
         background: isLight
-          ? 'linear-gradient(135deg, #f5f7fb 0%, #e4ecfa 100%)'
-          : 'linear-gradient(135deg, #090e17 0%, #121e33 100%)',
+          ? 'radial-gradient(circle at top left, rgba(17, 111, 219, 0.10), transparent 26%), linear-gradient(135deg, #f6f9fd 0%, #e9f1fb 100%)'
+          : 'radial-gradient(circle at top left, rgba(17, 111, 219, 0.18), transparent 26%), linear-gradient(135deg, #07111e 0%, #101c30 100%)',
         position: 'relative',
         py: 4,
         px: 2,
+        overflow: 'hidden',
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          inset: 'auto -10% 8% auto',
+          width: 320,
+          height: 320,
+          borderRadius: '50%',
+          background: isLight ? alpha('#1171d8', 0.08) : alpha('#1171d8', 0.14),
+          filter: 'blur(30px)',
+          pointerEvents: 'none',
+        },
       }}
     >
       <Box sx={{ position: 'absolute', top: 16, right: 16 }}>
@@ -73,61 +86,125 @@ export const LoginPage = () => {
         </IconButton>
       </Box>
 
-      <Stack spacing={3} sx={{ width: '100%', maxWidth: 450, alignItems: 'center' }}>
-        <Paper
-          sx={{
-            width: '100%',
-            p: { xs: 3, sm: 5 },
-            borderRadius: 4,
-            boxShadow: isLight
-              ? '0 10px 30px rgba(0, 89, 179, 0.08)'
-              : '0 10px 30px rgba(0, 0, 0, 0.4)',
-            border: '1px solid',
-            borderColor: isLight ? 'rgba(0, 89, 179, 0.08)' : 'rgba(255, 255, 255, 0.05)',
-            background: isLight ? '#ffffff' : '#101d32',
-          }}
-        >
-          <Stack spacing={3.5}>
-            {/* Logo and Branding */}
-            <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', alignSelf: 'center' }}>
-              <Avatar
-                sx={{
-                  bgcolor: 'primary.main',
-                  width: 40,
-                  height: 40,
-                  boxShadow: '0 4px 10px rgba(0, 89, 179, 0.3)',
-                }}
-              >
-                <AdminPanelSettingsIcon sx={{ color: '#ffffff' }} />
-              </Avatar>
-              <Typography variant="h5" sx={{ fontWeight: 800 }}>
-                bookini Admin
-              </Typography>
+      <Grid container spacing={0} sx={{ width: '100%', maxWidth: 1180, zIndex: 1 }}>
+        <Grid size={{ xs: 12, lg: 5 }}>
+          <Paper
+            sx={{
+              height: '100%',
+              minHeight: { lg: 720 },
+              p: { xs: 3, sm: 5 },
+              borderRadius: { xs: 4, lg: '28px 0 0 28px' },
+              border: '1px solid',
+              borderRight: { lg: 'none' },
+              borderColor: isLight ? 'rgba(0, 89, 179, 0.08)' : 'rgba(255, 255, 255, 0.06)',
+              background: isLight
+                ? 'linear-gradient(145deg, #ffffff 0%, #f7fbff 100%)'
+                : 'linear-gradient(145deg, rgba(12,20,34,0.96) 0%, rgba(8,14,24,0.96) 100%)',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              gap: 4,
+            }}
+          >
+            <Stack spacing={3}>
+              <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
+                <Avatar
+                  sx={{
+                    bgcolor: 'primary.main',
+                    width: 48,
+                    height: 48,
+                    boxShadow: '0 10px 24px rgba(15, 111, 219, 0.28)',
+                  }}
+                >
+                  <AdminPanelSettingsIcon sx={{ color: '#ffffff' }} />
+                </Avatar>
+                <Box>
+                  <Typography variant="overline" color="text.secondary" sx={{ lineHeight: 1 }}>
+                    Bookini Admin
+                  </Typography>
+                  <Typography variant="h5" sx={{ fontWeight: 900, lineHeight: 1.1 }}>
+                    Workspace Console
+                  </Typography>
+                </Box>
+              </Stack>
+
+              <Box>
+                <Chip
+                  icon={<WorkspacePremiumOutlinedIcon />}
+                  label="Premium admin experience"
+                  color="primary"
+                  variant="outlined"
+                  sx={{ mb: 2, fontWeight: 700 }}
+                />
+                <Typography variant="h3" sx={{ fontWeight: 900, letterSpacing: '-0.04em', mb: 1 }}>
+                  Manage bookings, spaces, and requests with clarity.
+                </Typography>
+                <Typography color="text.secondary" variant="body1" sx={{ maxWidth: 520 }}>
+                  A focused operational workspace for Super Admin and Organization Admin teams with real-time controls, insight-driven summaries, and polished workflows.
+                </Typography>
+              </Box>
+
+              <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
+                <Chip icon={<VerifiedUserOutlinedIcon />} label="Role-based access" variant="outlined" />
+                <Chip icon={<InsightsOutlinedIcon />} label="Operational insights" variant="outlined" />
+                <Chip label="Light / Dark mode" variant="outlined" />
+              </Stack>
             </Stack>
 
-            <Stack spacing={1}>
-              <Typography variant="h5" align="center" sx={{ fontWeight: 700 }}>
-                Admin access
-              </Typography>
-              <Typography color="text.secondary" align="center" variant="body2">
-                Sign in to access the redesigned Bookini administrative workspace.
-              </Typography>
+            <Stack spacing={2}>
+              <Divider />
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                <Paper sx={{ flex: 1, p: 2.25, borderRadius: 3, background: alpha('#1171d8', isLight ? 0.06 : 0.15) }} elevation={0}>
+                  <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, display: 'block' }}>
+                    Access
+                  </Typography>
+                  <Typography sx={{ fontWeight: 800 }}>Secure sign-in</Typography>
+                </Paper>
+                <Paper sx={{ flex: 1, p: 2.25, borderRadius: 3, background: alpha('#1ea88a', isLight ? 0.06 : 0.14) }} elevation={0}>
+                  <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, display: 'block' }}>
+                    Coverage
+                  </Typography>
+                  <Typography sx={{ fontWeight: 800 }}>Bookings & admin ops</Typography>
+                </Paper>
+              </Stack>
             </Stack>
+          </Paper>
+        </Grid>
 
-            <Stack direction="row" spacing={1} sx={{ justifyContent: 'center', flexWrap: 'wrap' }}>
-              <Chip label="Super Admin" />
-              <Chip label="Organization Admin" />
-              <Chip label="Dark / Light Theme" />
+        <Grid size={{ xs: 12, lg: 7 }}>
+          <Paper
+            sx={{
+              height: '100%',
+              minHeight: { lg: 720 },
+              p: { xs: 3, sm: 5 },
+              borderRadius: { xs: 4, lg: '0 28px 28px 0' },
+              border: '1px solid',
+              borderColor: isLight ? 'rgba(0, 89, 179, 0.08)' : 'rgba(255, 255, 255, 0.06)',
+              boxShadow: isLight ? '0 24px 60px rgba(16, 24, 40, 0.08)' : '0 24px 60px rgba(0, 0, 0, 0.35)',
+              background: isLight ? '#ffffff' : '#101d32',
+              display: 'flex',
+              alignItems: 'center',
+            }}
+          >
+            <Stack spacing={3.5} sx={{ width: '100%', maxWidth: 520, mx: 'auto' }}>
+              <Stack spacing={0.75}>
+                <Typography variant="h5" sx={{ fontWeight: 900 }}>
+                  Sign in to continue
+                </Typography>
+                <Typography color="text.secondary" variant="body2">
+                  Use your administrator account to access the Bookini workspace.
+                </Typography>
+              </Stack>
+
+              <LoginForm
+                onSubmit={handleSubmit}
+                error={error}
+                isLoading={loginMutation.isPending}
+              />
             </Stack>
-
-            <LoginForm
-              onSubmit={handleSubmit}
-              error={error}
-              isLoading={loginMutation.isPending}
-            />
-          </Stack>
-        </Paper>
-      </Stack>
+          </Paper>
+        </Grid>
+      </Grid>
     </Box>
   )
 }

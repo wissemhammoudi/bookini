@@ -3,7 +3,7 @@ import BlockOutlinedIcon from '@mui/icons-material/BlockOutlined'
 import CheckCircleOutlineOutlinedIcon from '@mui/icons-material/CheckCircleOutlineOutlined'
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
-import { Avatar, Box, Button, Chip, Paper, Stack, TextField, Typography } from '@mui/material'
+import { Avatar, Box, Button, Chip, Paper, Stack, TextField, Typography, alpha } from '@mui/material'
 import Grid from '@mui/material/Grid'
 
 import type { OrganizationActionHandler } from '@/features/admin-workspace/admin-workspace-types'
@@ -40,7 +40,7 @@ export const OrganizationsSection = ({
       <Grid container spacing={2.5}>
         {organizations.map((organization) => (
           <Grid key={organization.id} size={{ xs: 12, lg: 6 }}>
-            <Paper sx={{ p: 3, height: '100%' }}>
+            <Paper sx={{ p: 3, height: '100%', border: '1px solid', borderColor: 'divider', background: 'linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,251,255,0.98))' }}>
               <Stack spacing={2}>
                 <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
                   <Avatar src={organization.logo || undefined} sx={{ width: 56, height: 56 }} />
@@ -55,10 +55,10 @@ export const OrganizationsSection = ({
                 <Typography variant="body2">{organization.contact_phone}</Typography>
                 <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
                   {organization.social_links.map((link) => (
-                    <Chip key={link} label={new URL(link).hostname} />
+                    <Chip key={link} label={new URL(link).hostname} variant="outlined" sx={{ backgroundColor: alpha('#0F6FDB', 0.04) }} />
                   ))}
                 </Stack>
-                <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
+                <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end', flexWrap: 'wrap' }}>
                   <Button startIcon={<EditOutlinedIcon />} onClick={() => onEditOrganization(organization)}>Edit</Button>
                   <Button startIcon={organization.status === 'ACTIVE' ? <BlockOutlinedIcon /> : <CheckCircleOutlineOutlinedIcon />} onClick={() => onToggleOrganizationStatus(organization)}>
                     {organization.status === 'ACTIVE' ? 'Suspend' : 'Activate'}

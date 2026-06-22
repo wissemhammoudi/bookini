@@ -16,19 +16,29 @@ import type { Room } from '../constants'
 interface RoomCardProps {
   room: Room
   isLight: boolean
+  isSelected?: boolean
   onBookNow: (room: Room) => void
 }
 
-export const RoomCard = ({ room, isLight, onBookNow }: RoomCardProps) => {
+export const RoomCard = ({ room, isLight, isSelected = false, onBookNow }: RoomCardProps) => {
   return (
     <Card
       elevation={0}
       sx={{
         border: '1px solid',
-        borderColor: isLight ? 'rgba(0, 89, 179, 0.08)' : 'rgba(255, 255, 255, 0.05)',
+        borderColor: isSelected
+          ? 'primary.main'
+          : isLight
+            ? 'rgba(0, 89, 179, 0.08)'
+            : 'rgba(255, 255, 255, 0.05)',
         borderRadius: 3,
         background: isLight ? '#ffffff' : alpha('#0a0e1a', 0.5),
         transition: 'all 0.3s',
+        boxShadow: isSelected
+          ? isLight
+            ? '0 10px 22px rgba(0, 89, 179, 0.16)'
+            : '0 10px 22px rgba(0, 89, 179, 0.24)'
+          : 'none',
         '&:hover': {
           borderColor: 'primary.main',
           transform: 'translateY(-4px)',
@@ -46,6 +56,9 @@ export const RoomCard = ({ room, isLight, onBookNow }: RoomCardProps) => {
               <Typography variant="h6" sx={{ fontWeight: 800 }}>
                 {room.name}
               </Typography>
+              {isSelected ? (
+                <Chip label="Selected" color="primary" size="small" sx={{ mt: 1, fontWeight: 700 }} />
+              ) : null}
               <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mt: 1 }}>
                 <PeopleIcon sx={{ fontSize: '1rem', color: 'primary.main' }} />
                 <Typography variant="body2" color="text.secondary">
@@ -78,11 +91,11 @@ export const RoomCard = ({ room, isLight, onBookNow }: RoomCardProps) => {
               </Typography>
             </Stack>
             <Button
-              variant="contained"
+              variant={isSelected ? 'contained' : 'outlined'}
               sx={{ fontWeight: 700 }}
               onClick={() => onBookNow(room)}
             >
-              Book Now
+              {isSelected ? 'Book Now' : 'Select Space'}
             </Button>
           </Stack>
         </Stack>

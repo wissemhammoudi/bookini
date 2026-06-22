@@ -1,4 +1,4 @@
-import { Button, MenuItem, Paper, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField } from '@mui/material'
+import { Button, MenuItem, Paper, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, alpha } from '@mui/material'
 
 import type { ReservationActionHandler, ReservationFilter } from '@/features/admin-workspace/admin-workspace-types'
 import { EmptyState, SectionHeader, StatusChip } from '@/features/admin-workspace/admin-workspace-utils'
@@ -38,8 +38,8 @@ export const ReservationsSection = ({
       </TextField>
     </Stack>
     {reservations.length === 0 ? <EmptyState title="No reservations found" description="Try a different status filter or search term." /> : (
-      <TableContainer component={Paper}>
-        <Table>
+      <TableContainer component={Paper} sx={{ border: '1px solid', borderColor: 'divider', background: 'linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,251,255,0.98))' }}>
+        <Table size="small">
           <TableHead>
             <TableRow>
               <TableCell>Reservation ID</TableCell>
@@ -63,7 +63,7 @@ export const ReservationsSection = ({
                 <TableCell>{reservation.time}</TableCell>
                 <TableCell><StatusChip value={reservation.status} /></TableCell>
                 <TableCell align="right">
-                  <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
+                  <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end', flexWrap: 'wrap' }}>
                     <Button size="small" onClick={() => onApprove(reservation)}>Approve</Button>
                     <Button size="small" color="warning" onClick={() => onReject(reservation)}>Reject</Button>
                     <Button size="small" color="error" onClick={() => onCancel(reservation)}>Cancel</Button>

@@ -7,6 +7,7 @@ import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined'
 import {
   Avatar,
   Button,
+  InputAdornment,
   IconButton,
   MenuItem,
   Paper,
@@ -59,7 +60,15 @@ export const UsersSection = ({
         placeholder="Search by name, email, or phone"
         value={search}
         onChange={(event) => onSearchChange(event.target.value)}
-        slotProps={{ input: { startAdornment: <SearchOutlinedIcon color="action" sx={{ mr: 1 }} /> } }}
+        slotProps={{
+          input: {
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchOutlinedIcon color="action" fontSize="small" />
+              </InputAdornment>
+            ),
+          },
+        }}
       />
       <TextField select label="Role" value={roleFilter} onChange={(event) => onRoleFilterChange(event.target.value as RoleFilter)} sx={{ minWidth: { md: 220 } }}>
         <MenuItem value="ALL">All roles</MenuItem>
@@ -69,8 +78,8 @@ export const UsersSection = ({
       </TextField>
     </Stack>
     {users.length === 0 ? <EmptyState title="No users found" description="Adjust the search or create a new user to populate this workspace." /> : (
-      <TableContainer component={Paper}>
-        <Table>
+      <TableContainer component={Paper} sx={{ border: '1px solid', borderColor: 'divider' }}>
+        <Table size="small">
           <TableHead>
             <TableRow>
               <TableCell>Profile</TableCell>
@@ -94,7 +103,7 @@ export const UsersSection = ({
                 <TableCell><StatusChip value={user.status} /></TableCell>
                 <TableCell>{new Date(user.created_date).toLocaleDateString()}</TableCell>
                 <TableCell align="right">
-                  <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
+                  <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end', flexWrap: 'wrap' }}>
                     <IconButton onClick={() => onEditUser(user)}><EditOutlinedIcon /></IconButton>
                     <IconButton onClick={() => onToggleUserStatus(user)}>
                       {user.status === 'ACTIVE' ? <BlockOutlinedIcon /> : <CheckCircleOutlineOutlinedIcon />}

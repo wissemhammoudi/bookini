@@ -2,7 +2,7 @@ import AddOutlinedIcon from '@mui/icons-material/AddOutlined'
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined'
-import { Avatar, Box, Button, Chip, Paper, Stack, TextField, Typography } from '@mui/material'
+import { Avatar, Box, Button, Chip, Paper, Stack, TextField, Typography, alpha } from '@mui/material'
 import Grid from '@mui/material/Grid'
 
 import type { PlaceActionHandler } from '@/features/admin-workspace/admin-workspace-types'
@@ -39,7 +39,7 @@ export const PlacesSection = ({
       <Grid container spacing={2.5}>
         {places.map((place) => (
           <Grid key={place.id} size={{ xs: 12, xl: 6 }}>
-            <Paper sx={{ p: 3, height: '100%' }}>
+            <Paper sx={{ p: 3, height: '100%', border: '1px solid', borderColor: 'divider', background: 'linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,251,255,0.98))' }}>
               <Stack spacing={2}>
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
                   <Avatar src={place.cover_image || undefined} variant="rounded" sx={{ width: 96, height: 96, borderRadius: 4 }} />
@@ -61,9 +61,9 @@ export const PlacesSection = ({
                   <Grid size={{ xs: 12 }}><Typography variant="body2" color="text.secondary">Address</Typography><Typography>{place.address}</Typography></Grid>
                 </Grid>
                 <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
-                  {place.features.map((feature) => <Chip key={feature} label={feature} />)}
+                  {place.features.map((feature) => <Chip key={feature} label={feature} variant="outlined" sx={{ backgroundColor: alpha('#0F6FDB', 0.04) }} />)}
                 </Stack>
-                <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
+                <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end', flexWrap: 'wrap' }}>
                   <Button startIcon={<VisibilityOutlinedIcon />} onClick={onViewReservations}>View Reservations</Button>
                   <Button startIcon={<EditOutlinedIcon />} onClick={() => onEditPlace(place)}>Edit</Button>
                   <Button color="error" startIcon={<DeleteOutlineOutlinedIcon />} onClick={() => onDeletePlace(place)}>Delete</Button>

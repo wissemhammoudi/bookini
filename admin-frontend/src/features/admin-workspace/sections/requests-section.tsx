@@ -1,5 +1,5 @@
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined'
-import { Alert, Button, Chip, Paper, Stack, Typography, Box } from '@mui/material'
+import { Alert, Button, Chip, Paper, Stack, Typography, Box, alpha } from '@mui/material'
 import Grid from '@mui/material/Grid'
 
 import type { ContactActionHandler } from '@/features/admin-workspace/admin-workspace-types'
@@ -29,14 +29,14 @@ export const RequestsSection = ({
     <SectionHeader title="Contact & Partnership Requests" description="Resolve support requests and onboard new organizations from partnership applications." />
     <Grid container spacing={2.5}>
       <Grid size={{ xs: 12, xl: 6 }}>
-        <Paper sx={{ p: 3, height: '100%' }}>
+        <Paper sx={{ p: 3, height: '100%', border: '1px solid', borderColor: 'divider', background: 'linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,251,255,0.98))' }}>
           <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
             <Typography variant="h6">Contact Us Requests</Typography>
-            <Chip label={`${contactRequests.length} requests`} />
+            <Chip label={`${contactRequests.length} requests`} variant="outlined" />
           </Stack>
           <Stack spacing={2}>
             {contactRequests.length === 0 ? <EmptyState title="No contact requests" description="Support requests will appear here when submitted." /> : contactRequests.map((request) => (
-              <Paper key={request.id} variant="outlined" sx={{ p: 2.5, borderRadius: 4 }}>
+              <Paper key={request.id} variant="outlined" sx={{ p: 2.5, borderRadius: 4, backgroundColor: alpha('#0F6FDB', 0.025) }}>
                 <Stack spacing={1.25}>
                   <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <Box>
@@ -47,7 +47,7 @@ export const RequestsSection = ({
                   </Stack>
                   <Typography>{request.message}</Typography>
                   <Typography variant="body2" color="text.secondary">Phone: {request.phone} · {new Date(request.date).toLocaleString()}</Typography>
-                  <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
+                  <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end', flexWrap: 'wrap' }}>
                     <Button size="small" startIcon={<VisibilityOutlinedIcon />} onClick={() => onPreviewMessage(`${request.full_name}: ${request.message}`)}>View</Button>
                     <Button size="small" onClick={() => onMarkProcessed(request)}>Mark Processed</Button>
                     <Button size="small" color="error" onClick={() => onDeleteContact(request)}>Delete</Button>
@@ -59,14 +59,14 @@ export const RequestsSection = ({
         </Paper>
       </Grid>
       <Grid size={{ xs: 12, xl: 6 }}>
-        <Paper sx={{ p: 3, height: '100%' }}>
+        <Paper sx={{ p: 3, height: '100%', border: '1px solid', borderColor: 'divider', background: 'linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,251,255,0.98))' }}>
           <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
             <Typography variant="h6">Become a Partner Requests</Typography>
-            <Chip label={`${partnerRequests.length} requests`} />
+            <Chip label={`${partnerRequests.length} requests`} variant="outlined" />
           </Stack>
           <Stack spacing={2}>
             {partnerRequests.length === 0 ? <EmptyState title="No partnership requests" description="New organization requests will appear here." /> : partnerRequests.map((request) => (
-              <Paper key={request.id} variant="outlined" sx={{ p: 2.5, borderRadius: 4 }}>
+              <Paper key={request.id} variant="outlined" sx={{ p: 2.5, borderRadius: 4, backgroundColor: alpha('#1EA88A', 0.025) }}>
                 <Stack spacing={1.25}>
                   <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <Box>
@@ -80,7 +80,7 @@ export const RequestsSection = ({
                   {request.generated_credentials ? (
                     <Alert severity="success">Credentials: {request.generated_credentials.email} / {request.generated_credentials.temporary_password}</Alert>
                   ) : null}
-                  <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
+                  <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end', flexWrap: 'wrap' }}>
                     <Button size="small" color="success" onClick={() => onApprovePartnership(request)}>Approve</Button>
                     <Button size="small" color="error" onClick={() => onRejectPartnership(request)}>Reject</Button>
                   </Stack>

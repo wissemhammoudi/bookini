@@ -1,7 +1,9 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import {
   Alert,
+  Box,
   Button,
+  Chip,
   Dialog,
   DialogActions,
   DialogContent,
@@ -9,9 +11,12 @@ import {
   FormControlLabel,
   Grid,
   MenuItem,
+  Paper,
   Stack,
   Switch,
   TextField,
+  Typography,
+  alpha,
 } from '@mui/material'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
@@ -96,6 +101,51 @@ type PlaceFormValues = z.infer<typeof placeSchema>
 type FloorFormValues = z.infer<typeof floorSchema>
 type SettingsFormValues = z.infer<typeof settingsSchema>
 
+const dialogPaperSx = {
+  '& .MuiDialog-paper': {
+    borderRadius: 5,
+    border: '1px solid',
+    borderColor: 'divider',
+    backgroundImage: 'none',
+    background: 'linear-gradient(180deg, #FFFFFF 0%, #F7FAFF 100%)',
+    boxShadow: '0 28px 70px rgba(16, 24, 40, 0.16)',
+  },
+}
+
+const dialogContentSx = {
+  pt: 2.5,
+}
+
+const dialogActionsSx = {
+  px: 3,
+  py: 2.5,
+  borderTop: '1px solid',
+  borderColor: 'divider',
+  backgroundColor: alpha('#0F6FDB', 0.02),
+}
+
+const DialogHeading = ({
+  tone,
+  title,
+  subtitle,
+}: {
+  tone: string
+  title: string
+  subtitle: string
+}) => (
+  <Stack spacing={1}>
+    <Chip label={tone} size="small" variant="outlined" sx={{ alignSelf: 'flex-start', fontWeight: 700 }} />
+    <Box>
+      <Typography variant="h5" sx={{ fontWeight: 900, letterSpacing: '-0.02em' }}>
+        {title}
+      </Typography>
+      <Typography color="text.secondary" sx={{ mt: 0.5 }}>
+        {subtitle}
+      </Typography>
+    </Box>
+  </Stack>
+)
+
 type BaseDialogProps = {
   open: boolean
   onClose: () => void
@@ -145,16 +195,22 @@ export const UserDialog = ({
   }
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle>{title}</DialogTitle>
-      <DialogContent dividers>
+    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth sx={dialogPaperSx}>
+      <DialogTitle sx={{ px: 3, pt: 3, pb: 0 }}>
+        <DialogHeading
+          tone="User access"
+          title={title}
+          subtitle="Create or update an account with role, status, and organization context."
+        />
+      </DialogTitle>
+      <DialogContent dividers sx={dialogContentSx}>
         <Stack spacing={2} component="form" id="user-form" onSubmit={handleSubmit(async (formValues) => {
           await onSubmit({
             ...formValues,
             organization_id: formValues.organization_id || undefined,
           })
         })}>
-          {error ? <Alert severity="error">{error}</Alert> : null}
+          {error ? <Alert severity="error" sx={{ borderRadius: 2 }}>{error}</Alert> : null}
           <TextField label="Full Name" {...register('full_name')} error={Boolean(errors.full_name)} helperText={errors.full_name?.message} />
           <TextField label="Email" {...register('email')} error={Boolean(errors.email)} helperText={errors.email?.message} />
           <TextField label="Phone" {...register('phone')} error={Boolean(errors.phone)} helperText={errors.phone?.message} />
@@ -175,7 +231,7 @@ export const UserDialog = ({
           </TextField>
         </Stack>
       </DialogContent>
-      <DialogActions>
+      <DialogActions sx={dialogActionsSx}>
         <Button onClick={handleClose}>Cancel</Button>
         <Button type="submit" form="user-form" variant="contained" disabled={isSubmitting}>
           {isSubmitting ? 'Saving...' : 'Save user'}
@@ -233,9 +289,15 @@ export const OrganizationDialog = ({
   }
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
-      <DialogTitle>{title}</DialogTitle>
-      <DialogContent dividers>
+    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth sx={dialogPaperSx}>
+      <DialogTitle sx={{ px: 3, pt: 3, pb: 0 }}>
+        <DialogHeading
+          tone="Organization profile"
+          title={title}
+          subtitle="Capture the organization identity, contact details, and public presence."
+        />
+      </DialogTitle>
+      <DialogContent dividers sx={dialogContentSx}>
         <Stack spacing={2} component="form" id="organization-form" onSubmit={handleSubmit(async (formValues) => {
           await onSubmit({
             ...formValues,
@@ -248,7 +310,7 @@ export const OrganizationDialog = ({
               .filter(Boolean),
           })
         })}>
-          {error ? <Alert severity="error">{error}</Alert> : null}
+          {error ? <Alert severity="error" sx={{ borderRadius: 2 }}>{error}</Alert> : null}
           <Grid container spacing={2}>
             <Grid size={{ xs: 12, md: 6 }}>
               <TextField fullWidth label="Organization Name" {...register('name')} error={Boolean(errors.name)} helperText={errors.name?.message} />
@@ -274,7 +336,7 @@ export const OrganizationDialog = ({
           <TextField label="Social Links" {...register('social_links')} error={Boolean(errors.social_links)} helperText={errors.social_links?.message ?? 'Comma separated URLs'} />
         </Stack>
       </DialogContent>
-      <DialogActions>
+      <DialogActions sx={dialogActionsSx}>
         <Button onClick={handleClose}>Cancel</Button>
         <Button type="submit" form="organization-form" variant="contained" disabled={isSubmitting}>
           {isSubmitting ? 'Saving...' : 'Save organization'}
@@ -338,9 +400,15 @@ export const PlaceDialog = ({
   }
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
-      <DialogTitle>{title}</DialogTitle>
-      <DialogContent dividers>
+    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth sx={dialogPaperSx}>
+      <DialogTitle sx={{ px: 3, pt: 3, pb: 0 }}>
+        <DialogHeading
+          tone="Place inventory"
+          title={title}
+          subtitle="Define the room or space details that surface in the reservation experience."
+        />
+      </DialogTitle>
+      <DialogContent dividers sx={dialogContentSx}>
         <Stack spacing={2} component="form" id="place-form" onSubmit={handleSubmit(async (formValues) => {
           await onSubmit({
             ...formValues,
@@ -349,7 +417,7 @@ export const PlaceDialog = ({
             features: formValues.features.split(',').map((item: string) => item.trim()).filter(Boolean),
           })
         })}>
-          {error ? <Alert severity="error">{error}</Alert> : null}
+          {error ? <Alert severity="error" sx={{ borderRadius: 2 }}>{error}</Alert> : null}
           <Grid container spacing={2}>
             <Grid size={{ xs: 12, md: 6 }}>
               <TextField fullWidth select label="Organization" defaultValue={value?.organization_id ?? organizations[0]?.id ?? ''} {...register('organization_id')} error={Boolean(errors.organization_id)} helperText={errors.organization_id?.message}>
@@ -383,7 +451,7 @@ export const PlaceDialog = ({
           </TextField>
         </Stack>
       </DialogContent>
-      <DialogActions>
+      <DialogActions sx={dialogActionsSx}>
         <Button onClick={handleClose}>Cancel</Button>
         <Button type="submit" form="place-form" variant="contained" disabled={isSubmitting}>
           {isSubmitting ? 'Saving...' : 'Save place'}
@@ -439,9 +507,15 @@ export const FloorDialog = ({
   }
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle>{title}</DialogTitle>
-      <DialogContent dividers>
+    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth sx={dialogPaperSx}>
+      <DialogTitle sx={{ px: 3, pt: 3, pb: 0 }}>
+        <DialogHeading
+          tone="Floor planning"
+          title={title}
+          subtitle="Configure a floor, its capacity, and the reservation areas it exposes."
+        />
+      </DialogTitle>
+      <DialogContent dividers sx={dialogContentSx}>
         <Stack spacing={2} component="form" id="floor-form" onSubmit={handleSubmit(async (formValues) => {
           await onSubmit({
             ...formValues,
@@ -449,7 +523,7 @@ export const FloorDialog = ({
             reservation_areas: formValues.reservation_areas.split(',').map((item: string) => item.trim()).filter(Boolean),
           })
         })}>
-          {error ? <Alert severity="error">{error}</Alert> : null}
+          {error ? <Alert severity="error" sx={{ borderRadius: 2 }}>{error}</Alert> : null}
           <TextField select label="Place" defaultValue={value?.place_id ?? places[0]?.id ?? ''} {...register('place_id')} error={Boolean(errors.place_id)} helperText={errors.place_id?.message}>
             {places.map((place) => (
               <MenuItem key={place.id} value={place.id}>{place.name}</MenuItem>
@@ -473,7 +547,7 @@ export const FloorDialog = ({
           </TextField>
         </Stack>
       </DialogContent>
-      <DialogActions>
+      <DialogActions sx={dialogActionsSx}>
         <Button onClick={handleClose}>Cancel</Button>
         <Button type="submit" form="floor-form" variant="contained" disabled={isSubmitting}>
           {isSubmitting ? 'Saving...' : 'Save floor'}
@@ -523,9 +597,15 @@ export const SettingsDialog = ({
   }
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
-      <DialogTitle>Update Settings</DialogTitle>
-      <DialogContent dividers>
+    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth sx={dialogPaperSx}>
+      <DialogTitle sx={{ px: 3, pt: 3, pb: 0 }}>
+        <DialogHeading
+          tone="System configuration"
+          title="Update Settings"
+          subtitle="Manage workspace identity, notifications, and security defaults in one panel."
+        />
+      </DialogTitle>
+      <DialogContent dividers sx={dialogContentSx}>
         <Stack spacing={2} component="form" id="settings-form" onSubmit={handleSubmit(async (formValues) => {
           await onSubmit({
             profile: {
@@ -553,47 +633,59 @@ export const SettingsDialog = ({
             },
           })
         })}>
-          {error ? <Alert severity="error">{error}</Alert> : null}
-          <Grid container spacing={2}>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TextField fullWidth label="Full Name" {...register('full_name')} error={Boolean(errors.full_name)} helperText={errors.full_name?.message} />
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TextField fullWidth label="Title" {...register('title')} error={Boolean(errors.title)} helperText={errors.title?.message} />
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TextField fullWidth label="Email" {...register('email')} error={Boolean(errors.email)} helperText={errors.email?.message} />
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TextField fullWidth label="Phone" {...register('phone')} error={Boolean(errors.phone)} helperText={errors.phone?.message} />
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TextField fullWidth label="Platform Name" {...register('platform_name')} error={Boolean(errors.platform_name)} helperText={errors.platform_name?.message} />
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TextField fullWidth label="Support Email" {...register('support_email')} error={Boolean(errors.support_email)} helperText={errors.support_email?.message} />
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TextField fullWidth label="Timezone" {...register('timezone')} error={Boolean(errors.timezone)} helperText={errors.timezone?.message} />
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TextField fullWidth label="Default Language" {...register('default_language')} error={Boolean(errors.default_language)} helperText={errors.default_language?.message} />
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TextField fullWidth type="number" label="Session Timeout (minutes)" {...register('session_timeout_minutes', { valueAsNumber: true })} error={Boolean(errors.session_timeout_minutes)} helperText={errors.session_timeout_minutes?.message} />
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TextField fullWidth type="number" label="Password Rotation (days)" {...register('password_rotation_days', { valueAsNumber: true })} error={Boolean(errors.password_rotation_days)} helperText={errors.password_rotation_days?.message} />
-            </Grid>
-          </Grid>
-          <FormControlLabel control={<Switch {...register('email_notifications')} defaultChecked={value.notifications.email_notifications} />} label="Email notifications" />
-          <FormControlLabel control={<Switch {...register('sms_notifications')} defaultChecked={value.notifications.sms_notifications} />} label="SMS notifications" />
-          <FormControlLabel control={<Switch {...register('weekly_report')} defaultChecked={value.notifications.weekly_report} />} label="Weekly reports" />
-          <FormControlLabel control={<Switch {...register('incident_alerts')} defaultChecked={value.notifications.incident_alerts} />} label="Incident alerts" />
-          <FormControlLabel control={<Switch {...register('require_mfa_for_admins')} defaultChecked={value.security.require_mfa_for_admins} />} label="Require MFA for admins" />
+          {error ? <Alert severity="error" sx={{ borderRadius: 2 }}>{error}</Alert> : null}
+          <Paper sx={{ p: 2.5, border: '1px solid', borderColor: 'divider', backgroundColor: alpha('#0F6FDB', 0.025) }}>
+            <Stack spacing={2}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>Profile & platform</Typography>
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <TextField fullWidth label="Full Name" {...register('full_name')} error={Boolean(errors.full_name)} helperText={errors.full_name?.message} />
+                </Grid>
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <TextField fullWidth label="Title" {...register('title')} error={Boolean(errors.title)} helperText={errors.title?.message} />
+                </Grid>
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <TextField fullWidth label="Email" {...register('email')} error={Boolean(errors.email)} helperText={errors.email?.message} />
+                </Grid>
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <TextField fullWidth label="Phone" {...register('phone')} error={Boolean(errors.phone)} helperText={errors.phone?.message} />
+                </Grid>
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <TextField fullWidth label="Platform Name" {...register('platform_name')} error={Boolean(errors.platform_name)} helperText={errors.platform_name?.message} />
+                </Grid>
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <TextField fullWidth label="Support Email" {...register('support_email')} error={Boolean(errors.support_email)} helperText={errors.support_email?.message} />
+                </Grid>
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <TextField fullWidth label="Timezone" {...register('timezone')} error={Boolean(errors.timezone)} helperText={errors.timezone?.message} />
+                </Grid>
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <TextField fullWidth label="Default Language" {...register('default_language')} error={Boolean(errors.default_language)} helperText={errors.default_language?.message} />
+                </Grid>
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <TextField fullWidth type="number" label="Session Timeout (minutes)" {...register('session_timeout_minutes', { valueAsNumber: true })} error={Boolean(errors.session_timeout_minutes)} helperText={errors.session_timeout_minutes?.message} />
+                </Grid>
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <TextField fullWidth type="number" label="Password Rotation (days)" {...register('password_rotation_days', { valueAsNumber: true })} error={Boolean(errors.password_rotation_days)} helperText={errors.password_rotation_days?.message} />
+                </Grid>
+              </Grid>
+            </Stack>
+          </Paper>
+          <Paper sx={{ p: 2.5, border: '1px solid', borderColor: 'divider', backgroundColor: alpha('#1EA88A', 0.025) }}>
+            <Stack spacing={2}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>Alerts & security</Typography>
+              <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} sx={{ flexWrap: 'wrap' }}>
+                <FormControlLabel control={<Switch {...register('email_notifications')} defaultChecked={value.notifications.email_notifications} />} label="Email notifications" />
+                <FormControlLabel control={<Switch {...register('sms_notifications')} defaultChecked={value.notifications.sms_notifications} />} label="SMS notifications" />
+                <FormControlLabel control={<Switch {...register('weekly_report')} defaultChecked={value.notifications.weekly_report} />} label="Weekly reports" />
+                <FormControlLabel control={<Switch {...register('incident_alerts')} defaultChecked={value.notifications.incident_alerts} />} label="Incident alerts" />
+                <FormControlLabel control={<Switch {...register('require_mfa_for_admins')} defaultChecked={value.security.require_mfa_for_admins} />} label="Require MFA for admins" />
+              </Stack>
+            </Stack>
+          </Paper>
         </Stack>
       </DialogContent>
-      <DialogActions>
+      <DialogActions sx={dialogActionsSx}>
         <Button onClick={handleClose}>Cancel</Button>
         <Button type="submit" form="settings-form" variant="contained" disabled={isSubmitting}>
           {isSubmitting ? 'Saving...' : 'Save settings'}
@@ -622,15 +714,21 @@ export const ConfirmDialog = ({
   open,
   title,
 }: ConfirmDialogProps) => (
-  <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
-    <DialogTitle>{title}</DialogTitle>
-    <DialogContent dividers>
+  <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth sx={dialogPaperSx}>
+    <DialogTitle sx={{ px: 3, pt: 3, pb: 0 }}>
+      <DialogHeading
+        tone="Confirmation"
+        title={title}
+        subtitle="Review the action before it is applied to the admin workspace."
+      />
+    </DialogTitle>
+    <DialogContent dividers sx={dialogContentSx}>
       <Stack spacing={2}>
-        {error ? <Alert severity="error">{error}</Alert> : null}
-        <Alert severity={color === 'error' ? 'warning' : 'info'}>{description}</Alert>
+        {error ? <Alert severity="error" sx={{ borderRadius: 2 }}>{error}</Alert> : null}
+        <Alert severity={color === 'error' ? 'warning' : 'info'} sx={{ borderRadius: 2 }}>{description}</Alert>
       </Stack>
     </DialogContent>
-    <DialogActions>
+    <DialogActions sx={dialogActionsSx}>
       <Button onClick={onClose}>Cancel</Button>
       <Button variant="contained" color={color} disabled={isSubmitting} onClick={() => void onConfirm()}>
         {isSubmitting ? 'Working...' : confirmLabel}
