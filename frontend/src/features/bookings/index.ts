@@ -1,4 +1,5 @@
 export { PublicBookingPage } from './public-booking-page'
+export { PlaceDetailsPage } from './place-details-page'
 export { BookingConfirmationPage } from './booking-confirmation-page'
 export * from './constants'
 export * from './types'

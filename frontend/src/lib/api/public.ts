@@ -19,10 +19,17 @@ export type PublicBookingCreatePayload = {
 export type PublicRoom = {
   id: number
   name: string
+  description?: string
   capacity: number
   price: number
+  address?: string
+  availability?: string
   amenities: string[]
+  features?: string[]
   image: string
+  cover_image?: string | null
+  gallery?: string[]
+  video_url?: string | null
 }
 
 export type PublicBookingCreateResponse = {

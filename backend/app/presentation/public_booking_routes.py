@@ -21,56 +21,31 @@ from app.services.admin_workspace_state_store import AdminWorkspaceStateStore
 
 router = APIRouter(prefix="/public", tags=["public"])
 
-PUBLIC_ROOMS_CATALOG = [
-    {
-        "id": 1,
-        "name": "Meeting Room A",
-        "capacity": 6,
-        "price": 5,
-        "amenities": ["WiFi", "Projector", "Whiteboard"],
-        "image": "🏢",
-    },
-    {
-        "id": 2,
-        "name": "Conference Room B",
-        "capacity": 12,
-        "price": 8,
-        "amenities": ["WiFi", "Projector", "Video Call", "Whiteboard"],
-        "image": "🏛",
-    },
-    {
-        "id": 3,
-        "name": "Collaboration Space",
-        "capacity": 8,
-        "price": 6,
-        "amenities": ["WiFi", "Whiteboard", "Modular Furniture"],
-        "image": "🤝",
-    },
-    {
-        "id": 4,
-        "name": "Executive Suite",
-        "capacity": 4,
-        "price": 10,
-        "amenities": ["WiFi", "Mini Bar", "Premium Furniture"],
-        "image": "🎩",
-    },
-    {
-        "id": 5,
-        "name": "Training Room",
-        "capacity": 20,
-        "price": 12,
-        "amenities": ["WiFi", "Projector", "Video Call", "Whiteboard", "AV Equipment"],
-        "image": "📚",
-    },
-    {
-        "id": 6,
-        "name": "Creative Studio",
-        "capacity": 5,
-        "price": 7,
-        "amenities": ["WiFi", "Whiteboard", "Creative Tools"],
-        "image": "🎨",
-    },
-]
+def _build_public_rooms_catalog() -> list[dict[str, object]]:
+    state = AdminWorkspaceStateStore.get_state()
+
+    rooms: list[dict[str, object]] = []
+    for index, place in enumerate(state.places, start=1):
+        rooms.append(
+            {
+                "id": index,
+                "name": place.name,
+                "description": place.description,
+                "capacity": place.capacity,
+                "price": place.pricing,
+                "address": place.address,
+                "availability": place.availability,
+                "amenities": place.features,
+                "features": place.features,
+                "image": "🏢",
+                "cover_image": str(place.cover_image) if place.cover_image else None,
+                "gallery": [str(url) for url in place.gallery],
+                # Placeholder for future admin-managed media URL.
+                "video_url": None,
+            }
+        )
+
+    return rooms
 
 
 def _time_to_minutes(value: str) -> int:
@@ -99,7 +74,7 @@ async def list_public_rooms() -> dict[str, object]:
 
     return success_response(
         message="Public rooms retrieved",
-        data=PUBLIC_ROOMS_CATALOG,
+        data=_build_public_rooms_catalog(),
     )
 
 

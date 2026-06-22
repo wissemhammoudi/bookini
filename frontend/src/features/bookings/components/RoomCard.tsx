@@ -18,9 +18,10 @@ interface RoomCardProps {
   isLight: boolean
   isSelected?: boolean
   onBookNow: (room: Room) => void
+  actionLabel?: string
 }
 
-export const RoomCard = ({ room, isLight, isSelected = false, onBookNow }: RoomCardProps) => {
+export const RoomCard = ({ room, isLight, isSelected = false, onBookNow, actionLabel }: RoomCardProps) => {
   return (
     <Card
       elevation={0}
@@ -95,7 +96,7 @@ export const RoomCard = ({ room, isLight, isSelected = false, onBookNow }: RoomC
               sx={{ fontWeight: 700 }}
               onClick={() => onBookNow(room)}
             >
-              {isSelected ? 'Book Now' : 'Select Space'}
+              {actionLabel ?? (isSelected ? 'Book Now' : 'Select Space')}
             </Button>
           </Stack>
         </Stack>
