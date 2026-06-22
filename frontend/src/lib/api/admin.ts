@@ -1,6 +1,5 @@
 import { apiClient } from '../api-client'
 import type { ApiResponse } from './common-types'
-import type { FloorItem } from './floors'
 import type { ReservationItem } from './reservations'
 
 export type AdminDashboard = {

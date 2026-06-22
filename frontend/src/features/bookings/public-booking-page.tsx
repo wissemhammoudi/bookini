@@ -2,7 +2,6 @@ import { useState } from 'react'
 import {
   Box,
   Container,
-  Divider,
   Stack,
   Typography,
 } from '@mui/material'
@@ -29,7 +28,7 @@ export const PublicBookingPage = () => {
   const { mode } = useColorMode()
   const isLight = mode === 'light'
 
-  const [selectedPlan, setSelectedPlan] = useState('pay-as-you-go')
+  const [selectedPlan] = useState('pay-as-you-go')
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null)
   const [bookingDialogOpen, setBookingDialogOpen] = useState(false)
 
