@@ -1,6 +1,7 @@
 import { Box, Container, List, ListItem, ListItemIcon, ListItemText, Stack, Typography, alpha } from '@mui/material'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import { useColorMode } from '@/app/use-color-mode'
+import { PublicNavbar } from './components/public-navbar'
 
 /**
  * Reservations Info Page
@@ -39,6 +40,7 @@ export const ReservationsInfoPage = () => {
         py: { xs: 6, md: 10 },
       }}
     >
+      <PublicNavbar isLight={isLight} />
       <Container maxWidth="md">
         <Stack spacing={6}>
           <Box sx={{ textAlign: 'center' }}>

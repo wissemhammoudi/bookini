@@ -1,5 +1,6 @@
 import { Stack, Typography, Box, Paper, alpha } from '@mui/material'
 import { useColorMode } from '@/app/use-color-mode'
+import { PublicNavbar } from './components/public-navbar'
 
 /**
  * About Page
@@ -18,6 +19,7 @@ export const AboutPage = () => {
           : 'linear-gradient(180deg, #0a0e1a 0%, #101d32 45%, #1a1f3a 100%)',
       }}
     >
+      <PublicNavbar isLight={isLight} />
       <Box sx={{ py: { xs: 6, md: 10 } }}>
         <Stack spacing={1.5} sx={{ mb: 3, maxWidth: 760, mx: 'auto', px: { xs: 2, md: 0 } }}>
           <Typography variant="overline" color="primary.main" sx={{ fontWeight: 700 }}>

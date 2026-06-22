@@ -1,21 +1,14 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import {
-  AppBar,
   Box,
   Container,
   Divider,
-  IconButton,
   Stack,
-  Toolbar,
   Typography,
-  alpha,
 } from '@mui/material'
-import ArrowBackIcon from '@mui/icons-material/ArrowBack'
-import LightModeOutlinedIcon from '@mui/icons-material/LightModeOutlined'
-import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined'
 
 import { useColorMode } from '@/app/use-color-mode'
+import { PublicNavbar } from '@/features/public/components/public-navbar'
 import { SUBSCRIPTION_PLANS, AVAILABLE_ROOMS } from './constants'
 import { PlanCard } from './components/PlanCard'
 import { RoomCard } from './components/RoomCard'
@@ -34,8 +27,7 @@ import type { Room } from './constants'
  * - Real-time price calculation based on plan and duration
  */
 export const PublicBookingPage = () => {
-  const navigate = useNavigate()
-  const { mode, toggleMode } = useColorMode()
+  const { mode } = useColorMode()
   const isLight = mode === 'light'
   
   const [selectedPlan, setSelectedPlan] = useState('pay-as-you-go')
@@ -61,52 +53,7 @@ export const PublicBookingPage = () => {
           : 'linear-gradient(180deg, #0a0e1a 0%, #101d32 45%, #1a1f3a 100%)',
       }}
     >
-      {/* Header */}
-      <AppBar
-        position="sticky"
-        elevation={0}
-        sx={{
-          background: alpha(isLight ? '#ffffff' : '#0f1419', isLight ? 0.82 : 0.85),
-          backdropFilter: 'blur(18px)',
-          color: 'text.primary',
-          borderBottom: '1px solid',
-          borderColor: isLight ? 'rgba(0, 89, 179, 0.08)' : 'rgba(255, 255, 255, 0.05)',
-        }}
-      >
-        <Toolbar>
-          <Container
-            maxWidth="lg"
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: 2,
-              width: '100%',
-            }}
-          >
-            <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-              <IconButton
-                onClick={() => navigate('/')}
-                color="inherit"
-                sx={{ border: '1px solid', borderColor: 'divider', backdropFilter: 'blur(4px)' }}
-              >
-                <ArrowBackIcon />
-              </IconButton>
-              <Typography variant="h6" sx={{ fontWeight: 800 }}>
-                Book a Room
-              </Typography>
-            </Stack>
-
-            <IconButton
-              onClick={toggleMode}
-              color="inherit"
-              sx={{ border: '1px solid', borderColor: 'divider', backdropFilter: 'blur(4px)' }}
-            >
-              {isLight ? <DarkModeOutlinedIcon /> : <LightModeOutlinedIcon />}
-            </IconButton>
-          </Container>
-        </Toolbar>
-      </AppBar>
+      <PublicNavbar isLight={isLight} />
 
       {/* Main Content */}
       <Container maxWidth="lg" sx={{ py: { xs: 6, md: 10 } }}>

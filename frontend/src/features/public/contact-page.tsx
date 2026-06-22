@@ -2,6 +2,7 @@ import { Box, Button, Container, Stack, Tabs, Tab, Paper, TextField, Typography,
 import { useState } from 'react'
 import SendIcon from '@mui/icons-material/Send'
 import { useColorMode } from '@/app/use-color-mode'
+import { PublicNavbar } from './components/public-navbar'
 
 /**
  * Contact Page
@@ -46,6 +47,7 @@ export const ContactPage = () => {
         py: { xs: 6, md: 10 },
       }}
     >
+      <PublicNavbar isLight={isLight} />
       <Container maxWidth="sm">
         <Stack spacing={4}>
           <Box sx={{ textAlign: 'center' }}>

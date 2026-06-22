@@ -2,23 +2,17 @@ import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   Alert,
-  AppBar,
   Box,
   Button,
   Container,
   Divider,
-  IconButton,
   Paper,
   Stack,
   TextField,
-  Toolbar,
   Typography,
   Chip,
   alpha,
 } from '@mui/material'
-import ArrowBackIcon from '@mui/icons-material/ArrowBack'
-import LightModeOutlinedIcon from '@mui/icons-material/LightModeOutlined'
-import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import EventIcon from '@mui/icons-material/Event'
 import AccessTimeIcon from '@mui/icons-material/AccessTime'
@@ -30,6 +24,7 @@ import AttachMoneyIcon from '@mui/icons-material/AttachMoney'
 import DownloadIcon from '@mui/icons-material/Download'
 
 import { useColorMode } from '@/app/use-color-mode'
+import { PublicNavbar } from '@/features/public/components/public-navbar'
 
 // Mock booking data - in production, fetch from API
 const MOCK_BOOKINGS: Record<string, any> = {
@@ -63,7 +58,7 @@ const MOCK_BOOKINGS: Record<string, any> = {
 export const BookingConfirmationPage = () => {
   const { reference = 'BK-2024-001' } = useParams()
   const navigate = useNavigate()
-  const { mode, toggleMode } = useColorMode()
+  const { mode } = useColorMode()
   const isLight = mode === 'light'
   const [searchReference, setSearchReference] = useState(reference)
 
@@ -109,52 +104,7 @@ END:VCALENDAR`
           : 'linear-gradient(180deg, #0a0e1a 0%, #101d32 45%, #1a1f3a 100%)',
       }}
     >
-      {/* Header */}
-      <AppBar
-        position="sticky"
-        elevation={0}
-        sx={{
-          background: alpha(isLight ? '#ffffff' : '#0f1419', isLight ? 0.82 : 0.85),
-          backdropFilter: 'blur(18px)',
-          color: 'text.primary',
-          borderBottom: '1px solid',
-          borderColor: isLight ? 'rgba(0, 89, 179, 0.08)' : 'rgba(255, 255, 255, 0.05)',
-        }}
-      >
-        <Toolbar>
-          <Container
-            maxWidth="lg"
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: 2,
-              width: '100%',
-            }}
-          >
-            <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-              <IconButton
-                onClick={() => navigate('/')}
-                color="inherit"
-                sx={{ border: '1px solid', borderColor: 'divider', backdropFilter: 'blur(4px)' }}
-              >
-                <ArrowBackIcon />
-              </IconButton>
-              <Typography variant="h6" sx={{ fontWeight: 800 }}>
-                Booking Confirmation
-              </Typography>
-            </Stack>
-
-            <IconButton
-              onClick={toggleMode}
-              color="inherit"
-              sx={{ border: '1px solid', borderColor: 'divider', backdropFilter: 'blur(4px)' }}
-            >
-              {isLight ? <DarkModeOutlinedIcon /> : <LightModeOutlinedIcon />}
-            </IconButton>
-          </Container>
-        </Toolbar>
-      </AppBar>
+      <PublicNavbar isLight={isLight} />
 
       {/* Main Content */}
       <Container maxWidth="md" sx={{ py: { xs: 6, md: 10 } }}>

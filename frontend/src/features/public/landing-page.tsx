@@ -1,22 +1,18 @@
 import { Link as RouterLink } from 'react-router-dom'
 import {
-  AppBar,
   Box,
   Button,
   Chip,
   Container,
-  IconButton,
   Stack,
-  Toolbar,
   Typography,
   Paper,
   alpha,
 } from '@mui/material'
-import LightModeOutlinedIcon from '@mui/icons-material/LightModeOutlined'
-import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 
 import { useColorMode } from '@/app/use-color-mode'
+import { PublicNavbar } from './components/public-navbar'
 
 /**
  * Landing Page
@@ -24,7 +20,7 @@ import { useColorMode } from '@/app/use-color-mode'
  * Showcases booking platform features and benefits
  */
 export const LandingPage = () => {
-  const { mode, toggleMode } = useColorMode()
+  const { mode } = useColorMode()
   const isLight = mode === 'light'
 
   return (
@@ -36,34 +32,7 @@ export const LandingPage = () => {
           : 'linear-gradient(180deg, #0a0e1a 0%, #101d32 45%, #1a1f3a 100%)',
       }}
     >
-      {/* Header */}
-      <AppBar
-        position="static"
-        elevation={0}
-        sx={{
-          background: alpha(isLight ? '#ffffff' : '#0f1419', isLight ? 0.6 : 0.5),
-          backdropFilter: 'blur(18px)',
-          color: 'text.primary',
-          borderBottom: '1px solid',
-          borderColor: isLight ? 'rgba(0, 89, 179, 0.08)' : 'rgba(255, 255, 255, 0.05)',
-        }}
-      >
-        <Toolbar>
-          <Container maxWidth="lg" sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Typography variant="h6" sx={{ fontWeight: 800 }}>
-              bookiwa7dek
-            </Typography>
-            <Stack direction="row" spacing={1}>
-              <IconButton onClick={toggleMode} color="inherit" size="small">
-                {isLight ? <DarkModeOutlinedIcon /> : <LightModeOutlinedIcon />}
-              </IconButton>
-              <Button component={RouterLink} to="/login" variant="outlined" size="small">
-                Sign In
-              </Button>
-            </Stack>
-          </Container>
-        </Toolbar>
-      </AppBar>
+      <PublicNavbar isLight={isLight} />
 
       <Container maxWidth="lg" sx={{ py: { xs: 6, md: 10 } }}>
         {/* Hero Section */}
