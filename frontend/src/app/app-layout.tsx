@@ -34,18 +34,6 @@ export const AppLayout = () => {
               <Button component={RouterLink} to="/dashboard" color="inherit">
                 Dashboard
               </Button>
-              <Button component={RouterLink} to="/rooms" color="inherit">
-                Rooms
-              </Button>
-              <Button component={RouterLink} to="/reservations/new" color="inherit">
-                Create
-              </Button>
-              <Button component={RouterLink} to="/reservations" color="inherit">
-                My reservations
-              </Button>
-              <Button component={RouterLink} to="/activities" color="inherit">
-                Activities
-              </Button>
               <Button component={RouterLink} to="/profile" color="inherit">
                 Profile
               </Button>

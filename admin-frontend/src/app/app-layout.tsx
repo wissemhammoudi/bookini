@@ -54,6 +54,12 @@ export const AppLayout = () => {
                   <Button component={RouterLink} to="/super-admin/admins" color="inherit">
                     Manage Admins
                   </Button>
+                  <Button component={RouterLink} to="/super-admin/bookings" color="inherit">
+                    Public Bookings
+                  </Button>
+                  <Button component={RouterLink} to="/super-admin/partnerships" color="inherit">
+                    Partnerships
+                  </Button>
                   <Button component={RouterLink} to="/super-admin/audit-logs" color="inherit">
                     Audit Logs
                   </Button>

@@ -12,6 +12,8 @@ import { StatisticsPage } from '@/features/admin/statistics-page'
 import { SuperAdminDashboardPage } from '@/features/admin/super-admin-dashboard-page'
 import { AuditLogsPage } from '@/features/admin/audit-logs-page'
 import { AdminManagementPage } from '@/features/admin/admin-management-page'
+import { PublicBookingsPage } from '@/features/admin/public-bookings-page'
+import { PartnershipRequestsPage } from '@/features/admin/partnership-requests-page'
 
 export const AppRouter = () => {
   return (
@@ -42,6 +44,14 @@ export const AppRouter = () => {
             <Route
               path="/super-admin/admins"
               element={<AdminManagementPage />}
+            />
+            <Route
+              path="/super-admin/bookings"
+              element={<PublicBookingsPage />}
+            />
+            <Route
+              path="/super-admin/partnerships"
+              element={<PartnershipRequestsPage />}
             />
           </Route>
         </Route>

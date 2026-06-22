@@ -7,6 +7,8 @@ from app.presentation.floor_routes import router as floor_router
 from app.presentation.health_routes import router as health_router
 from app.presentation.reservation_routes import router as reservation_router
 from app.presentation.statistics_routes import router as statistics_router
+from app.presentation.public_booking_routes import router as public_booking_router
+from app.presentation.partnership_routes import router as partnership_router
 
 api_v1_router = APIRouter()
 api_v1_router.include_router(health_router)
@@ -16,3 +18,5 @@ api_v1_router.include_router(floor_router)
 api_v1_router.include_router(reservation_router)
 api_v1_router.include_router(activity_router)
 api_v1_router.include_router(statistics_router)
+api_v1_router.include_router(public_booking_router)
+api_v1_router.include_router(partnership_router)

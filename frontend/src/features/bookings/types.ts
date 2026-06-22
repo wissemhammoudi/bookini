@@ -1,0 +1,31 @@
+/**
+ * Type definitions for booking features
+ */
+
+export interface BookingFormData {
+  guestName: string
+  guestEmail: string
+  guestPhone: string
+  bookingDate: string
+  startTime: string
+  endTime: string
+  participants: string
+  notes: string
+}
+
+export interface BookingPayload extends BookingFormData {
+  roomId: number
+  roomName: string
+  planId: string
+  price: number
+}
+
+export interface BookingConfirmation {
+  reference: string
+  roomName: string
+  date: string
+  startTime: string
+  endTime: string
+  guestName: string
+  price: number
+}

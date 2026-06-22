@@ -1,3 +1,4 @@
+
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 
 import { AppLayout } from '@/app/app-layout'
@@ -5,35 +6,38 @@ import { ProtectedRoute } from '@/features/auth/protected-route'
 import { DashboardPage } from '@/pages/dashboard-page'
 import { LoginPage } from '@/features/auth/login-page'
 import { NotFoundPage } from '@/pages/not-found-page'
-import { LandingPage } from '@/pages/landing-page'
-import { ReservationsPage } from '@/features/reservations/reservations-page'
+import { LandingPage, AboutPage, ContactPage, ReservationsInfoPage } from '@/features/public'
+import { PublicBookingPage, BookingConfirmationPage } from '@/features/bookings'
 import { RegisterPage } from '@/features/auth/register-page'
 import { ForgotPasswordPage } from '@/features/auth/forgot-password-page'
-import { AvailableRoomsPage } from '@/features/floors/available-rooms-page'
-import { CreateReservationPage } from '@/features/reservations/create-reservation-page'
-import { ActivitiesPage } from '@/features/activities/activities-page'
 import { ProfilePage } from '@/features/auth/profile-page'
 
 export const AppRouter = () => {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Public Pages */}
         <Route path="/" element={<LandingPage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="/reservations-info" element={<ReservationsInfoPage />} />
+        <Route path="/book" element={<PublicBookingPage />} />
+        <Route path="/booking-confirmation/:reference" element={<BookingConfirmationPage />} />
+
+        {/* Auth Pages */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
+        {/* Protected Pages */}
         <Route element={<ProtectedRoute />}>
           <Route element={<AppLayout />}>
             <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/rooms" element={<AvailableRoomsPage />} />
-            <Route path="/reservations/new" element={<CreateReservationPage />} />
-            <Route path="/reservations" element={<ReservationsPage />} />
-            <Route path="/activities" element={<ActivitiesPage />} />
             <Route path="/profile" element={<ProfilePage />} />
           </Route>
         </Route>
 
+        {/* 404 */}
         <Route path="/404" element={<NotFoundPage />} />
         <Route path="*" element={<Navigate to="/404" replace />} />
       </Routes>
