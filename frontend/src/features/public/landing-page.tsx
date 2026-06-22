@@ -9,7 +9,6 @@ import {
   Stack,
   Toolbar,
   Typography,
-  Grid,
   Paper,
   alpha,
 } from '@mui/material'

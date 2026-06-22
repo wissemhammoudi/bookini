@@ -1,4 +1,4 @@
-import { Stack, Typography, Box, Paper, Grid, alpha } from '@mui/material'
+import { Stack, Typography, Box, Paper, alpha } from '@mui/material'
 import { useColorMode } from '@/app/use-color-mode'
 
 /**
@@ -31,7 +31,17 @@ export const AboutPage = () => {
           </Typography>
         </Stack>
 
-        <Grid container spacing={3} sx={{ mt: 6, maxWidth: 1200, mx: 'auto', px: { xs: 2, md: 0 } }}>
+        <Box
+          sx={{
+            mt: 6,
+            maxWidth: 1200,
+            mx: 'auto',
+            px: { xs: 2, md: 0 },
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', md: 'repeat(3, minmax(0, 1fr))' },
+            gap: 3,
+          }}
+        >
           {[
             {
               title: 'Our Mission',
@@ -46,7 +56,7 @@ export const AboutPage = () => {
               description: 'We prioritize simplicity, reliability, and customer success in everything we do.',
             },
           ].map((item, idx) => (
-            <Grid item xs={12} md={4} key={idx}>
+            <Box key={idx}>
               <Paper
                 elevation={0}
                 sx={{
@@ -64,9 +74,9 @@ export const AboutPage = () => {
                   {item.description}
                 </Typography>
               </Paper>
-            </Grid>
+            </Box>
           ))}
-        </Grid>
+        </Box>
       </Box>
     </Box>
   )

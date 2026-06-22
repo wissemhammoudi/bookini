@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import {
   Alert,
+  Box,
   Button,
   Dialog,
   DialogActions,
@@ -76,11 +77,13 @@ export const BookingDialog = ({
       onClose={onClose}
       maxWidth="sm"
       fullWidth
-      PaperProps={{
-        sx: {
+      sx={{
+        '& .MuiDialog-paper': {
           borderRadius: 3,
           background: isLight ? '#ffffff' : alpha('#0a0e1a', 0.9),
-          backgroundImage: isLight ? 'none' : `linear-gradient(135deg, ${alpha('#101d32', 0.8)} 0%, ${alpha('#0a0e1a', 0.9)} 100%)`,
+          backgroundImage: isLight
+            ? 'none'
+            : `linear-gradient(135deg, ${alpha('#101d32', 0.8)} 0%, ${alpha('#0a0e1a', 0.9)} 100%)`,
         },
       }}
     >
@@ -114,7 +117,9 @@ export const BookingDialog = ({
                     required
                     fullWidth
                     size="small"
-                    InputLabelProps={{ shrink: true }}
+                    slotProps={{
+                      inputLabel: { shrink: true },
+                    }}
                   />
                   <Stack direction="row" spacing={1.5}>
                     <TextField
@@ -125,7 +130,9 @@ export const BookingDialog = ({
                       required
                       fullWidth
                       size="small"
-                      InputLabelProps={{ shrink: true }}
+                      slotProps={{
+                        inputLabel: { shrink: true },
+                      }}
                     />
                     <TextField
                       label="End Time"
@@ -135,7 +142,9 @@ export const BookingDialog = ({
                       required
                       fullWidth
                       size="small"
-                      InputLabelProps={{ shrink: true }}
+                      slotProps={{
+                        inputLabel: { shrink: true },
+                      }}
                     />
                   </Stack>
                 </Stack>
@@ -206,7 +215,9 @@ export const BookingDialog = ({
                   onChange={(e) => handleInputChange('participants', e.target.value)}
                   fullWidth
                   size="small"
-                  inputProps={{ min: 1, max: room?.capacity }}
+                  slotProps={{
+                    htmlInput: { min: 1, max: room?.capacity },
+                  }}
                 />
               </Box>
 
@@ -276,5 +287,3 @@ export const BookingDialog = ({
     </Dialog>
   )
 }
-
-import { Box } from '@mui/material'

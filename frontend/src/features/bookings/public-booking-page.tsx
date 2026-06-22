@@ -5,7 +5,6 @@ import {
   Box,
   Container,
   Divider,
-  Grid,
   IconButton,
   Stack,
   Toolbar,
@@ -21,7 +20,8 @@ import { SUBSCRIPTION_PLANS, AVAILABLE_ROOMS } from './constants'
 import { PlanCard } from './components/PlanCard'
 import { RoomCard } from './components/RoomCard'
 import { BookingDialog } from './components/BookingDialog'
-import type { Room, BookingFormData } from './types'
+import type { BookingFormData } from './types'
+import type { Room } from './constants'
 
 /**
  * Public Booking Page
@@ -127,18 +127,24 @@ export const PublicBookingPage = () => {
               Subscription Plans
             </Typography>
 
-            <Grid container spacing={3}>
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: { xs: '1fr', md: 'repeat(3, minmax(0, 1fr))' },
+                gap: 3,
+              }}
+            >
               {SUBSCRIPTION_PLANS.map((plan) => (
-                <Grid item xs={12} md={4} key={plan.id}>
+                <Box key={plan.id}>
                   <PlanCard
                     plan={plan}
                     isSelected={selectedPlan === plan.id}
                     onSelect={setSelectedPlan}
                     isLight={isLight}
                   />
-                </Grid>
+                </Box>
               ))}
-            </Grid>
+            </Box>
           </Box>
 
           <Divider sx={{ borderColor: isLight ? 'rgba(0, 89, 179, 0.08)' : 'rgba(255, 255, 255, 0.05)' }} />
@@ -149,17 +155,23 @@ export const PublicBookingPage = () => {
               Available Rooms
             </Typography>
 
-            <Grid container spacing={3}>
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))' },
+                gap: 3,
+              }}
+            >
               {AVAILABLE_ROOMS.map((room) => (
-                <Grid item xs={12} md={6} key={room.id}>
+                <Box key={room.id}>
                   <RoomCard
                     room={room}
                     isLight={isLight}
                     onBookNow={handleRoomSelect}
                   />
-                </Grid>
+                </Box>
               ))}
-            </Grid>
+            </Box>
           </Box>
         </Stack>
       </Container>
