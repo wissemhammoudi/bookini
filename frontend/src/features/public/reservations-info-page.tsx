@@ -35,70 +35,71 @@ export const ReservationsInfoPage = () => {
   const { mode } = useColorMode()
   const isLight = mode === 'light'
 
-  // FAQ open state tracking
   const [expanded, setExpanded] = useState<string | false>(false)
   const handleAccordionChange = (panel: string) => (_event: React.SyntheticEvent, isExpanded: boolean) => {
     setExpanded(isExpanded ? panel : false)
   }
 
+  // Consistent professional slate-based steps color accents
   const steps = [
     {
       step: 'Step 1',
       title: 'Browse Spaces',
       desc: 'Explore available spaces using filters such as Location, Category, Capacity, and Availability.',
-      icon: <SearchIcon sx={{ fontSize: '2rem', color: '#3b82f6' }} />,
-      color: '#3b82f6',
+      icon: <SearchIcon sx={{ fontSize: '2rem', color: 'text.primary' }} />,
+      color: '#475569',
     },
     {
       step: 'Step 2',
       title: 'Select a Space',
       desc: 'View photos, description, capacity details, standard amenities, and live availability schedules.',
-      icon: <AdsClickIcon sx={{ fontSize: '2rem', color: '#10b981' }} />,
-      color: '#10b981',
+      icon: <AdsClickIcon sx={{ fontSize: '2rem', color: 'text.primary' }} />,
+      color: '#334155',
     },
     {
       step: 'Step 3',
       title: 'Submit Reservation',
       desc: 'Choose your desired date, startTime, duration, and submit your reservation request.',
-      icon: <SendIcon sx={{ fontSize: '2rem', color: '#f59e0b' }} />,
-      color: '#f59e0b',
+      icon: <SendIcon sx={{ fontSize: '2rem', color: 'text.primary' }} />,
+      color: '#1e293b',
     },
     {
       step: 'Step 4',
       title: 'Approval Process',
       desc: 'The space administrator reviews the request. Booking status changes to Pending, Approved, or Rejected.',
-      icon: <FactCheckIcon sx={{ fontSize: '2rem', color: '#8b5cf6' }} />,
-      color: '#8b5cf6',
+      icon: <FactCheckIcon sx={{ fontSize: '2rem', color: 'text.primary' }} />,
+      color: '#0f172a',
     },
     {
       step: 'Step 5',
       title: 'Use the Space',
       desc: 'Receive instant email/platform confirmation and enjoy your fully reserved space.',
-      icon: <CelebrationIcon sx={{ fontSize: '2rem', color: '#ec4899' }} />,
-      color: '#ec4899',
+      icon: <CelebrationIcon sx={{ fontSize: '2rem', color: 'text.primary' }} />,
+      color: '#020617',
     },
   ]
 
+  // Clean monochromatic roles setup
   const roles = [
     {
       role: 'Super Admin',
-      icon: <WorkspacePremiumIcon sx={{ fontSize: '3rem', color: '#f59e0b' }} />,
+      icon: <WorkspacePremiumIcon sx={{ fontSize: '3rem', color: 'text.primary' }} />,
       badge: '👑 Platform Owner',
-      color: '#f59e0b',
+      color: '#475569',
       manages: ['Platform settings', 'Administrators', 'All reservations', 'Global statistics'],
     },
     {
       role: 'Admin',
-      icon: <CorporateFareIcon sx={{ fontSize: '3rem', color: '#3b82f6' }} />,
+      icon: <CorporateFareIcon sx={{ fontSize: '3rem', color: 'text.primary' }} />,
       badge: '🏢 Space Manager',
-      color: '#3b82f6',
+      color: '#334155',
       manages: ['Places & Locations', 'Specific Spaces & Rooms', 'Reservations & Approvals', 'Availability schedules'],
     },
     {
       role: 'User',
-      icon: <PersonIcon sx={{ fontSize: '3rem', color: '#10b981' }} />,
+      icon: <PersonIcon sx={{ fontSize: '3rem', color: 'text.primary' }} />,
       badge: '👤 Space Booker',
-      color: '#10b981',
+      color: '#1e293b',
       manages: ['Search spaces', 'Make reservations', 'Track reservation status', 'Manage bookings'],
     },
   ]
@@ -132,7 +133,7 @@ export const ReservationsInfoPage = () => {
         minHeight: '100vh',
         background: isLight
           ? 'linear-gradient(180deg, #f8fafc 0%, #ffffff 45%, #f1f5f9 100%)'
-          : 'linear-gradient(180deg, #0a0e1a 0%, #101d32 45%, #0f172a 100%)',
+          : 'linear-gradient(180deg, #0b0f19 0%, #111827 45%, #0f172a 100%)',
       }}
     >
       <PublicNavbar isLight={isLight} />
@@ -140,7 +141,7 @@ export const ReservationsInfoPage = () => {
       {/* Hero Header */}
       <Container maxWidth="lg" sx={{ pt: { xs: 8, md: 12 }, pb: 8, textAlign: 'center' }}>
         <Stack spacing={3} sx={{ alignItems: 'center' }}>
-          <Typography variant="overline" color="primary.main" sx={{ fontWeight: 800, letterSpacing: '0.1em' }}>
+          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 800, letterSpacing: '0.1em' }}>
             User Guide
           </Typography>
           <Typography
@@ -170,19 +171,17 @@ export const ReservationsInfoPage = () => {
                   height: '100%',
                   borderRadius: 4,
                   border: '1px solid',
-                  borderColor: isLight ? 'rgba(0, 89, 179, 0.08)' : 'rgba(255, 255, 255, 0.05)',
-                  background: isLight ? '#ffffff' : alpha('#1e293b', 0.4),
+                  borderColor: 'divider',
+                  background: isLight ? '#ffffff' : alpha('#1f2937', 0.4),
                   position: 'relative',
                   overflow: 'hidden',
                   transition: 'all 0.25s',
                   '&:hover': {
                     transform: 'translateY(-4px)',
-                    borderColor: step.color,
-                    boxShadow: `0 8px 24px ${alpha(step.color, 0.08)}`,
+                    borderColor: 'text.primary',
                   },
                 }}
               >
-                {/* Colored visual header */}
                 <Box sx={{ height: 6, bgcolor: step.color }} />
                 <CardContent sx={{ p: 3 }}>
                   <Stack spacing={2}>
@@ -192,8 +191,8 @@ export const ReservationsInfoPage = () => {
                           width: 44,
                           height: 44,
                           borderRadius: 2,
-                          bgcolor: alpha(step.color, 0.1),
-                          color: step.color,
+                          bgcolor: isLight ? 'rgba(0, 0, 0, 0.04)' : 'rgba(255, 255, 255, 0.05)',
+                          color: 'text.primary',
                           display: 'grid',
                           placeItems: 'center',
                         }}
@@ -204,7 +203,7 @@ export const ReservationsInfoPage = () => {
                         variant="subtitle2"
                         sx={{
                           fontWeight: 800,
-                          color: step.color,
+                          color: 'text.secondary',
                           textTransform: 'uppercase',
                         }}
                       >
@@ -231,17 +230,17 @@ export const ReservationsInfoPage = () => {
         sx={{
           py: 12,
           background: isLight
-            ? 'linear-gradient(180deg, #f8fafc 0%, #eff6ff 100%)'
-            : 'linear-gradient(180deg, #0a0e1a 0%, #1e1b4b 100%)',
+            ? 'linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%)'
+            : 'linear-gradient(180deg, #111827 0%, #0f172a 100%)',
           borderTop: '1px solid',
           borderBottom: '1px solid',
-          borderColor: isLight ? 'rgba(59,130,246,0.06)' : 'rgba(255,255,255,0.03)',
+          borderColor: 'divider',
           mb: 12,
         }}
       >
         <Container maxWidth="lg">
           <Stack spacing={2} sx={{ mb: 8, textAlign: 'center' }}>
-            <Typography variant="overline" color="primary.main" sx={{ fontWeight: 800, letterSpacing: '0.1em' }}>
+            <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 800, letterSpacing: '0.1em' }}>
               Access Controls
             </Typography>
             <Typography variant="h3" sx={{ fontWeight: 900 }}>
@@ -261,8 +260,8 @@ export const ReservationsInfoPage = () => {
                     p: 4,
                     borderRadius: 4,
                     border: '1px solid',
-                    borderColor: isLight ? 'rgba(0, 89, 179, 0.08)' : 'rgba(255, 255, 255, 0.05)',
-                    background: isLight ? '#ffffff' : alpha('#1e293b', 0.5),
+                    borderColor: 'divider',
+                    background: isLight ? '#ffffff' : alpha('#1f2937', 0.5),
                     height: '100%',
                     transition: 'transform 0.2s',
                     '&:hover': {
@@ -275,8 +274,8 @@ export const ReservationsInfoPage = () => {
                       sx={{
                         p: 2,
                         borderRadius: '50%',
-                        bgcolor: alpha(r.color, 0.1),
-                        color: r.color,
+                        bgcolor: isLight ? 'rgba(0, 0, 0, 0.04)' : 'rgba(255, 255, 255, 0.05)',
+                        color: 'text.primary',
                         display: 'grid',
                         placeItems: 'center',
                       }}
@@ -292,8 +291,8 @@ export const ReservationsInfoPage = () => {
                         size="small"
                         sx={{
                           fontWeight: 700,
-                          bgcolor: alpha(r.color, 0.1),
-                          color: r.color,
+                          bgcolor: isLight ? 'rgba(0, 0, 0, 0.04)' : 'rgba(255, 255, 255, 0.05)',
+                          color: 'text.primary',
                         }}
                       />
                     </Stack>
@@ -301,7 +300,7 @@ export const ReservationsInfoPage = () => {
                     <Stack spacing={1.5} sx={{ alignSelf: 'stretch', textAlign: 'left', pt: 2 }}>
                       {r.manages.map((m, mIdx) => (
                         <Stack key={mIdx} direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
-                          <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: r.color }} />
+                          <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: 'text.primary' }} />
                           <Typography variant="body2" sx={{ fontWeight: 500 }}>
                             {m}
                           </Typography>
@@ -319,7 +318,7 @@ export const ReservationsInfoPage = () => {
       {/* FAQ Section */}
       <Container maxWidth="md" sx={{ mb: 12 }}>
         <Stack spacing={2} sx={{ mb: 6, textAlign: 'center' }}>
-          <HelpIcon sx={{ fontSize: '3rem', color: 'primary.main', mx: 'auto', opacity: 0.8 }} />
+          <HelpIcon sx={{ fontSize: '3rem', color: 'text.secondary', mx: 'auto', opacity: 0.8 }} />
           <Typography variant="h3" sx={{ fontWeight: 900 }}>
             Frequently Asked Questions
           </Typography>
@@ -335,14 +334,14 @@ export const ReservationsInfoPage = () => {
               sx={{
                 borderRadius: '12px !important',
                 border: '1px solid',
-                borderColor: isLight ? 'rgba(0, 89, 179, 0.08)' : 'rgba(255, 255, 255, 0.05)',
-                background: isLight ? '#ffffff' : alpha('#1e293b', 0.4),
+                borderColor: 'divider',
+                background: isLight ? '#ffffff' : alpha('#1f2937', 0.4),
                 mb: 1,
                 '&::before': { display: 'none' },
               }}
             >
               <AccordionSummary
-                expandIcon={<ExpandMoreIcon sx={{ color: 'primary.main' }} />}
+                expandIcon={<ExpandMoreIcon sx={{ color: 'text.secondary' }} />}
                 sx={{ px: 3, py: 1 }}
               >
                 <Typography sx={{ fontWeight: 800, fontSize: '1.05rem' }}>{faq.question}</Typography>
@@ -365,11 +364,10 @@ export const ReservationsInfoPage = () => {
             p: { xs: 6, md: 8 },
             borderRadius: 5,
             background: isLight
-              ? 'linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%)'
-              : 'linear-gradient(135deg, #581c87 0%, #1e3a8a 100%)',
+              ? 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)'
+              : 'linear-gradient(135deg, #030712 0%, #0f172a 100%)',
             color: '#ffffff',
             textAlign: 'center',
-            boxShadow: '0 20px 40px rgba(59, 130, 246, 0.15)',
           }}
         >
           <Stack spacing={3} sx={{ alignItems: 'center' }}>
@@ -387,14 +385,13 @@ export const ReservationsInfoPage = () => {
               endIcon={<ArrowForwardIcon />}
               sx={{
                 bgcolor: '#ffffff',
-                color: isLight ? '#7c3aed' : '#581c87',
+                color: '#0f172a',
                 fontWeight: 800,
                 px: 5,
                 py: 2,
                 borderRadius: 3,
-                boxShadow: '0 8px 20px rgba(0,0,0,0.1)',
                 '&:hover': {
-                  bgcolor: alpha('#ffffff', 0.95),
+                  bgcolor: alpha('#ffffff', 0.9),
                   transform: 'translateY(-2px)',
                 },
               }}

@@ -33,8 +33,8 @@ export const AboutPage = () => {
   const offers = [
     {
       title: 'For Users',
-      icon: <PeopleAltOutlinedIcon sx={{ fontSize: '2.25rem', color: '#3b82f6' }} />,
-      color: '#3b82f6',
+      icon: <PeopleAltOutlinedIcon sx={{ fontSize: '2.25rem', color: 'text.primary' }} />,
+      color: '#475569',
       items: [
         'Easy space discovery',
         'Online reservations',
@@ -44,8 +44,8 @@ export const AboutPage = () => {
     },
     {
       title: 'For Space Managers',
-      icon: <BusinessCenterOutlinedIcon sx={{ fontSize: '2.25rem', color: '#10b981' }} />,
-      color: '#10b981',
+      icon: <BusinessCenterOutlinedIcon sx={{ fontSize: '2.25rem', color: 'text.primary' }} />,
+      color: '#334155',
       items: [
         'Space management',
         'Reservation tracking',
@@ -55,8 +55,8 @@ export const AboutPage = () => {
     },
     {
       title: 'For Administrators',
-      icon: <AdminPanelSettingsOutlinedIcon sx={{ fontSize: '2.25rem', color: '#8b5cf6' }} />,
-      color: '#8b5cf6',
+      icon: <AdminPanelSettingsOutlinedIcon sx={{ fontSize: '2.25rem', color: 'text.primary' }} />,
+      color: '#1e293b',
       items: [
         'Facility management',
         'Space organization',
@@ -70,22 +70,22 @@ export const AboutPage = () => {
     {
       title: 'Simplicity',
       desc: 'Easy-to-use platform.',
-      icon: <SpeedIcon sx={{ fontSize: '2rem', color: '#3b82f6' }} />,
+      icon: <SpeedIcon sx={{ fontSize: '2rem', color: 'text.secondary' }} />,
     },
     {
       title: 'Reliability',
       desc: 'Accurate availability and reservation tracking.',
-      icon: <VerifiedIcon sx={{ fontSize: '2rem', color: '#10b981' }} />,
+      icon: <VerifiedIcon sx={{ fontSize: '2rem', color: 'text.secondary' }} />,
     },
     {
       title: 'Transparency',
       desc: 'Clear information and reservation processes.',
-      icon: <InfoIcon sx={{ fontSize: '2rem', color: '#f59e0b' }} />,
+      icon: <InfoIcon sx={{ fontSize: '2rem', color: 'text.secondary' }} />,
     },
     {
       title: 'Innovation',
       desc: 'Modern tools for managing spaces.',
-      icon: <HubIcon sx={{ fontSize: '2rem', color: '#8b5cf6' }} />,
+      icon: <HubIcon sx={{ fontSize: '2rem', color: 'text.secondary' }} />,
     },
   ]
 
@@ -95,7 +95,7 @@ export const AboutPage = () => {
         minHeight: '100vh',
         background: isLight
           ? 'linear-gradient(180deg, #f8fafc 0%, #ffffff 45%, #f1f5f9 100%)'
-          : 'linear-gradient(180deg, #0a0e1a 0%, #101d32 45%, #0f172a 100%)',
+          : 'linear-gradient(180deg, #0b0f19 0%, #111827 45%, #0f172a 100%)',
       }}
     >
       <PublicNavbar isLight={isLight} />
@@ -105,15 +105,15 @@ export const AboutPage = () => {
         sx={{
           py: { xs: 8, md: 12 },
           background: isLight
-            ? 'radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.05) 0%, transparent 50%)'
-            : 'radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%)',
+            ? 'radial-gradient(circle at 80% 20%, rgba(15, 23, 42, 0.03) 0%, transparent 50%)'
+            : 'radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.02) 0%, transparent 50%)',
         }}
       >
         <Container maxWidth="lg">
           <Grid container spacing={6} sx={{ alignItems: 'center' }}>
             <Grid size={{ xs: 12, md: 6 }}>
               <Stack spacing={3}>
-                <Typography variant="overline" color="primary.main" sx={{ fontWeight: 800, letterSpacing: '0.1em' }}>
+                <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 800, letterSpacing: '0.1em' }}>
                   About Us
                 </Typography>
                 <Typography
@@ -129,7 +129,7 @@ export const AboutPage = () => {
                   <Box
                     component="span"
                     sx={{
-                      background: 'linear-gradient(90deg, #3b82f6 0%, #10b981 100%)',
+                      background: 'linear-gradient(90deg, #1e293b 0%, #64748b 100%)',
                       WebkitBackgroundClip: 'text',
                       WebkitTextFillColor: 'transparent',
                     }}
@@ -155,8 +155,8 @@ export const AboutPage = () => {
                     p: 4,
                     borderRadius: 4,
                     border: '1px solid',
-                    borderColor: isLight ? 'rgba(0, 89, 179, 0.08)' : 'rgba(255, 255, 255, 0.05)',
-                    background: isLight ? '#ffffff' : alpha('#1e293b', 0.4),
+                    borderColor: 'divider',
+                    background: isLight ? '#ffffff' : alpha('#1f2937', 0.4),
                     position: 'relative',
                     overflow: 'hidden',
                   }}
@@ -166,8 +166,8 @@ export const AboutPage = () => {
                       sx={{
                         p: 1.5,
                         borderRadius: 2,
-                        bgcolor: isLight ? 'rgba(59, 130, 246, 0.08)' : 'rgba(59, 130, 246, 0.15)',
-                        color: '#3b82f6',
+                        bgcolor: isLight ? 'rgba(0, 0, 0, 0.04)' : 'rgba(255, 255, 255, 0.05)',
+                        color: 'text.primary',
                       }}
                     >
                       <FlagOutlinedIcon fontSize="medium" />
@@ -190,8 +190,8 @@ export const AboutPage = () => {
                     p: 4,
                     borderRadius: 4,
                     border: '1px solid',
-                    borderColor: isLight ? 'rgba(0, 89, 179, 0.08)' : 'rgba(255, 255, 255, 0.05)',
-                    background: isLight ? '#ffffff' : alpha('#1e293b', 0.4),
+                    borderColor: 'divider',
+                    background: isLight ? '#ffffff' : alpha('#1f2937', 0.4),
                     position: 'relative',
                     overflow: 'hidden',
                   }}
@@ -201,8 +201,8 @@ export const AboutPage = () => {
                       sx={{
                         p: 1.5,
                         borderRadius: 2,
-                        bgcolor: isLight ? 'rgba(16, 185, 129, 0.08)' : 'rgba(16, 185, 129, 0.15)',
-                        color: '#10b981',
+                        bgcolor: isLight ? 'rgba(0, 0, 0, 0.04)' : 'rgba(255, 255, 255, 0.05)',
+                        color: 'text.primary',
                       }}
                     >
                       <VisibilityOutlinedIcon fontSize="medium" />
@@ -227,7 +227,7 @@ export const AboutPage = () => {
       {/* What We Offer */}
       <Container maxWidth="lg" sx={{ py: 10 }}>
         <Stack spacing={2} sx={{ mb: 6, textAlign: 'center' }}>
-          <Typography variant="overline" color="primary.main" sx={{ fontWeight: 800, letterSpacing: '0.1em' }}>
+          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 800, letterSpacing: '0.1em' }}>
             Offerings
           </Typography>
           <Typography variant="h3" sx={{ fontWeight: 900 }}>
@@ -244,13 +244,12 @@ export const AboutPage = () => {
                   height: '100%',
                   borderRadius: 4,
                   border: '1px solid',
-                  borderColor: isLight ? 'rgba(0, 89, 179, 0.08)' : 'rgba(255, 255, 255, 0.05)',
-                  background: isLight ? '#ffffff' : alpha('#1e293b', 0.4),
+                  borderColor: 'divider',
+                  background: isLight ? '#ffffff' : alpha('#1f2937', 0.4),
                   transition: 'all 0.2s',
                   '&:hover': {
-                    transform: 'translateY(-6px)',
-                    boxShadow: `0 12px 30px ${alpha(offer.color, 0.08)}`,
-                    borderColor: offer.color,
+                    transform: 'translateY(-4px)',
+                    borderColor: 'text.primary',
                   },
                 }}
               >
@@ -268,10 +267,10 @@ export const AboutPage = () => {
                               width: 24,
                               height: 24,
                               borderRadius: '50%',
-                              bgcolor: alpha(offer.color, 0.1),
+                              bgcolor: isLight ? 'rgba(0, 0, 0, 0.04)' : 'rgba(255, 255, 255, 0.05)',
                               display: 'grid',
                               placeItems: 'center',
-                              color: offer.color,
+                              color: 'text.primary',
                               flexShrink: 0,
                             }}
                           >
@@ -297,9 +296,9 @@ export const AboutPage = () => {
           py: 12,
           background: isLight
             ? 'linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%)'
-            : 'linear-gradient(180deg, #0a0e1a 0%, #0f172a 100%)',
+            : 'linear-gradient(180deg, #0b0f19 0%, #0f172a 100%)',
           borderTop: '1px solid',
-          borderColor: isLight ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.02)',
+          borderColor: 'divider',
         }}
       >
         <Container maxWidth="lg">
@@ -311,7 +310,7 @@ export const AboutPage = () => {
                     display: 'flex',
                     alignItems: 'center',
                     gap: 1.5,
-                    color: 'primary.main',
+                    color: 'text.secondary',
                   }}
                 >
                   <EmojiObjectsOutlinedIcon />
@@ -338,8 +337,8 @@ export const AboutPage = () => {
                         p: 4,
                         borderRadius: 4,
                         border: '1px solid',
-                        borderColor: isLight ? 'rgba(0, 89, 179, 0.08)' : 'rgba(255, 255, 255, 0.05)',
-                        background: isLight ? '#ffffff' : alpha('#1e293b', 0.5),
+                        borderColor: 'divider',
+                        background: isLight ? '#ffffff' : alpha('#1f2937', 0.5),
                         height: '100%',
                       }}
                     >
@@ -367,11 +366,10 @@ export const AboutPage = () => {
             p: { xs: 6, md: 8 },
             borderRadius: 5,
             background: isLight
-              ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
-              : 'linear-gradient(135deg, #064e3b 0%, #022c22 100%)',
+              ? 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)'
+              : 'linear-gradient(135deg, #030712 0%, #0f172a 100%)',
             color: '#ffffff',
             textAlign: 'center',
-            boxShadow: '0 20px 40px rgba(16, 185, 129, 0.15)',
           }}
         >
           <Stack spacing={3} sx={{ alignItems: 'center' }}>
@@ -388,14 +386,13 @@ export const AboutPage = () => {
               size="large"
               sx={{
                 bgcolor: '#ffffff',
-                color: isLight ? '#059669' : '#047857',
+                color: '#0f172a',
                 fontWeight: 800,
                 px: 5,
                 py: 2,
                 borderRadius: 3,
-                boxShadow: '0 8px 20px rgba(0,0,0,0.1)',
                 '&:hover': {
-                  bgcolor: alpha('#ffffff', 0.95),
+                  bgcolor: alpha('#ffffff', 0.9),
                   transform: 'translateY(-2px)',
                 },
               }}

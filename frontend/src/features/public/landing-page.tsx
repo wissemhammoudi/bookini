@@ -34,8 +34,7 @@ import { PublicNavbar } from './components/public-navbar'
 
 /**
  * Landing Page
- * Homepage with hero section, space type preview, interactive search, categories,
- * how it works, features, featured spaces, testimonials, and CTA.
+ * Homepage with a professional, minimalistic color palette and clean design tokens.
  */
 export const LandingPage = () => {
   const { mode } = useColorMode()
@@ -50,7 +49,6 @@ export const LandingPage = () => {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
-    // Navigate to the booking page with query parameters
     const params = new URLSearchParams()
     if (location) params.append('location', location)
     if (spaceType) params.append('type', spaceType)
@@ -59,18 +57,18 @@ export const LandingPage = () => {
     navigate(`/book?${params.toString()}`)
   }
 
-  // Previews for Hero Section visual
+  // Cohesive professional slate/blue gradients for hero items
   const heroSpaces = [
-    { name: 'Meeting Rooms', icon: '🏢', gradient: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)' },
-    { name: 'Coworking Offices', icon: '💻', gradient: 'linear-gradient(135deg, #10b981 0%, #047857 100%)' },
-    { name: 'Event Halls', icon: '🎉', gradient: 'linear-gradient(135deg, #f59e0b 0%, #b45309 100%)' },
-    { name: 'Sports Fields', icon: '⚽', gradient: 'linear-gradient(135deg, #ec4899 0%, #be185d 100%)' },
-    { name: 'Training Rooms', icon: '🎓', gradient: 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)' },
+    { name: 'Meeting Rooms', icon: '🏢', gradient: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)' },
+    { name: 'Coworking Offices', icon: '💻', gradient: 'linear-gradient(135deg, #334155 0%, #1e293b 100%)' },
+    { name: 'Event Halls', icon: '🎉', gradient: 'linear-gradient(135deg, #475569 0%, #334155 100%)' },
+    { name: 'Sports Fields', icon: '⚽', gradient: 'linear-gradient(135deg, #64748b 0%, #475569 100%)' },
+    { name: 'Training Rooms', icon: '🎓', gradient: 'linear-gradient(135deg, #94a3b8 0%, #64748b 100%)' },
   ]
 
-  // Categories
+  // Monochromatic categories
   const categories = [
-    { title: 'Meeting Rooms', icon: '📍', desc: 'Professional spaces for private boards and team syncs.' },
+    { title: 'Meeting Rooms', icon: '🏢', desc: 'Professional spaces for private boards and team syncs.' },
     { title: 'Coworking Spaces', icon: '💻', desc: 'Flexible hot desks and dedicated offices.' },
     { title: 'Event Venues', icon: '🎉', desc: 'Large halls and creative spaces for gatherings.' },
     { title: 'Sports Facilities', icon: '⚽', desc: 'Fields, courts, and training grounds.' },
@@ -78,7 +76,7 @@ export const LandingPage = () => {
     { title: 'Private Dining Spaces', icon: '🍽️', desc: 'Elegant dining rooms for professional lunches.' },
   ]
 
-  // Steps
+  // Clean grey steps
   const steps = [
     { num: '01', title: 'Search', desc: 'Find spaces that match your needs.' },
     { num: '02', title: 'Reserve', desc: 'Choose a date and submit your reservation.' },
@@ -86,31 +84,31 @@ export const LandingPage = () => {
     { num: '04', title: 'Enjoy', desc: 'Use the space and focus on your activity.' },
   ]
 
-  // Why choose
+  // Monochromatic minimal icons
   const advantages = [
     {
       title: 'Verified Spaces',
       desc: 'Every space is managed by approved administrators.',
-      icon: <VerifiedIcon sx={{ fontSize: '2.5rem', color: '#3b82f6' }} />,
+      icon: <VerifiedIcon sx={{ fontSize: '2.25rem', color: isLight ? '#1e293b' : '#94a3b8' }} />,
     },
     {
       title: 'Easy Reservations',
       desc: 'Reserve in just a few clicks.',
-      icon: <TouchAppIcon sx={{ fontSize: '2.5rem', color: '#10b981' }} />,
+      icon: <TouchAppIcon sx={{ fontSize: '2.25rem', color: isLight ? '#1e293b' : '#94a3b8' }} />,
     },
     {
       title: 'Transparent Information',
       desc: 'Clear descriptions, photos, and availability.',
-      icon: <InfoIcon sx={{ fontSize: '2.5rem', color: '#f59e0b' }} />,
+      icon: <InfoIcon sx={{ fontSize: '2.25rem', color: isLight ? '#1e293b' : '#94a3b8' }} />,
     },
     {
       title: 'Multiple Space Types',
       desc: 'From business meetings to events and sports activities.',
-      icon: <CategoryIcon sx={{ fontSize: '2.5rem', color: '#8b5cf6' }} />,
+      icon: <CategoryIcon sx={{ fontSize: '2.25rem', color: isLight ? '#1e293b' : '#94a3b8' }} />,
     },
   ]
 
-  // Featured Spaces
+  // Monochromatic slate gradient for featured space cards
   const featuredSpaces = [
     {
       name: 'Premium Boardroom A',
@@ -118,7 +116,7 @@ export const LandingPage = () => {
       capacity: 'Up to 12 people',
       rating: 4.9,
       price: '€15/hr',
-      gradient: 'linear-gradient(135deg, rgba(59,130,246,0.3) 0%, rgba(29,78,216,0.5) 100%)',
+      gradient: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
     },
     {
       name: 'Creative Events Lounge',
@@ -126,7 +124,7 @@ export const LandingPage = () => {
       capacity: 'Up to 50 people',
       rating: 4.8,
       price: '€45/hr',
-      gradient: 'linear-gradient(135deg, rgba(236,72,153,0.3) 0%, rgba(190,24,93,0.5) 100%)',
+      gradient: 'linear-gradient(135deg, #334155 0%, #1e293b 100%)',
     },
     {
       name: 'Executive Training Hall',
@@ -134,11 +132,10 @@ export const LandingPage = () => {
       capacity: 'Up to 30 people',
       rating: 4.7,
       price: '€25/hr',
-      gradient: 'linear-gradient(135deg, rgba(139,92,246,0.3) 0%, rgba(109,40,217,0.5) 100%)',
+      gradient: 'linear-gradient(135deg, #475569 0%, #334155 100%)',
     },
   ]
 
-  // Testimonials
   const testimonials = [
     {
       text: 'Finding a meeting room has never been easier.',
@@ -163,7 +160,7 @@ export const LandingPage = () => {
         minHeight: '100vh',
         background: isLight
           ? 'linear-gradient(180deg, #f8fafc 0%, #ffffff 45%, #f1f5f9 100%)'
-          : 'linear-gradient(180deg, #0a0e1a 0%, #101d32 45%, #0f172a 100%)',
+          : 'linear-gradient(180deg, #0b0f19 0%, #111827 45%, #0f172a 100%)',
       }}
     >
       <PublicNavbar isLight={isLight} />
@@ -175,14 +172,14 @@ export const LandingPage = () => {
             <Stack spacing={4}>
               <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
                 <Chip
-                  label="All-in-one booking platform"
-                  color="primary"
+                  label="Space Booking Simplified"
                   variant="outlined"
                   sx={{
                     fontWeight: 700,
                     letterSpacing: '0.05em',
                     textTransform: 'uppercase',
                     fontSize: '0.75rem',
+                    borderColor: 'divider',
                   }}
                 />
               </Stack>
@@ -199,7 +196,7 @@ export const LandingPage = () => {
                 <Box
                   component="span"
                   sx={{
-                    background: 'linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%)',
+                    background: 'linear-gradient(90deg, #1e293b 0%, #64748b 100%)',
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
                   }}
@@ -229,11 +226,12 @@ export const LandingPage = () => {
                     px: 4,
                     py: 1.8,
                     borderRadius: 3,
-                    boxShadow: '0 8px 24px rgba(59, 130, 246, 0.25)',
+                    bgcolor: 'primary.main',
+                    boxShadow: 'none',
                     transition: 'all 0.2s',
                     '&:hover': {
                       transform: 'translateY(-2px)',
-                      boxShadow: '0 12px 28px rgba(59, 130, 246, 0.35)',
+                      boxShadow: 'none',
                     },
                   }}
                 >
@@ -249,11 +247,12 @@ export const LandingPage = () => {
                     px: 4,
                     py: 1.8,
                     borderRadius: 3,
-                    borderColor: isLight ? 'rgba(0, 89, 179, 0.2)' : 'rgba(255, 255, 255, 0.15)',
+                    borderColor: isLight ? 'rgba(0, 0, 0, 0.15)' : 'rgba(255, 255, 255, 0.15)',
+                    color: 'text.primary',
                     transition: 'all 0.2s',
                     '&:hover': {
                       transform: 'translateY(-2px)',
-                      borderColor: 'primary.main',
+                      borderColor: 'text.primary',
                     },
                   }}
                 >
@@ -275,11 +274,11 @@ export const LandingPage = () => {
                 borderRadius: 5,
                 background: isLight
                   ? 'rgba(255, 255, 255, 0.4)'
-                  : 'rgba(15, 23, 42, 0.3)',
+                  : 'rgba(17, 24, 39, 0.2)',
                 backdropFilter: 'blur(20px)',
                 border: '1px solid',
-                borderColor: isLight ? 'rgba(59, 130, 246, 0.08)' : 'rgba(255, 255, 255, 0.05)',
-                boxShadow: '0 20px 40px rgba(0,0,0,0.05)',
+                borderColor: 'divider',
+                boxShadow: '0 20px 40px rgba(0,0,0,0.02)',
               }}
             >
               <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 1, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'text.secondary' }}>
@@ -294,15 +293,14 @@ export const LandingPage = () => {
                     justifyContent: 'space-between',
                     p: 2,
                     borderRadius: 3,
-                    background: isLight ? '#ffffff' : alpha('#1e293b', 0.6),
+                    background: isLight ? '#ffffff' : alpha('#1f2937', 0.6),
                     border: '1px solid',
-                    borderColor: isLight ? 'rgba(0, 89, 179, 0.05)' : 'rgba(255, 255, 255, 0.03)',
+                    borderColor: 'divider',
                     transition: 'all 0.2s',
                     cursor: 'pointer',
                     '&:hover': {
                       transform: 'translateX(6px)',
-                      borderColor: 'primary.main',
-                      boxShadow: '0 4px 20px rgba(59, 130, 246, 0.08)',
+                      borderColor: 'text.primary',
                     },
                   }}
                   onClick={() => navigate(`/book?type=${encodeURIComponent(item.name)}`)}
@@ -340,10 +338,10 @@ export const LandingPage = () => {
           sx={{
             p: { xs: 3, md: 4 },
             borderRadius: 4,
-            background: isLight ? '#ffffff' : '#0f172a',
+            background: isLight ? '#ffffff' : '#111827',
             border: '1px solid',
-            borderColor: isLight ? 'rgba(0, 89, 179, 0.08)' : 'rgba(255, 255, 255, 0.05)',
-            boxShadow: '0 12px 32px rgba(0, 0, 0, 0.05)',
+            borderColor: 'divider',
+            boxShadow: '0 12px 32px rgba(0, 0, 0, 0.02)',
           }}
         >
           <Typography variant="h5" sx={{ fontWeight: 800, mb: 3 }}>
@@ -469,7 +467,7 @@ export const LandingPage = () => {
       {/* 3. Popular Categories */}
       <Container maxWidth="lg" sx={{ mb: 12 }}>
         <Stack spacing={2} sx={{ mb: 6, textAlign: 'center' }}>
-          <Typography variant="overline" color="primary.main" sx={{ fontWeight: 800, letterSpacing: '0.1em' }}>
+          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 800, letterSpacing: '0.1em' }}>
             Popular Categories
           </Typography>
           <Typography variant="h3" sx={{ fontWeight: 900 }}>
@@ -486,20 +484,19 @@ export const LandingPage = () => {
                   p: 3,
                   borderRadius: 4,
                   border: '1px solid',
-                  borderColor: isLight ? 'rgba(0, 89, 179, 0.08)' : 'rgba(255, 255, 255, 0.05)',
-                  background: isLight ? '#ffffff' : alpha('#1e293b', 0.4),
+                  borderColor: 'divider',
+                  background: isLight ? '#ffffff' : alpha('#1f2937', 0.4),
                   transition: 'all 0.25s',
                   cursor: 'pointer',
                   '&:hover': {
-                    transform: 'translateY(-6px)',
-                    borderColor: 'primary.main',
-                    boxShadow: '0 12px 24px rgba(59, 130, 246, 0.08)',
+                    transform: 'translateY(-4px)',
+                    borderColor: 'text.primary',
                   },
                 }}
                 onClick={() => navigate(`/book?type=${encodeURIComponent(cat.title)}`)}
               >
                 <CardContent sx={{ p: 0 }}>
-                  <Typography variant="h2" sx={{ mb: 2, fontSize: '2.5rem' }}>
+                  <Typography variant="h2" sx={{ mb: 2, fontSize: '2rem' }}>
                     {cat.icon}
                   </Typography>
                   <Typography variant="h5" sx={{ fontWeight: 800, mb: 1 }}>
@@ -520,17 +517,17 @@ export const LandingPage = () => {
         sx={{
           py: 12,
           background: isLight
-            ? 'linear-gradient(180deg, #f8fafc 0%, #eff6ff 100%)'
-            : 'linear-gradient(180deg, #0f172a 0%, #1e1b4b 100%)',
+            ? 'linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%)'
+            : 'linear-gradient(180deg, #111827 0%, #0f172a 100%)',
           borderTop: '1px solid',
           borderBottom: '1px solid',
-          borderColor: isLight ? 'rgba(59,130,246,0.06)' : 'rgba(255,255,255,0.03)',
+          borderColor: 'divider',
           mb: 12,
         }}
       >
         <Container maxWidth="lg">
           <Stack spacing={2} sx={{ mb: 8, textAlign: 'center' }}>
-            <Typography variant="overline" color="primary.main" sx={{ fontWeight: 800, letterSpacing: '0.1em' }}>
+            <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 800, letterSpacing: '0.1em' }}>
               Process
             </Typography>
             <Typography variant="h3" sx={{ fontWeight: 900 }}>
@@ -547,8 +544,8 @@ export const LandingPage = () => {
                     sx={{
                       fontSize: '4.5rem',
                       fontWeight: 900,
-                      opacity: 0.08,
-                      color: isLight ? '#000000' : '#ffffff',
+                      opacity: 0.05,
+                      color: 'text.primary',
                       position: 'absolute',
                       top: -10,
                       left: '50%',
@@ -578,7 +575,7 @@ export const LandingPage = () => {
         <Grid container spacing={6} sx={{ alignItems: 'center' }}>
           <Grid size={{ xs: 12, md: 5 }}>
             <Stack spacing={2}>
-              <Typography variant="overline" color="primary.main" sx={{ fontWeight: 800, letterSpacing: '0.1em' }}>
+              <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 800, letterSpacing: '0.1em' }}>
                 Benefits
               </Typography>
               <Typography variant="h3" sx={{ fontWeight: 900, lineHeight: 1.2 }}>
@@ -598,14 +595,14 @@ export const LandingPage = () => {
                     sx={{
                       p: 3,
                       borderRadius: 4,
-                      background: isLight ? '#ffffff' : alpha('#1e293b', 0.5),
+                      background: isLight ? '#ffffff' : alpha('#1f2937', 0.5),
                       border: '1px solid',
-                      borderColor: isLight ? 'rgba(0, 89, 179, 0.08)' : 'rgba(255, 255, 255, 0.05)',
+                      borderColor: 'divider',
                       height: '100%',
                       transition: 'all 0.2s',
                       '&:hover': {
-                        transform: 'translateY(-4px)',
-                        boxShadow: '0 8px 24px rgba(0,0,0,0.03)',
+                        transform: 'translateY(-2px)',
+                        borderColor: 'text.primary',
                       },
                     }}
                   >
@@ -627,7 +624,7 @@ export const LandingPage = () => {
       {/* 6. Featured Spaces */}
       <Container maxWidth="lg" sx={{ mb: 12 }}>
         <Stack spacing={2} sx={{ mb: 6, textAlign: 'center' }}>
-          <Typography variant="overline" color="primary.main" sx={{ fontWeight: 800, letterSpacing: '0.1em' }}>
+          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 800, letterSpacing: '0.1em' }}>
             Featured
           </Typography>
           <Typography variant="h3" sx={{ fontWeight: 900 }}>
@@ -643,13 +640,13 @@ export const LandingPage = () => {
                 sx={{
                   borderRadius: 4,
                   border: '1px solid',
-                  borderColor: isLight ? 'rgba(0, 89, 179, 0.08)' : 'rgba(255, 255, 255, 0.05)',
-                  background: isLight ? '#ffffff' : alpha('#1e293b', 0.4),
+                  borderColor: 'divider',
+                  background: isLight ? '#ffffff' : alpha('#1f2937', 0.4),
                   overflow: 'hidden',
                   transition: 'all 0.2s',
                   '&:hover': {
-                    transform: 'translateY(-6px)',
-                    boxShadow: '0 12px 28px rgba(0, 0, 0, 0.06)',
+                    transform: 'translateY(-4px)',
+                    borderColor: 'text.primary',
                   },
                 }}
               >
@@ -669,13 +666,13 @@ export const LandingPage = () => {
                   </Typography>
                   <Chip
                     label={space.price}
-                    color="primary"
                     sx={{
                       position: 'absolute',
                       top: 16,
                       right: 16,
                       fontWeight: 700,
-                      boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+                      bgcolor: '#0f172a',
+                      color: '#ffffff',
                     }}
                   />
                 </Box>
@@ -715,7 +712,7 @@ export const LandingPage = () => {
       {/* 7. Testimonials */}
       <Container maxWidth="lg" sx={{ mb: 12 }}>
         <Stack spacing={2} sx={{ mb: 6, textAlign: 'center' }}>
-          <Typography variant="overline" color="primary.main" sx={{ fontWeight: 800, letterSpacing: '0.1em' }}>
+          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 800, letterSpacing: '0.1em' }}>
             Testimonials
           </Typography>
           <Typography variant="h3" sx={{ fontWeight: 900 }}>
@@ -732,8 +729,8 @@ export const LandingPage = () => {
                   p: 4,
                   borderRadius: 4,
                   border: '1px solid',
-                  borderColor: isLight ? 'rgba(0, 89, 179, 0.08)' : 'rgba(255, 255, 255, 0.05)',
-                  background: isLight ? '#ffffff' : alpha('#1e293b', 0.4),
+                  borderColor: 'divider',
+                  background: isLight ? '#ffffff' : alpha('#1f2937', 0.4),
                   height: '100%',
                   display: 'flex',
                   flexDirection: 'column',
@@ -741,13 +738,13 @@ export const LandingPage = () => {
                 }}
               >
                 <Stack spacing={2}>
-                  <FormatQuoteIcon sx={{ fontSize: '2.5rem', color: 'primary.main', opacity: 0.3 }} />
+                  <FormatQuoteIcon sx={{ fontSize: '2.5rem', color: 'text.secondary', opacity: 0.3 }} />
                   <Typography variant="body1" sx={{ fontStyle: 'italic', lineHeight: 1.6 }}>
                     "{test.text}"
                   </Typography>
                 </Stack>
                 <Stack direction="row" spacing={2} sx={{ alignItems: 'center', pt: 3 }}>
-                  <Avatar sx={{ bgcolor: 'primary.main', fontWeight: 700 }}>
+                  <Avatar sx={{ bgcolor: 'text.secondary', fontWeight: 700 }}>
                     {test.author[0]}
                   </Avatar>
                   <Box>
@@ -773,39 +770,14 @@ export const LandingPage = () => {
             p: { xs: 6, md: 8 },
             borderRadius: 5,
             background: isLight
-              ? 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)'
-              : 'linear-gradient(135deg, #1e3a8a 0%, #581c87 100%)',
+              ? 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)'
+              : 'linear-gradient(135deg, #030712 0%, #0f172a 100%)',
             color: '#ffffff',
             textAlign: 'center',
             position: 'relative',
             overflow: 'hidden',
-            boxShadow: '0 20px 40px rgba(124, 58, 237, 0.25)',
           }}
         >
-          {/* Background shapes */}
-          <Box
-            sx={{
-              position: 'absolute',
-              top: '-50%',
-              left: '-20%',
-              width: '60%',
-              height: '200%',
-              background: 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%)',
-              pointerEvents: 'none',
-            }}
-          />
-          <Box
-            sx={{
-              position: 'absolute',
-              bottom: '-50%',
-              right: '-20%',
-              width: '60%',
-              height: '200%',
-              background: 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%)',
-              pointerEvents: 'none',
-            }}
-          />
-
           <Stack spacing={4} sx={{ position: 'relative', zIndex: 1, alignItems: 'center' }}>
             <Typography variant="h2" sx={{ fontWeight: 900, fontSize: { xs: '2.25rem', sm: '3rem', md: '3.5rem' } }}>
               Ready to Find Your Next Space?
@@ -820,18 +792,16 @@ export const LandingPage = () => {
               size="large"
               sx={{
                 bgcolor: '#ffffff',
-                color: isLight ? '#2563eb' : '#1e3a8a',
+                color: '#0f172a',
                 fontWeight: 800,
                 px: 5,
                 py: 2,
                 borderRadius: 3,
                 fontSize: '1rem',
-                boxShadow: '0 8px 20px rgba(0,0,0,0.15)',
                 transition: 'all 0.2s',
                 '&:hover': {
-                  bgcolor: alpha('#ffffff', 0.95),
+                  bgcolor: alpha('#ffffff', 0.9),
                   transform: 'translateY(-2px)',
-                  boxShadow: '0 12px 24px rgba(0,0,0,0.25)',
                 },
               }}
             >

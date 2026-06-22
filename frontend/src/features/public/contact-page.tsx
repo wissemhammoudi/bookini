@@ -9,8 +9,7 @@ import { PublicNavbar } from './components/public-navbar'
 
 /**
  * Contact Page
- * Dual-tab page for contact inquiries and partnership requests
- * With location, phone, and email information panels
+ * Redesigned with minimalistic colors and professional slate/grey accents.
  */
 export const ContactPage = () => {
   const { mode } = useColorMode()
@@ -44,8 +43,8 @@ export const ContactPage = () => {
       sx={{
         minHeight: '100vh',
         background: isLight
-          ? 'linear-gradient(180deg, #f8fafc 0%, #ffffff 45%, #eef2ff 100%)'
-          : 'linear-gradient(180deg, #0a0e1a 0%, #101d32 45%, #1a1f3a 100%)',
+          ? 'linear-gradient(180deg, #f8fafc 0%, #ffffff 45%, #f1f5f9 100%)'
+          : 'linear-gradient(180deg, #0b0f19 0%, #111827 45%, #0f172a 100%)',
       }}
     >
       <PublicNavbar isLight={isLight} />
@@ -80,11 +79,11 @@ export const ContactPage = () => {
                     <Stack direction="row" spacing={2.5} sx={{ alignItems: 'center' }}>
                       <Avatar
                         sx={{
-                          bgcolor: isLight ? alpha('#0059B3', 0.08) : alpha('#0059B3', 0.25),
-                          color: 'primary.main',
+                          bgcolor: isLight ? 'rgba(0, 0, 0, 0.04)' : 'rgba(255, 255, 255, 0.05)',
+                          color: 'text.primary',
                           width: 52,
                           height: 52,
-                          boxShadow: '0 4px 10px rgba(0, 89, 179, 0.05)',
+                          boxShadow: 'none',
                         }}
                       >
                         <PhoneIcon />
@@ -103,11 +102,11 @@ export const ContactPage = () => {
                     <Stack direction="row" spacing={2.5} sx={{ alignItems: 'center' }}>
                       <Avatar
                         sx={{
-                          bgcolor: isLight ? alpha('#0059B3', 0.08) : alpha('#0059B3', 0.25),
-                          color: 'primary.main',
+                          bgcolor: isLight ? 'rgba(0, 0, 0, 0.04)' : 'rgba(255, 255, 255, 0.05)',
+                          color: 'text.primary',
                           width: 52,
                           height: 52,
-                          boxShadow: '0 4px 10px rgba(0, 89, 179, 0.05)',
+                          boxShadow: 'none',
                         }}
                       >
                         <EmailIcon />
@@ -126,11 +125,11 @@ export const ContactPage = () => {
                     <Stack direction="row" spacing={2.5} sx={{ alignItems: 'center' }}>
                       <Avatar
                         sx={{
-                          bgcolor: isLight ? alpha('#0059B3', 0.08) : alpha('#0059B3', 0.25),
-                          color: 'primary.main',
+                          bgcolor: isLight ? 'rgba(0, 0, 0, 0.04)' : 'rgba(255, 255, 255, 0.05)',
+                          color: 'text.primary',
                           width: 52,
                           height: 52,
-                          boxShadow: '0 4px 10px rgba(0, 89, 179, 0.05)',
+                          boxShadow: 'none',
                         }}
                       >
                         <LocationOnIcon />
@@ -154,10 +153,10 @@ export const ContactPage = () => {
                   elevation={0}
                   sx={{
                     border: '1px solid',
-                    borderColor: isLight ? 'rgba(0, 89, 179, 0.08)' : 'rgba(255, 255, 255, 0.05)',
+                    borderColor: 'divider',
                     borderRadius: 4,
-                    background: isLight ? '#ffffff' : alpha('#0a0e1a', 0.5),
-                    boxShadow: isLight ? '0 10px 30px rgba(0, 89, 179, 0.04)' : '0 10px 30px rgba(0, 0, 0, 0.2)',
+                    background: isLight ? '#ffffff' : alpha('#1f2937', 0.5),
+                    boxShadow: 'none',
                   }}
                 >
                   <Tabs
@@ -165,7 +164,7 @@ export const ContactPage = () => {
                     onChange={handleTabChange}
                     sx={{
                       borderBottom: '1px solid',
-                      borderColor: isLight ? 'rgba(0, 89, 179, 0.08)' : 'rgba(255, 255, 255, 0.05)',
+                      borderColor: 'divider',
                       px: 2,
                     }}
                   >
@@ -237,4 +236,3 @@ export const ContactPage = () => {
     </Box>
   )
 }
-
