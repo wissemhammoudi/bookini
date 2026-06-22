@@ -1,5 +1,5 @@
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
-import { Button, Paper, Stack, Typography, alpha } from '@mui/material'
+import { Button, Paper, Stack, Typography } from '@mui/material'
 import Grid from '@mui/material/Grid'
 
 import { SectionHeader } from '@/features/admin-workspace/admin-workspace-utils'

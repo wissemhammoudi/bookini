@@ -5,7 +5,6 @@ import {
   Avatar,
   Box,
   Button,
-  CircularProgress,
   Divider,
   Drawer,
   IconButton,
