@@ -89,6 +89,7 @@ export const AdminWorkspacePage = () => {
   const [search, setSearch] = useState('')
   const [roleFilter, setRoleFilter] = useState<RoleFilter>('ALL')
   const [reservationFilter, setReservationFilter] = useState<ReservationFilter>('ALL')
+  const brandLogoSrc = '/navbar_logo.png'
 
   const currentSection = useMemo<SectionKey>(() => {
     const section = location.pathname.split('/')[2] as SectionKey | undefined
@@ -255,7 +256,18 @@ export const AdminWorkspacePage = () => {
   const drawer = (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', p: 2, background: mode === 'light' ? 'linear-gradient(180deg, #FFFFFF 0%, #F5F7FB 100%)' : 'linear-gradient(180deg, #101D32 0%, #0C1525 100%)' }}>
       <Stack spacing={1.5} sx={{ px: 1.5, py: 2 }}>
-        <Typography variant="overline" color="primary.main">Bookini Platform</Typography>
+        <Box
+          component="img"
+          src={brandLogoSrc}
+          alt="Bookiblastek"
+          sx={{
+            height: 34,
+            width: 'auto',
+            display: 'block',
+            mb: 0.5,
+          }}
+        />
+        <Typography variant="overline" color="primary.main">Bookiblastek Platform</Typography>
         <Typography variant="h5" sx={{ fontWeight: 900 }}>Admin Console</Typography>
         <Typography color="text.secondary">{sectionConfig.caption}</Typography>
       </Stack>
@@ -301,6 +313,17 @@ export const AdminWorkspacePage = () => {
       >
         <Toolbar sx={{ gap: 2, minHeight: 78, flexWrap: 'wrap', py: 1.25 }}>
           {!isDesktop ? <IconButton onClick={() => setMobileOpen(true)}><MenuOutlinedIcon /></IconButton> : null}
+          <Box
+            component="img"
+            src={brandLogoSrc}
+            alt="Bookiblastek"
+            sx={{
+              height: 30,
+              width: 'auto',
+              display: 'block',
+              mr: { xs: 0, md: 0.5 },
+            }}
+          />
           <Box sx={{ flex: 1, minWidth: { xs: '100%', md: 0 } }}>
             <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 0.25, flexWrap: 'wrap' }}>
               <Typography variant="h6" sx={{ fontWeight: 900 }}>{sectionConfig.label}</Typography>

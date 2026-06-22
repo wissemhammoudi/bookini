@@ -3,6 +3,7 @@ import { Link as RouterLink, useNavigate } from 'react-router-dom'
 import {
   AppBar,
   Avatar,
+  Box,
   Button,
   Container,
   Divider,
@@ -11,7 +12,6 @@ import {
   MenuItem,
   Stack,
   Toolbar,
-  Typography,
   alpha,
 } from '@mui/material'
 import LightModeOutlinedIcon from '@mui/icons-material/LightModeOutlined'
@@ -97,6 +97,7 @@ export const PublicNavbar = ({ isLight }: PublicNavbarProps) => {
 
   const [mobileAnchorEl, setMobileAnchorEl] = useState<null | HTMLElement>(null)
   const mobileOpen = Boolean(mobileAnchorEl)
+  const brandLogoSrc = '/navbar_logo.png'
 
   const userLabel = useMemo(() => getSubFromToken(token), [token])
   const avatarText = useMemo(() => getInitials(userLabel), [userLabel])
@@ -150,18 +151,26 @@ export const PublicNavbar = ({ isLight }: PublicNavbarProps) => {
               >
                 <MenuIcon />
               </IconButton>
-              <Typography
+              <Box
                 component={RouterLink}
                 to="/"
                 sx={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
                   textDecoration: 'none',
-                  color: 'inherit',
-                  fontSize: '1.1rem',
-                  fontWeight: 800,
                 }}
               >
-                bookiwa7dek
-              </Typography>
+                <Box
+                  component="img"
+                  src={brandLogoSrc}
+                  alt="Bookiblastek"
+                  sx={{
+                    height: { xs: 36, md: 42 },
+                    width: 'auto',
+                    display: 'block',
+                  }}
+                />
+              </Box>
             </Stack>
 
             {/* Desktop Navigation Links */}

@@ -1,10 +1,9 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Paper, Stack, Typography, Box, IconButton, Avatar, Chip, Grid, Divider, alpha } from '@mui/material'
+import { Paper, Stack, Typography, Box, IconButton, Chip, Grid, Divider, alpha } from '@mui/material'
 import LightModeOutlinedIcon from '@mui/icons-material/LightModeOutlined'
 import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined'
-import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings'
 import WorkspacePremiumOutlinedIcon from '@mui/icons-material/WorkspacePremiumOutlined'
 import VerifiedUserOutlinedIcon from '@mui/icons-material/VerifiedUserOutlined'
 import InsightsOutlinedIcon from '@mui/icons-material/InsightsOutlined'
@@ -48,6 +47,7 @@ export const LoginPage = () => {
   }
 
   const isLight = mode === 'light'
+  const brandLogoSrc = '/navbar_logo.png'
 
   return (
     <Box
@@ -107,20 +107,20 @@ export const LoginPage = () => {
             }}
           >
             <Stack spacing={3}>
-              <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
-                <Avatar
+              <Stack spacing={1.5} sx={{ alignItems: 'flex-start' }}>
+                <Box
+                  component="img"
+                  src={brandLogoSrc}
+                  alt="Bookiblastek"
                   sx={{
-                    bgcolor: 'primary.main',
-                    width: 48,
-                    height: 48,
-                    boxShadow: '0 10px 24px rgba(15, 111, 219, 0.28)',
+                    height: { xs: 34, sm: 40 },
+                    width: 'auto',
+                    display: 'block',
                   }}
-                >
-                  <AdminPanelSettingsIcon sx={{ color: '#ffffff' }} />
-                </Avatar>
+                />
                 <Box>
                   <Typography variant="overline" color="text.secondary" sx={{ lineHeight: 1 }}>
-                    Bookini Admin
+                    Bookiblastek Admin
                   </Typography>
                   <Typography variant="h5" sx={{ fontWeight: 900, lineHeight: 1.1 }}>
                     Workspace Console
