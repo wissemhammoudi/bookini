@@ -2,10 +2,11 @@ import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Link as RouterLink } from 'react-router-dom'
-import { Alert, Link, Paper, Stack, Typography, Box, IconButton, Avatar } from '@mui/material'
+import { Link, Paper, Stack, Typography, Box, IconButton, Avatar } from '@mui/material'
 import LightModeOutlinedIcon from '@mui/icons-material/LightModeOutlined'
 import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined'
 import MeetingRoomIcon from '@mui/icons-material/MeetingRoom'
+import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 
 import { LoginForm, type LoginFormValues } from '@/features/auth/login-form'
 import { useAuth } from '@/features/auth/use-auth'
@@ -57,6 +58,18 @@ export const LoginPage = () => {
         px: 2,
       }}
     >
+      {/* Back Button */}
+      <Box sx={{ position: 'absolute', top: 16, left: 16 }}>
+        <IconButton
+          onClick={() => navigate('/')}
+          color="inherit"
+          sx={{ border: '1px solid', borderColor: 'divider', backdropFilter: 'blur(4px)' }}
+          title="Go back to home"
+        >
+          <ArrowBackIcon />
+        </IconButton>
+      </Box>
+
       {/* Floating Theme Toggle */}
       <Box sx={{ position: 'absolute', top: 16, right: 16 }}>
         <IconButton
@@ -132,19 +145,6 @@ export const LoginPage = () => {
             </Typography>
           </Stack>
         </Paper>
-
-        <Alert
-          severity="info"
-          sx={{
-            width: '100%',
-            borderRadius: 3,
-            border: '1px solid',
-            borderColor: 'info.light',
-            opacity: 0.9,
-          }}
-        >
-          Use a valid backend user account to sign in.
-        </Alert>
       </Stack>
     </Box>
   )
