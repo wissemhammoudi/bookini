@@ -2,14 +2,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Alert,
   Button,
-  Card,
-  CardContent,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   Divider,
-  Grid,
   MenuItem,
   Paper,
   Stack,
@@ -22,9 +19,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  IconButton,
 } from '@mui/material'
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -56,6 +51,7 @@ interface PublicBooking {
 }
 
 interface BookingDetails extends PublicBooking {
+  guest_phone: string
   notes: string | null
   admin_notes: string | null
 }
