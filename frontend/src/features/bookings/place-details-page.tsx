@@ -282,7 +282,7 @@ export const PlaceDetailsPage = () => {
             </Button>
             {room.admin_id ? (
               <Button variant="text" onClick={() => navigate(`/admins/${room.admin_id}`)}>
-                View admin profile
+                View owner
               </Button>
             ) : null}
           </Stack>

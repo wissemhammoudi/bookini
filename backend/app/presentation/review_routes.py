@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.responses import success_response
+from app.core.exceptions import NotFoundException
 from app.dependencies.auth import get_current_user
 from app.infrastructure.session import get_db_session
 from app.models.admin_rating import AdminRating
@@ -15,6 +16,7 @@ from app.repositories.reservation_repository import ReservationRepository
 from app.repositories.user_repository import UserRepository
 from app.schemas.review import RatingCommentRequest
 from app.services.audit_log_service import AuditLogService
+from app.services.admin_workspace_state_store import AdminWorkspaceStateStore
 from app.services.review_service import ReviewService
 
 router = APIRouter(tags=["reviews"])
@@ -72,47 +74,94 @@ async def get_admin_profile(
     service = _service_from_session(session)
     floor_review_repository = FloorReviewRepository(session)
 
-    admin, floors, avg_rating, rating_count = await service.get_admin_profile(
-        admin_id=admin_id
-    )
-
-    serialized_floors: list[dict[str, object]] = []
-    for floor in floors:
-        floor_average, floor_count = await floor_review_repository.get_aggregate_for_floor(
-            floor_id=str(floor.id)
+    try:
+        admin, floors, avg_rating, rating_count = await service.get_admin_profile(
+            admin_id=admin_id
         )
-        serialized_floors.append(
-            {
-                "id": str(floor.id),
-                "admin_id": str(floor.admin_id) if floor.admin_id else None,
-                "name": floor.name,
-                "capacity": floor.capacity,
-                "building": floor.building,
-                "floor_number": floor.floor_number,
-                "location": floor.location,
-                "description": floor.description,
-                "status": floor.status.value,
-                "is_deleted": floor.is_deleted,
-                "average_rating": round(floor_average, 2),
-                "rating_count": floor_count,
-            }
-        )
+        serialized_floors: list[dict[str, object]] = []
+        for floor in floors:
+            floor_average, floor_count = await floor_review_repository.get_aggregate_for_floor(
+                floor_id=str(floor.id)
+            )
+            serialized_floors.append(
+                {
+                    "id": str(floor.id),
+                    "admin_id": str(floor.admin_id) if floor.admin_id else None,
+                    "name": floor.name,
+                    "capacity": floor.capacity,
+                    "building": floor.building,
+                    "floor_number": floor.floor_number,
+                    "location": floor.location,
+                    "description": floor.description,
+                    "status": floor.status.value,
+                    "is_deleted": floor.is_deleted,
+                    "average_rating": round(floor_average, 2),
+                    "rating_count": floor_count,
+                }
+            )
 
-    return success_response(
-        message="Admin profile retrieved successfully",
-        data={
-            "admin": {
-                "id": str(admin.id),
-                "full_name": admin.full_name,
-                "email": admin.email,
-                "avatar_url": admin.avatar_url,
-                "role": admin.role.value,
+        return success_response(
+            message="Admin profile retrieved successfully",
+            data={
+                "admin": {
+                    "id": str(admin.id),
+                    "full_name": admin.full_name,
+                    "email": admin.email,
+                    "avatar_url": admin.avatar_url,
+                    "role": admin.role.value,
+                },
+                "average_rating": round(avg_rating, 2),
+                "rating_count": rating_count,
+                "spaces": serialized_floors,
             },
-            "average_rating": round(avg_rating, 2),
-            "rating_count": rating_count,
-            "spaces": serialized_floors,
-        },
-    )
+        )
+    except NotFoundException:
+        state = AdminWorkspaceStateStore.get_state()
+        admin_record = next(
+            (
+                user
+                for user in state.users
+                if user.id == admin_id and user.role in {"ADMIN", "SUPER_ADMIN"}
+            ),
+            None,
+        )
+        if not admin_record:
+            raise
+
+        serialized_floors = [
+            {
+                "id": place.id,
+                "admin_id": admin_record.id,
+                "name": place.name,
+                "capacity": place.capacity,
+                "building": place.category,
+                "floor_number": 0,
+                "location": place.address,
+                "description": place.description,
+                "status": place.status,
+                "is_deleted": False,
+                "average_rating": 0.0,
+                "rating_count": 0,
+            }
+            for place in state.places
+            if place.organization_id == admin_record.organization_id
+        ]
+
+        return success_response(
+            message="Admin profile retrieved successfully",
+            data={
+                "admin": {
+                    "id": admin_record.id,
+                    "full_name": admin_record.full_name,
+                    "email": admin_record.email,
+                    "avatar_url": str(admin_record.profile_image) if admin_record.profile_image else None,
+                    "role": admin_record.role,
+                },
+                "average_rating": 0.0,
+                "rating_count": 0,
+                "spaces": serialized_floors,
+            },
+        )
 
 
 @router.get("/admins/{admin_id}/ratings")
