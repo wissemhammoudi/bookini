@@ -12,6 +12,7 @@ import {
 import { useAuth } from './hooks'
 import { useColorMode } from '@/app/use-color-mode'
 import { registerRequest } from '@/lib/api'
+import { PublicFooter } from '@/features/public/components/public-footer'
 
 export const RegisterPage = () => {
   const [error, setError] = useState<string | undefined>()
