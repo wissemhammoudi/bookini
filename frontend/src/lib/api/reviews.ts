@@ -24,6 +24,7 @@ export type AdminProfile = {
     is_deleted: boolean
     average_rating: number
     rating_count: number
+    cover_image?: string | null
   }>
 }
 

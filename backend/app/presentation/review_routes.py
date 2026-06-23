@@ -142,6 +142,7 @@ async def get_admin_profile(
                 "is_deleted": False,
                 "average_rating": 0.0,
                 "rating_count": 0,
+                "cover_image": place.cover_image,
             }
             for place in state.places
             if place.organization_id == admin_record.organization_id

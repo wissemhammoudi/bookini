@@ -364,7 +364,15 @@ export const AdminProfilePage = () => {
 
               return (
                 <Grid key={space.id} size={{ xs: 12, md: 6 }}>
-                  <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
+                  <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider', overflow: 'hidden' }}>
+                    <Box sx={{ height: 200, position: 'relative', overflow: 'hidden' }}>
+                      <Box
+                        component="img"
+                        src={space.cover_image || `https://picsum.photos/seed/${encodeURIComponent(space.name)}/800/500`}
+                        alt={space.name}
+                        sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
+                    </Box>
                     <CardContent>
                       <Stack spacing={1.5}>
                         <Typography variant="h6" sx={{ fontWeight: 800 }}>
