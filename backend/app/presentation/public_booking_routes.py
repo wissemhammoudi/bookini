@@ -23,11 +23,11 @@ router = APIRouter(prefix="/public", tags=["public"])
 
 def _build_public_rooms_catalog() -> list[dict[str, object]]:
     state = AdminWorkspaceStateStore.get_state()
-    admin_by_organization_id = {
-        user.organization_id: user.id
-        for user in state.users
-        if user.role == "ADMIN" and user.organization_id
-    }
+    admin_by_organization_id = {}
+    for user in state.users:
+        if user.role == "ADMIN" and user.organization_ids:
+            for org_id in user.organization_ids:
+                admin_by_organization_id[org_id] = user.id
     rating_by_organization_id: dict[str, tuple[float, int]] = {
         "org-atlas": (4.9, 128),
         "org-marina": (4.8, 96),

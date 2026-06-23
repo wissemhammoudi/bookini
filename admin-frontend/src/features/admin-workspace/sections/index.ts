@@ -7,3 +7,5 @@ export * from '@/features/admin-workspace/sections/requests-section'
 export * from '@/features/admin-workspace/sections/reservations-section'
 export * from '@/features/admin-workspace/sections/settings-section'
 export * from '@/features/admin-workspace/sections/users-section'
+export * from '@/features/admin-workspace/sections/logs-section'
+

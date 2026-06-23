@@ -25,6 +25,7 @@ import type {
   ReservationRecord,
   StatisticsSummary,
   UserRecord,
+  RecentActivity,
 } from './api-types'
 
 const unwrap = <T>(response: ApiResponse<T>) => response.data
@@ -273,13 +274,18 @@ export const getAdminWorkspace = async () => {
   return unwrap(response.data)
 }
 
+export const getWorkspaceAuditLogs = async () => {
+  const response = await apiClient.get<ApiResponse<RecentActivity[]>>('/admin/workspace/audit-logs')
+  return unwrap(response.data)
+}
+
 export const createWorkspaceUser = async (payload: {
   full_name: string
   email: string
   phone: string
   role: 'SUPER_ADMIN' | 'ADMIN' | 'USER'
   status: 'ACTIVE' | 'SUSPENDED'
-  organization_id?: string
+  organization_ids: string[]
 }) => {
   const response = await apiClient.post<ApiResponse<UserRecord>>('/admin/workspace/users', payload)
   return unwrap(response.data)
@@ -293,7 +299,7 @@ export const updateWorkspaceUser = async (
     phone: string
     role: 'SUPER_ADMIN' | 'ADMIN' | 'USER'
     status: 'ACTIVE' | 'SUSPENDED'
-    organization_id?: string
+    organization_ids: string[]
   },
 ) => {
   const response = await apiClient.put<ApiResponse<UserRecord>>(`/admin/workspace/users/${userId}`, payload)

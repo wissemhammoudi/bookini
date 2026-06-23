@@ -56,7 +56,13 @@ class AdminWorkspaceOrganizationService:
         state = AdminWorkspaceStateStore.get_state()
         previous = len(state.organizations)
         state.organizations = [item for item in state.organizations if item.id != organization_id]
-        state.users = [item for item in state.users if item.organization_id != organization_id]
+        for user in state.users:
+            if user.organization_ids and organization_id in user.organization_ids:
+                user.organization_ids = [org_id for org_id in user.organization_ids if org_id != organization_id]
+        state.users = [
+            user for user in state.users
+            if not user.organization_ids or len(user.organization_ids) > 0 or user.role != "ADMIN"
+        ]
         place_ids = {item.id for item in state.places if item.organization_id == organization_id}
         state.places = [item for item in state.places if item.organization_id != organization_id]
         state.floors = [item for item in state.floors if item.place_id not in place_ids]

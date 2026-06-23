@@ -49,6 +49,7 @@ import {
   ReservationsSection,
   SettingsSection,
   UsersSection,
+  LogsSection,
 } from '@/features/admin-workspace/sections'
 import { useAuth } from '@/features/auth/use-auth'
 import {
@@ -372,6 +373,7 @@ export const AdminWorkspacePage = () => {
         {currentSection === 'users' ? (
           <UsersSection
             users={users}
+            organizations={workspace.organizations}
             search={search}
             roleFilter={roleFilter}
             onSearchChange={setSearch}
@@ -513,6 +515,7 @@ export const AdminWorkspacePage = () => {
             )}
           />
         ) : null}
+        {currentSection === 'logs' ? <LogsSection /> : null}
         {currentSection === 'settings' ? <SettingsSection settings={workspace.settings} onEditSettings={() => setDialogState({ type: 'settings' })} /> : null}
       </Box>
 

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import {
   Alert,
@@ -38,7 +38,6 @@ const userSchema = z.object({
   phone: z.string().min(6, 'Phone is required'),
   role: z.enum(['SUPER_ADMIN', 'ADMIN', 'USER']),
   status: z.enum(['ACTIVE', 'SUSPENDED']),
-  organization_id: z.string().optional(),
 })
 
 const organizationSchema = z.object({
@@ -75,7 +74,7 @@ const floorSchema = z.object({
   floor_number: z.number().int().min(0, 'Floor number must be 0 or more'),
   capacity: z.number().int().min(1, 'Capacity must be at least 1'),
   description: z.string().min(5, 'Description is required'),
-  blueprint_image: z.url('Valid blueprint URL required').or(z.literal('')),
+  blueprint_image: z.string().optional(),
   reservation_areas: z.string(),
   status: z.enum(['ACTIVE', 'SUSPENDED']),
 })
@@ -166,7 +165,7 @@ type UserDialogProps = BaseDialogProps & {
     phone: string
     role: 'SUPER_ADMIN' | 'ADMIN' | 'USER'
     status: 'ACTIVE' | 'SUSPENDED'
-    organization_id?: string
+    organization_ids: string[]
   }) => Promise<void> | void
 }
 
@@ -180,6 +179,8 @@ export const UserDialog = ({
   title,
   value,
 }: UserDialogProps) => {
+  const [selectedOrgs, setSelectedOrgs] = useState<string[]>(() => value?.organization_ids ?? [])
+
   const { handleSubmit, register, reset, formState: { errors } } = useForm<UserFormValues>({
     resolver: zodResolver(userSchema),
     values: {
@@ -188,12 +189,18 @@ export const UserDialog = ({
       phone: value?.phone ?? '',
       role: value?.role ?? 'USER',
       status: value?.status ?? 'ACTIVE',
-      organization_id: value?.organization_id ?? '',
     },
   })
 
+  useEffect(() => {
+    if (open) {
+      setSelectedOrgs(value?.organization_ids ?? [])
+    }
+  }, [open, value])
+
   const handleClose = () => {
     reset()
+    setSelectedOrgs([])
     onClose()
   }
 
@@ -210,7 +217,7 @@ export const UserDialog = ({
         <Stack spacing={2} component="form" id="user-form" onSubmit={handleSubmit(async (formValues) => {
           await onSubmit({
             ...formValues,
-            organization_id: formValues.organization_id || undefined,
+            organization_ids: selectedOrgs,
           })
         })}>
           {error ? <Alert severity="error" sx={{ borderRadius: 2 }}>{error}</Alert> : null}
@@ -226,10 +233,30 @@ export const UserDialog = ({
             <MenuItem value="ACTIVE">Active</MenuItem>
             <MenuItem value="SUSPENDED">Suspended</MenuItem>
           </TextField>
-          <TextField select label="Organization" defaultValue={value?.organization_id ?? ''} {...register('organization_id')} helperText="Optional for super admins and regular users">
-            <MenuItem value="">No organization</MenuItem>
+          <TextField
+            select
+            label="Organizations"
+            value={selectedOrgs}
+            onChange={(e) => setSelectedOrgs(typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value as string[])}
+            slotProps={{
+              select: {
+                multiple: true,
+                renderValue: (selected: any) => (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {(selected as string[]).map((val) => {
+                      const org = organizations.find((o) => o.id === val)
+                      return <Chip key={val} label={org?.name ?? val} size="small" />
+                    })}
+                  </Box>
+                ),
+              },
+            }}
+            helperText="Optional for super admins and regular users"
+          >
             {organizations.map((organization) => (
-              <MenuItem key={organization.id} value={organization.id}>{organization.name}</MenuItem>
+              <MenuItem key={organization.id} value={organization.id}>
+                {organization.name}
+              </MenuItem>
             ))}
           </TextField>
         </Stack>

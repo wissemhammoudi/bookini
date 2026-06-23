@@ -54,7 +54,7 @@ class UserRecord(BaseModel):
     role: RoleValue
     status: StatusValue
     created_date: datetime
-    organization_id: str | None = None
+    organization_ids: list[str] = Field(default_factory=list)
 
 
 class UserUpsertRequest(BaseModel):
@@ -63,7 +63,7 @@ class UserUpsertRequest(BaseModel):
     phone: str = Field(min_length=6, max_length=30)
     role: RoleValue
     status: StatusValue = "ACTIVE"
-    organization_id: str | None = None
+    organization_ids: list[str] = Field(default_factory=list)
 
 
 class OrganizationRecord(BaseModel):
@@ -133,7 +133,7 @@ class FloorRecord(BaseModel):
     floor_number: int
     capacity: int
     description: str
-    blueprint_image: HttpUrl | None = None
+    blueprint_image: str | None = None
     reservation_areas: list[str] = Field(default_factory=list)
     status: StatusValue
     created_date: datetime
@@ -145,7 +145,7 @@ class FloorUpsertRequest(BaseModel):
     floor_number: int = Field(ge=0, le=200)
     capacity: int = Field(ge=1, le=5000)
     description: str = Field(min_length=5, max_length=400)
-    blueprint_image: HttpUrl | None = None
+    blueprint_image: str | None = None
     reservation_areas: list[str] = Field(default_factory=list)
     status: StatusValue = "ACTIVE"
 

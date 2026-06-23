@@ -18,6 +18,7 @@ export type SectionKey =
   | 'ratings'
   | 'reservations'
   | 'requests'
+  | 'logs'
   | 'settings'
 
 export type FeedbackState = {

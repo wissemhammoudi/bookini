@@ -26,10 +26,11 @@ import {
 
 import type { RoleFilter, UserActionHandler } from '@/features/admin-workspace/admin-workspace-types'
 import { EmptyState, SectionHeader, StatusChip } from '@/features/admin-workspace/admin-workspace-utils'
-import type { UserRecord } from '@/lib/api-types'
+import type { UserRecord, OrganizationRecord } from '@/lib/api-types'
 
 type UsersSectionProps = {
   users: UserRecord[]
+  organizations: OrganizationRecord[]
   search: string
   roleFilter: RoleFilter
   onSearchChange: (value: string) => void
@@ -50,6 +51,7 @@ export const UsersSection = ({
   roleFilter,
   search,
   users,
+  organizations,
 }: UsersSectionProps) => (
   <Stack spacing={3}>
     <SectionHeader
@@ -98,6 +100,7 @@ export const UsersSection = ({
               <TableCell>Email</TableCell>
               <TableCell>Phone</TableCell>
               <TableCell>Role</TableCell>
+              <TableCell>Organizations</TableCell>
               <TableCell>Status</TableCell>
               <TableCell>Created</TableCell>
               <TableCell align="right">Actions</TableCell>
@@ -116,6 +119,18 @@ export const UsersSection = ({
                 <TableCell>{user.email}</TableCell>
                 <TableCell>{user.phone}</TableCell>
                 <TableCell>{user.role.replace('_', ' ')}</TableCell>
+                <TableCell>
+                  {user.organization_ids && user.organization_ids.length > 0 ? (
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                      {user.organization_ids.map((orgId) => {
+                        const org = organizations.find((o) => o.id === orgId)
+                        return <Chip key={orgId} label={org?.name ?? orgId} size="small" variant="outlined" />
+                      })}
+                    </Box>
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">—</Typography>
+                  )}
+                </TableCell>
                 <TableCell><StatusChip value={user.status} /></TableCell>
                 <TableCell>{new Date(user.created_date).toLocaleDateString()}</TableCell>
                 <TableCell align="right">

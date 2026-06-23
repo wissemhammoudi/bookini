@@ -19,7 +19,7 @@ class AdminWorkspaceUserService:
             phone=payload.phone,
             role=payload.role,
             status=payload.status,
-            organization_id=payload.organization_id,
+            organization_ids=payload.organization_ids,
             created_date=utc_now(),
         )
         state.users.insert(0, user)
@@ -42,7 +42,7 @@ class AdminWorkspaceUserService:
                         "phone": payload.phone,
                         "role": payload.role,
                         "status": payload.status,
-                        "organization_id": payload.organization_id,
+                        "organization_ids": payload.organization_ids,
                     }
                 )
                 state.users[index] = updated

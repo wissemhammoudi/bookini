@@ -101,7 +101,7 @@ def build_workspace_state() -> WorkspaceState:
             phone="+216 25 111 222",
             role="ADMIN",
             status="ACTIVE",
-            organization_id="org-atlas",
+            organization_ids=["org-atlas"],
             created_date=now - timedelta(days=250),
         ),
         UserRecord(
@@ -112,7 +112,7 @@ def build_workspace_state() -> WorkspaceState:
             phone="+216 26 333 444",
             role="ADMIN",
             status="ACTIVE",
-            organization_id="org-marina",
+            organization_ids=["org-marina"],
             created_date=now - timedelta(days=190),
         ),
         UserRecord(

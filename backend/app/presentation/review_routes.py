@@ -145,7 +145,7 @@ async def get_admin_profile(
                 "cover_image": place.cover_image,
             }
             for place in state.places
-            if place.organization_id == admin_record.organization_id
+            if admin_record.organization_ids and place.organization_id in admin_record.organization_ids
         ]
 
         return success_response(

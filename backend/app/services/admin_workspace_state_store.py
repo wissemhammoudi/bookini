@@ -41,4 +41,4 @@ class AdminWorkspaceStateStore:
                 type=item_type,
             ),
         )
-        state.recent_activity = state.recent_activity[:10]
+        state.recent_activity = state.recent_activity[:200]

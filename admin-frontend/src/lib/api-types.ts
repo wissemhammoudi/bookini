@@ -144,6 +144,7 @@ export type RecentActivity = {
   description: string
   timestamp: string
   type: 'reservation' | 'organization' | 'partnership' | 'contact' | 'user'
+  ip_address?: string
 }
 
 export type UserRecord = {
@@ -155,7 +156,7 @@ export type UserRecord = {
   role: UserRole
   status: ActiveState
   created_date: string
-  organization_id: string | null
+  organization_ids: string[]
 }
 
 export type OrganizationRecord = {

@@ -7,6 +7,7 @@ import EventSeatOutlinedIcon from '@mui/icons-material/EventSeatOutlined'
 import ReviewsOutlinedIcon from '@mui/icons-material/ReviewsOutlined'
 import MailOutlineOutlinedIcon from '@mui/icons-material/MailOutlineOutlined'
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined'
+import HistoryOutlinedIcon from '@mui/icons-material/HistoryOutlined'
 
 import type { SectionConfig } from '@/features/admin-workspace/admin-workspace-types'
 
@@ -68,6 +69,13 @@ export const sections: SectionConfig[] = [
     label: 'Contact & Partnerships',
     caption: 'Resolve support and partnership requests',
     icon: <MailOutlineOutlinedIcon />,
+    roles: ['SUPER_ADMIN'],
+  },
+  {
+    key: 'logs',
+    label: 'Audit Logs',
+    caption: 'Track user sessions and lifecycle logs',
+    icon: <HistoryOutlinedIcon />,
     roles: ['SUPER_ADMIN'],
   },
   {
