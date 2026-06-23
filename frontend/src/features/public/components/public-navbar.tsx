@@ -278,7 +278,7 @@ export const PublicNavbar = ({ isLight }: PublicNavbarProps) => {
                   <MenuItem
                     onClick={() => {
                       handleCloseMenu()
-                      navigate('/book')
+                      navigate('/dashboard')
                     }}
                   >
                     Reservation
