@@ -15,10 +15,10 @@ import PeopleIcon from '@mui/icons-material/People'
 import type { Room } from '../constants'
 
 interface RoomCardProps {
-  room: Room & { cover_image?: string | null; admin_id?: string | null }
+  room: any
   isLight: boolean
   isSelected?: boolean
-  onBookNow: (room: Room) => void
+  onBookNow: (room: any) => void
   onViewAdmin?: (adminId: string) => void
   actionLabel?: string
 }
@@ -31,7 +31,6 @@ export const RoomCard = ({
   onViewAdmin,
   actionLabel,
 }: RoomCardProps) => {
-  // Fallback to emoji if no cover image
   const hasImage = room.cover_image && room.cover_image.trim()
 
   return (
@@ -92,6 +91,11 @@ export const RoomCard = ({
       <CardContent sx={{ p: 3 }}>
         <Stack spacing={2}>
           <Stack spacing={1}>
+            {room.organization_name && (
+              <Typography variant="caption" color="primary" sx={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                {room.organization_name}
+              </Typography>
+            )}
             <Typography variant="h6" sx={{ fontWeight: 800 }}>
               {room.name}
             </Typography>
@@ -107,7 +111,7 @@ export const RoomCard = ({
           </Stack>
 
           <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
-            {room.amenities.map((amenity) => (
+            {room.amenities.map((amenity: string) => (
               <Chip
                 key={amenity}
                 label={amenity}
@@ -116,6 +120,29 @@ export const RoomCard = ({
               />
             ))}
           </Stack>
+
+          {room.floors && room.floors.length > 0 && (
+            <Stack spacing={0.75}>
+              <Typography variant="caption" sx={{ fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'text.secondary' }}>
+                Available Floors
+              </Typography>
+              <Stack direction="row" spacing={0.75} sx={{ flexWrap: 'wrap', gap: 0.5 }}>
+                {room.floors.map((floor: any) => (
+                  <Chip
+                    key={floor.id}
+                    label={`${floor.floor_name} (Lvl ${floor.floor_number})`}
+                    size="small"
+                    sx={{
+                      backgroundColor: (theme) => alpha(theme.palette.info.main, 0.08),
+                      borderColor: 'info.main',
+                      fontWeight: 600,
+                    }}
+                    variant="outlined"
+                  />
+                ))}
+              </Stack>
+            </Stack>
+          )}
 
           <Divider sx={{ borderColor: isLight ? 'rgba(0, 89, 179, 0.08)' : 'rgba(255, 255, 255, 0.05)' }} />
 

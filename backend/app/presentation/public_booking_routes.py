@@ -37,6 +37,23 @@ def _build_public_rooms_catalog() -> list[dict[str, object]]:
     rooms: list[dict[str, object]] = []
     for index, place in enumerate(state.places, start=1):
         average_rating, rating_count = rating_by_organization_id.get(place.organization_id, (0.0, 0))
+        org = next((o for o in state.organizations if o.id == place.organization_id), None)
+        org_name = org.name if org else "Unknown Organization"
+        
+        floors = [
+            {
+                "id": f.id,
+                "floor_name": f.floor_name,
+                "floor_number": f.floor_number,
+                "capacity": f.capacity,
+                "description": f.description,
+                "status": f.status,
+                "reservation_areas": f.reservation_areas,
+            }
+            for f in state.floors
+            if f.place_id == place.id
+        ]
+
         rooms.append(
             {
                 "id": index,
@@ -56,6 +73,9 @@ def _build_public_rooms_catalog() -> list[dict[str, object]]:
                 "admin_id": admin_by_organization_id.get(place.organization_id),
                 "average_rating": average_rating,
                 "rating_count": rating_count,
+                "organization_id": place.organization_id,
+                "organization_name": org_name,
+                "floors": floors,
             }
         )
 

@@ -22,21 +22,23 @@ services:
       POSTGRES_DB: bookiwa7dek
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d bookiwa7dek"]
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d bookiwa7dek" ]
       interval: 10s
       timeout: 5s
       retries: 5
 
   redis:
     image: redis:7-alpine
-    command: ["redis-server", "--appendonly", "yes"]
+    command: [ "redis-server", "--appendonly", "yes" ]
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -53,7 +55,7 @@ services:
       - "9000:9000"
       - "9001:9001"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -85,7 +87,7 @@ services:
       MINIO_SECRET_KEY: minioadmin
       MINIO_BUCKET: bookini
       MINIO_SECURE: "false"
-    command: ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
+    command: [ "sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000" ]
     labels:
       - traefik.enable=true
       - traefik.http.routers.backend.rule=PathPrefix(`/api`) || PathPrefix(`/metrics`)
@@ -101,11 +103,10 @@ services:
       minio:
         condition: service_started
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health', timeout=5)"]
+      test: [ "CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health', timeout=5)" ]
       interval: 20s
       timeout: 5s
       retries: 5
-
 
   frontend:
     build:
@@ -124,7 +125,7 @@ services:
       backend:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1/health"]
+      test: [ "CMD", "wget", "--spider", "-q", "http://127.0.0.1/health" ]
       interval: 20s
       timeout: 5s
       retries: 5
@@ -146,7 +147,7 @@ services:
       backend:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1/health"]
+      test: [ "CMD", "wget", "--spider", "-q", "http://127.0.0.1/health" ]
       interval: 20s
       timeout: 5s
       retries: 5
@@ -185,7 +186,7 @@ services:
 
   loki:
     image: grafana/loki:3.2.0
-    command: ["-config.file=/etc/loki/loki-config.yml"]
+    command: [ "-config.file=/etc/loki/loki-config.yml" ]
     volumes:
       - ./monitoring/loki/loki-config.yml:/etc/loki/loki-config.yml:ro
       - loki_data:/loki
@@ -194,7 +195,7 @@ services:
 
   promtail:
     image: grafana/promtail:3.2.0
-    command: ["-config.file=/etc/promtail/promtail-config.yml"]
+    command: [ "-config.file=/etc/promtail/promtail-config.yml" ]
     volumes:
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro

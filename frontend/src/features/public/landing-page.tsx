@@ -768,9 +768,26 @@ export const LandingPage = () => {
                 </Box>
                 <CardContent sx={{ p: 3 }}>
                   <Stack spacing={1.5}>
-                    <Typography variant="h5" sx={{ fontWeight: 800 }}>
-                      {space.name}
-                    </Typography>
+                    <Box>
+                      <Typography variant="h5" sx={{ fontWeight: 800 }}>
+                        {space.name}
+                      </Typography>
+                      {space.organization_name && (
+                        <Typography
+                          variant="caption"
+                          color="primary"
+                          sx={{
+                            fontWeight: 700,
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.05em',
+                            display: 'block',
+                            mt: 0.5,
+                          }}
+                        >
+                          {space.organization_name}
+                        </Typography>
+                      )}
+                    </Box>
                     <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center' }}>
                       <LocationOnIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
                       <Typography variant="body2" color="text.secondary">

@@ -16,6 +16,16 @@ export type PublicBookingCreatePayload = {
   price: number
 }
 
+export type PublicFloor = {
+  id: string
+  floor_name: string
+  floor_number: number
+  capacity: number
+  description: string
+  status: string
+  reservation_areas: string[]
+}
+
 export type PublicRoom = {
   id: number
   admin_id?: string | null
@@ -33,6 +43,9 @@ export type PublicRoom = {
   cover_image?: string | null
   gallery?: string[]
   video_url?: string | null
+  organization_id?: string
+  organization_name?: string
+  floors?: PublicFloor[]
 }
 
 export type PublicBookingCreateResponse = {

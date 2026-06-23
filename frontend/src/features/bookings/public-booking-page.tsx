@@ -47,11 +47,62 @@ export const PublicBookingPage = () => {
   const [search, setSearch] = useState('')
   const [capacityFilter, setCapacityFilter] = useState<'ALL' | 'SMALL' | 'MEDIUM' | 'LARGE'>('ALL')
   const [amenityFilter, setAmenityFilter] = useState('ALL')
+  const [organizationFilter, setOrganizationFilter] = useState('ALL')
+  const [spaceFilter, setSpaceFilter] = useState('ALL')
+  const [floorFilter, setFloorFilter] = useState('ALL')
 
   const allAmenities = useMemo(
     () => Array.from(new Set(rooms.flatMap((room) => room.amenities))).sort((a, b) => a.localeCompare(b)),
     [rooms],
   )
+
+  const allOrganizations = useMemo(() => {
+    const orgs = new Map<string, string>()
+    rooms.forEach((room) => {
+      if (room.organization_id && room.organization_name) {
+        orgs.set(room.organization_id, room.organization_name)
+      }
+    })
+    return Array.from(orgs.entries()).map(([id, name]) => ({ id, name }))
+  }, [rooms])
+
+  const allSpaces = useMemo(() => {
+    const filteredByOrg = organizationFilter === 'ALL' 
+      ? rooms 
+      : rooms.filter(room => room.organization_id === organizationFilter)
+    
+    return filteredByOrg.map((room) => ({ id: room.id, name: room.name }))
+  }, [rooms, organizationFilter])
+
+  const allFloors = useMemo(() => {
+    let targetRooms = rooms
+    if (spaceFilter !== 'ALL') {
+      targetRooms = rooms.filter(room => room.id === Number(spaceFilter))
+    } else if (organizationFilter !== 'ALL') {
+      targetRooms = rooms.filter(room => room.organization_id === organizationFilter)
+    }
+
+    const floorList = new Map<string, string>()
+    targetRooms.forEach((room) => {
+      if (room.floors) {
+        room.floors.forEach((f) => {
+          floorList.set(f.id, f.floor_name)
+        })
+      }
+    })
+    return Array.from(floorList.entries()).map(([id, name]) => ({ id, name }))
+  }, [rooms, organizationFilter, spaceFilter])
+
+  const handleOrganizationChange = (val: string) => {
+    setOrganizationFilter(val)
+    setSpaceFilter('ALL')
+    setFloorFilter('ALL')
+  }
+
+  const handleSpaceChange = (val: string) => {
+    setSpaceFilter(val)
+    setFloorFilter('ALL')
+  }
 
   const filteredRooms = useMemo(() => {
     return rooms.filter((room) => {
@@ -68,9 +119,15 @@ export const PublicBookingPage = () => {
 
       const matchesAmenity = amenityFilter === 'ALL' || room.amenities.includes(amenityFilter)
 
-      return matchesSearch && matchesCapacity && matchesAmenity
+      const matchesOrganization = organizationFilter === 'ALL' || room.organization_id === organizationFilter
+
+      const matchesSpace = spaceFilter === 'ALL' || room.id === Number(spaceFilter)
+
+      const matchesFloor = floorFilter === 'ALL' || (room.floors && room.floors.some(f => f.id === floorFilter))
+
+      return matchesSearch && matchesCapacity && matchesAmenity && matchesOrganization && matchesSpace && matchesFloor
     })
-  }, [rooms, search, capacityFilter, amenityFilter])
+  }, [rooms, search, capacityFilter, amenityFilter, organizationFilter, spaceFilter, floorFilter])
 
   const openPlacePage = (roomId: number) => {
     navigate(`/book/place/${roomId}`)
@@ -148,49 +205,95 @@ export const PublicBookingPage = () => {
                   <Chip label={`${filteredRooms.length} result${filteredRooms.length === 1 ? '' : 's'}`} size="small" variant="outlined" />
                 </Stack>
 
-                <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5}>
-                  <TextField
-                    value={search}
-                    onChange={(event) => setSearch(event.target.value)}
-                    placeholder="Search by name or amenity"
-                    fullWidth
-                    size="small"
-                    slotProps={{
-                      input: {
-                        startAdornment: <SearchOutlinedIcon sx={{ mr: 1, color: 'text.secondary' }} fontSize="small" />,
-                      },
-                    }}
-                  />
+                <Stack spacing={1.5}>
+                  <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5}>
+                    <TextField
+                      value={search}
+                      onChange={(event) => setSearch(event.target.value)}
+                      placeholder="Search by name or amenity"
+                      fullWidth
+                      size="small"
+                      slotProps={{
+                        input: {
+                          startAdornment: <SearchOutlinedIcon sx={{ mr: 1, color: 'text.secondary' }} fontSize="small" />,
+                        },
+                      }}
+                    />
 
-                  <FormControl size="small" sx={{ minWidth: { xs: '100%', md: 170 } }}>
-                    <InputLabel>Capacity</InputLabel>
-                    <Select
-                      value={capacityFilter}
-                      label="Capacity"
-                      onChange={(event) => setCapacityFilter(event.target.value as 'ALL' | 'SMALL' | 'MEDIUM' | 'LARGE')}
-                    >
-                      <MenuItem value="ALL">All</MenuItem>
-                      <MenuItem value="SMALL">1 - 6</MenuItem>
-                      <MenuItem value="MEDIUM">7 - 12</MenuItem>
-                      <MenuItem value="LARGE">13+</MenuItem>
-                    </Select>
-                  </FormControl>
+                    <FormControl size="small" sx={{ minWidth: { xs: '100%', md: 170 } }}>
+                      <InputLabel>Capacity</InputLabel>
+                      <Select
+                        value={capacityFilter}
+                        label="Capacity"
+                        onChange={(event) => setCapacityFilter(event.target.value as 'ALL' | 'SMALL' | 'MEDIUM' | 'LARGE')}
+                      >
+                        <MenuItem value="ALL">All</MenuItem>
+                        <MenuItem value="SMALL">1 - 6</MenuItem>
+                        <MenuItem value="MEDIUM">7 - 12</MenuItem>
+                        <MenuItem value="LARGE">13+</MenuItem>
+                      </Select>
+                    </FormControl>
 
-                  <FormControl size="small" sx={{ minWidth: { xs: '100%', md: 210 } }}>
-                    <InputLabel>Amenity</InputLabel>
-                    <Select
-                      value={amenityFilter}
-                      label="Amenity"
-                      onChange={(event) => setAmenityFilter(event.target.value)}
-                    >
-                      <MenuItem value="ALL">All amenities</MenuItem>
-                      {allAmenities.map((amenity) => (
-                        <MenuItem key={amenity} value={amenity}>
-                          {amenity}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
+                    <FormControl size="small" sx={{ minWidth: { xs: '100%', md: 210 } }}>
+                      <InputLabel>Amenity</InputLabel>
+                      <Select
+                        value={amenityFilter}
+                        label="Amenity"
+                        onChange={(event) => setAmenityFilter(event.target.value)}
+                      >
+                        <MenuItem value="ALL">All amenities</MenuItem>
+                        {allAmenities.map((amenity) => (
+                          <MenuItem key={amenity} value={amenity}>
+                            {amenity}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Stack>
+
+                  <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5}>
+                    <FormControl size="small" sx={{ minWidth: { xs: '100%', md: 200 }, flex: 1 }}>
+                      <InputLabel>Organization</InputLabel>
+                      <Select
+                        value={organizationFilter}
+                        label="Organization"
+                        onChange={(e) => handleOrganizationChange(e.target.value as string)}
+                      >
+                        <MenuItem value="ALL">All organizations</MenuItem>
+                        {allOrganizations.map((org) => (
+                          <MenuItem key={org.id} value={org.id}>{org.name}</MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+
+                    <FormControl size="small" sx={{ minWidth: { xs: '100%', md: 200 }, flex: 1 }}>
+                      <InputLabel>Space</InputLabel>
+                      <Select
+                        value={spaceFilter}
+                        label="Space"
+                        onChange={(e) => handleSpaceChange(e.target.value as string)}
+                      >
+                        <MenuItem value="ALL">All spaces</MenuItem>
+                        {allSpaces.map((space) => (
+                          <MenuItem key={space.id} value={space.id.toString()}>{space.name}</MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+
+                    <FormControl size="small" sx={{ minWidth: { xs: '100%', md: 200 }, flex: 1 }}>
+                      <InputLabel>Floor</InputLabel>
+                      <Select
+                        value={floorFilter}
+                        label="Floor"
+                        onChange={(e) => setFloorFilter(e.target.value as string)}
+                      >
+                        <MenuItem value="ALL">All floors</MenuItem>
+                        {allFloors.map((floor) => (
+                          <MenuItem key={floor.id} value={floor.id}>{floor.name}</MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Stack>
                 </Stack>
               </Stack>
             </Paper>
