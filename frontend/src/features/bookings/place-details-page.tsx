@@ -5,10 +5,16 @@ import {
   Box,
   Button,
   Chip,
+  Card,
+  CardContent,
   Container,
   Divider,
+  Grid,
+  MenuItem,
+  Rating,
   Paper,
   Stack,
+  TextField,
   Typography,
 } from '@mui/material'
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew'
@@ -85,6 +91,10 @@ export const PlaceDetailsPage = () => {
   const [selectedPlan] = useState('pay-as-you-go')
   const [bookingDialogOpen, setBookingDialogOpen] = useState(false)
   const [bookingError, setBookingError] = useState<string | null>(null)
+  const [floorRating, setFloorRating] = useState(5)
+  const [floorComment, setFloorComment] = useState('')
+  const [floorReviewsPage, setFloorReviewsPage] = useState(0)
+  const [floorReviewsMinFilter, setFloorReviewsMinFilter] = useState(0)
   const [calendarMonth, setCalendarMonth] = useState(() => new Date())
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<string | null>(null)
 
@@ -100,6 +110,35 @@ export const PlaceDetailsPage = () => {
   const media = useMemo(() => (room ? buildMedia(room) : { images: [], videos: [] }), [room])
 
   const createBookingMutation = useMutation({ mutationFn: createPublicBookingRequest })
+  const floorReviewsLimit = 5
+
+  const floorReviewsQuery = useQuery({
+    queryKey: ['floor-reviews', room?.id, floorReviewsPage, floorReviewsMinFilter],
+    queryFn: () =>
+      listFloorReviews(String(room!.id), {
+        limit: floorReviewsLimit,
+        offset: floorReviewsPage * floorReviewsLimit,
+        min_rating: floorReviewsMinFilter > 0 ? floorReviewsMinFilter : undefined,
+      }),
+    enabled: Boolean(room),
+  })
+
+  const upsertFloorReviewMutation = useMutation({
+    mutationFn: (payload: { rating: number; comment?: string }) =>
+      upsertMyFloorReview(String(room!.id), payload),
+    onSuccess: async () => {
+      await floorReviewsQuery.refetch()
+      setFloorComment('')
+      setFloorRating(5)
+    },
+  })
+
+  const deleteFloorReviewMutation = useMutation({
+    mutationFn: () => deleteMyFloorReview(String(room!.id)),
+    onSuccess: async () => {
+      await floorReviewsQuery.refetch()
+    },
+  })
 
   const calendarStart = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth(), 1)
   const calendarEnd = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 0)
@@ -397,212 +436,166 @@ export const PlaceDetailsPage = () => {
 
               <Paper
                 elevation={0}
-                    Card,
-                    CardContent,
-                    Grid,
-                    MenuItem,
-                    Rating,
+                sx={{
+                  p: 3,
+                  borderRadius: 3,
+                  border: '1px solid',
+                  borderColor: isLight ? 'rgba(0, 89, 179, 0.08)' : 'rgba(255, 255, 255, 0.05)',
+                  background: isLight ? '#ffffff' : 'rgba(10, 14, 26, 0.45)',
+                }}
+              >
+                <Stack spacing={2.5}>
+                  <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ justifyContent: 'space-between', alignItems: { xs: 'flex-start', md: 'center' } }}>
+                    <Box>
+                      <Typography variant="h5" sx={{ fontWeight: 800 }}>
+                        Ratings & Comments
+                      </Typography>
+                      <Typography color="text.secondary" variant="body2">
+                        See what people said about this space and leave your own rating.
+                      </Typography>
+                    </Box>
+                    <Stack spacing={0.5} sx={{ minWidth: 130 }}>
+                      <Typography variant="body2" color="text.secondary">
+                        Average rating
+                      </Typography>
+                      <Typography variant="h4" sx={{ fontWeight: 900 }}>
+                        {floorReviewsQuery.data?.average_rating?.toFixed(1) ?? '0.0'}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {floorReviewsQuery.data?.rating_count ?? 0} reviews
+                      </Typography>
+                    </Stack>
+                  </Stack>
+
+                  {floorReviewsQuery.isError ? <Alert severity="error">Could not load ratings and comments right now.</Alert> : null}
+
+                  <Grid container spacing={2.5}>
+                    <Grid size={{ xs: 12, md: 5 }}>
+                      <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider', height: '100%' }}>
+                        <CardContent>
+                          <Stack spacing={2}>
+                            <Typography variant="h6" sx={{ fontWeight: 800 }}>
+                              Rate this place
+                            </Typography>
+                            <Rating value={floorRating} onChange={(_, value) => setFloorRating(value ?? 5)} precision={1} />
+                            <TextField
+                              label="Comment"
+                              value={floorComment}
+                              onChange={(event) => setFloorComment(event.target.value)}
+                              minRows={4}
+                              multiline
+                            />
+                            <Stack direction="row" spacing={1}>
+                              <Button
+                                variant="contained"
+                                disabled={upsertFloorReviewMutation.isPending}
+                                onClick={() =>
+                                  upsertFloorReviewMutation.mutate({
+                                    rating: floorRating,
+                                    comment: floorComment.trim() || undefined,
+                                  })
+                                }
+                              >
+                                Save rating
+                              </Button>
+                              <Button
+                                variant="outlined"
+                                color="error"
+                                disabled={deleteFloorReviewMutation.isPending}
+                                onClick={() => deleteFloorReviewMutation.mutate()}
+                              >
+                                Delete my rating
+                              </Button>
+                            </Stack>
+                            {upsertFloorReviewMutation.isError || deleteFloorReviewMutation.isError ? (
+                              <Alert severity="error">You need to be logged in and have a completed booking to rate this place.</Alert>
+                            ) : null}
+                          </Stack>
+                        </CardContent>
+                      </Card>
+                    </Grid>
+
+                    <Grid size={{ xs: 12, md: 7 }}>
+                      <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider', height: '100%' }}>
+                        <CardContent>
+                          <Typography variant="h6" sx={{ fontWeight: 800, mb: 1.5 }}>
+                            Recent comments
+                          </Typography>
+                          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ mb: 1.5 }}>
+                            <TextField
+                              select
+                              label="Minimum rating"
+                              size="small"
+                              value={floorReviewsMinFilter}
+                              onChange={(event) => {
+                                setFloorReviewsPage(0)
+                                setFloorReviewsMinFilter(Number(event.target.value))
+                              }}
+                              sx={{ width: { xs: '100%', sm: 180 } }}
+                            >
+                              <MenuItem value={0}>All</MenuItem>
+                              <MenuItem value={5}>5 stars</MenuItem>
+                              <MenuItem value={4}>4+ stars</MenuItem>
+                              <MenuItem value={3}>3+ stars</MenuItem>
+                              <MenuItem value={2}>2+ stars</MenuItem>
+                              <MenuItem value={1}>1+ stars</MenuItem>
+                            </TextField>
+                          </Stack>
+
+                          <Stack spacing={1.5}>
+                            {(floorReviewsQuery.data?.reviews ?? []).map((review) => (
+                              <Box key={review.id}>
+                                <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
+                                  <Rating value={review.rating} precision={1} readOnly size="small" />
+                                  <Typography variant="caption" color="text.secondary">
+                                    {new Date(review.created_at).toLocaleDateString()}
+                                  </Typography>
+                                </Stack>
+                                {review.comment ? (
+                                  <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                                    {review.comment}
+                                  </Typography>
+                                ) : null}
+                                <Divider sx={{ mt: 1 }} />
+                              </Box>
+                            ))}
+                            {!(floorReviewsQuery.data?.reviews ?? []).length ? <Alert severity="info">No comments yet.</Alert> : null}
+                            <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
+                              <Button
+                                variant="outlined"
+                                size="small"
+                                disabled={floorReviewsPage === 0}
+                                onClick={() => setFloorReviewsPage((prev) => Math.max(0, prev - 1))}
+                              >
+                                Previous
+                              </Button>
+                              <Button
+                                variant="outlined"
+                                size="small"
+                                disabled={(floorReviewsQuery.data?.reviews ?? []).length < floorReviewsLimit}
+                                onClick={() => setFloorReviewsPage((prev) => prev + 1)}
+                              >
+                                Next
+                              </Button>
+                            </Stack>
+                          </Stack>
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                  </Grid>
+                </Stack>
+              </Paper>
+
+              <Paper
+                elevation={0}
                 sx={{
                   p: 2,
                   borderRadius: 2,
-                    const [floorRating, setFloorRating] = useState(5)
-                    const [floorComment, setFloorComment] = useState('')
-                    const [floorReviewsPage, setFloorReviewsPage] = useState(0)
-                    const [floorReviewsMinFilter, setFloorReviewsMinFilter] = useState(0)
                   border: '1px solid',
                   borderColor: isLight ? 'rgba(0, 89, 179, 0.16)' : 'rgba(255, 255, 255, 0.16)',
-                    const floorReviewsLimit = 5
-
-                    const floorReviewsQuery = useQuery({
-                      queryKey: ['floor-reviews', room?.id, floorReviewsPage, floorReviewsMinFilter],
-                      queryFn: () =>
-                        listFloorReviews(String(room!.id), {
-                          limit: floorReviewsLimit,
-                          offset: floorReviewsPage * floorReviewsLimit,
-                          min_rating: floorReviewsMinFilter > 0 ? floorReviewsMinFilter : undefined,
-                        }),
-                      enabled: Boolean(room),
-                    })
-
-                    const upsertFloorReviewMutation = useMutation({
-                      mutationFn: (payload: { rating: number; comment?: string }) =>
-                        upsertMyFloorReview(String(room!.id), payload),
-                      onSuccess: async () => {
-                        await floorReviewsQuery.refetch()
-                        setFloorComment('')
-                        setFloorRating(5)
-                      },
-                    })
-
-                    const deleteFloorReviewMutation = useMutation({
-                      mutationFn: () => deleteMyFloorReview(String(room!.id)),
-                      onSuccess: async () => {
-                        await floorReviewsQuery.refetch()
-                      },
-                    })
                   background: isLight ? '#f9fcff' : 'rgba(16, 29, 50, 0.55)',
                 }}
               >
-                        <Paper
-                          elevation={0}
-                          sx={{
-                            p: 3,
-                            borderRadius: 3,
-                            border: '1px solid',
-                            borderColor: isLight ? 'rgba(0, 89, 179, 0.08)' : 'rgba(255, 255, 255, 0.05)',
-                            background: isLight ? '#ffffff' : 'rgba(10, 14, 26, 0.45)',
-                          }}
-                        >
-                          <Stack spacing={2.5}>
-                            <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ justifyContent: 'space-between', alignItems: { xs: 'flex-start', md: 'center' } }}>
-                              <Box>
-                                <Typography variant="h5" sx={{ fontWeight: 800 }}>
-                                  Ratings & Comments
-                                </Typography>
-                                <Typography color="text.secondary" variant="body2">
-                                  See what people said about this space and leave your own rating.
-                                </Typography>
-                              </Box>
-                              <Stack spacing={0.5} sx={{ minWidth: 130 }}>
-                                <Typography variant="body2" color="text.secondary">
-                                  Average rating
-                                </Typography>
-                                <Typography variant="h4" sx={{ fontWeight: 900 }}>
-                                  {floorReviewsQuery.data?.average_rating?.toFixed(1) ?? '0.0'}
-                                </Typography>
-                                <Typography variant="caption" color="text.secondary">
-                                  {floorReviewsQuery.data?.rating_count ?? 0} reviews
-                                </Typography>
-                              </Stack>
-                            </Stack>
-
-                            {floorReviewsQuery.isError ? (
-                              <Alert severity="error">Could not load ratings and comments right now.</Alert>
-                            ) : null}
-
-                            <Grid container spacing={2.5}>
-                              <Grid size={{ xs: 12, md: 5 }}>
-                                <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider', height: '100%' }}>
-                                  <CardContent>
-                                    <Stack spacing={2}>
-                                      <Typography variant="h6" sx={{ fontWeight: 800 }}>
-                                        Rate this place
-                                      </Typography>
-                                      <Rating
-                                        value={floorRating}
-                                        onChange={(_, value) => setFloorRating(value ?? 5)}
-                                        precision={1}
-                                      />
-                                      <TextField
-                                        label="Comment"
-                                        value={floorComment}
-                                        onChange={(event) => setFloorComment(event.target.value)}
-                                        minRows={4}
-                                        multiline
-                                      />
-                                      <Stack direction="row" spacing={1}>
-                                        <Button
-                                          variant="contained"
-                                          disabled={upsertFloorReviewMutation.isPending}
-                                          onClick={() =>
-                                            upsertFloorReviewMutation.mutate({
-                                              rating: floorRating,
-                                              comment: floorComment.trim() || undefined,
-                                            })
-                                          }
-                                        >
-                                          Save rating
-                                        </Button>
-                                        <Button
-                                          variant="outlined"
-                                          color="error"
-                                          disabled={deleteFloorReviewMutation.isPending}
-                                          onClick={() => deleteFloorReviewMutation.mutate()}
-                                        >
-                                          Delete my rating
-                                        </Button>
-                                      </Stack>
-                                      {upsertFloorReviewMutation.isError || deleteFloorReviewMutation.isError ? (
-                                        <Alert severity="error">You need to be logged in and have a completed booking to rate this place.</Alert>
-                                      ) : null}
-                                    </Stack>
-                                  </CardContent>
-                                </Card>
-                              </Grid>
-
-                              <Grid size={{ xs: 12, md: 7 }}>
-                                <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider', height: '100%' }}>
-                                  <CardContent>
-                                    <Typography variant="h6" sx={{ fontWeight: 800, mb: 1.5 }}>
-                                      Recent comments
-                                    </Typography>
-                                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ mb: 1.5 }}>
-                                      <TextField
-                                        select
-                                        label="Minimum rating"
-                                        size="small"
-                                        value={floorReviewsMinFilter}
-                                        onChange={(event) => {
-                                          setFloorReviewsPage(0)
-                                          setFloorReviewsMinFilter(Number(event.target.value))
-                                        }}
-                                        sx={{ width: { xs: '100%', sm: 180 } }}
-                                      >
-                                        <MenuItem value={0}>All</MenuItem>
-                                        <MenuItem value={5}>5 stars</MenuItem>
-                                        <MenuItem value={4}>4+ stars</MenuItem>
-                                        <MenuItem value={3}>3+ stars</MenuItem>
-                                        <MenuItem value={2}>2+ stars</MenuItem>
-                                        <MenuItem value={1}>1+ stars</MenuItem>
-                                      </TextField>
-                                    </Stack>
-
-                                    <Stack spacing={1.5}>
-                                      {(floorReviewsQuery.data?.reviews ?? []).map((review) => (
-                                        <Box key={review.id}>
-                                          <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <Rating value={review.rating} precision={1} readOnly size="small" />
-                                            <Typography variant="caption" color="text.secondary">
-                                              {new Date(review.created_at).toLocaleDateString()}
-                                            </Typography>
-                                          </Stack>
-                                          {review.comment ? (
-                                            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                                              {review.comment}
-                                            </Typography>
-                                          ) : null}
-                                          <Divider sx={{ mt: 1 }} />
-                                        </Box>
-                                      ))}
-                                      {!(floorReviewsQuery.data?.reviews ?? []).length ? (
-                                        <Alert severity="info">No comments yet.</Alert>
-                                      ) : null}
-                                      <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
-                                        <Button
-                                          variant="outlined"
-                                          size="small"
-                                          disabled={floorReviewsPage === 0}
-                                          onClick={() => setFloorReviewsPage((prev) => Math.max(0, prev - 1))}
-                                        >
-                                          Previous
-                                        </Button>
-                                        <Button
-                                          variant="outlined"
-                                          size="small"
-                                          disabled={(floorReviewsQuery.data?.reviews ?? []).length < floorReviewsLimit}
-                                          onClick={() => setFloorReviewsPage((prev) => prev + 1)}
-                                        >
-                                          Next
-                                        </Button>
-                                      </Stack>
-                                    </Stack>
-                                  </CardContent>
-                                </Card>
-                              </Grid>
-                            </Grid>
-                          </Stack>
-                        </Paper>
-
                 <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ justifyContent: 'space-between', alignItems: { xs: 'flex-start', md: 'center' } }}>
                   <Stack direction="row" spacing={1.25} sx={{ alignItems: 'center' }}>
                     <MeetingRoomOutlinedIcon color="primary" />
