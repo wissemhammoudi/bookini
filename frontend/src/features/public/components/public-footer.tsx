@@ -1,5 +1,4 @@
 import { Box, Container, Divider, Link as MuiLink, Stack, Typography } from '@mui/material'
-import ApartmentOutlinedIcon from '@mui/icons-material/ApartmentOutlined'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined'
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined'
@@ -35,30 +34,26 @@ export const PublicFooter = ({ isLight }: PublicFooterProps) => {
         <Stack spacing={4}>
           <Stack direction={{ xs: 'column', md: 'row' }} spacing={4} sx={{ justifyContent: 'space-between' }}>
             <Stack spacing={2} sx={{ maxWidth: 420 }}>
-              <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
+              <Box
+                component={RouterLink}
+                to="/"
+                sx={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  textDecoration: 'none',
+                }}
+              >
                 <Box
+                  component="img"
+                  src="/navbar_logo.png"
+                  alt="Bookini Logo"
                   sx={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: 2,
-                    display: 'grid',
-                    placeItems: 'center',
-                    background: 'linear-gradient(135deg, #0f172a 0%, #334155 100%)',
-                    color: '#fff',
-                    boxShadow: '0 10px 24px rgba(15, 23, 42, 0.24)',
+                    height: 40,
+                    width: 'auto',
+                    display: 'block',
                   }}
-                >
-                  <ApartmentOutlinedIcon />
-                </Box>
-                <Box>
-                  <Typography variant="h6" sx={{ fontWeight: 900, letterSpacing: '-0.02em' }}>
-                    Bookini
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Professional space booking
-                  </Typography>
-                </Box>
-              </Stack>
+                />
+              </Box>
               <Typography color="text.secondary" sx={{ lineHeight: 1.7 }}>
                 Discover and book meeting rooms, event spaces, and professional venues with a clean,
                 trusted reservation experience.

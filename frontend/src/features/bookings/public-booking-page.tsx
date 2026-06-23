@@ -13,6 +13,7 @@ import {
   Stack,
   TextField,
   Typography,
+  Grid,
 } from '@mui/material'
 import EventAvailableOutlinedIcon from '@mui/icons-material/EventAvailableOutlined'
 import FilterListOutlinedIcon from '@mui/icons-material/FilterListOutlined'
@@ -95,40 +96,38 @@ export const PublicBookingPage = () => {
       <Container maxWidth="lg" sx={{ py: { xs: 6, md: 10 } }}>
         <Stack spacing={8}>
           {/* Header */}
-          <Paper
-            elevation={0}
-            sx={{
-              p: { xs: 3, md: 4 },
-              borderRadius: 3,
-              border: '1px solid',
-              borderColor: isLight ? 'rgba(0, 89, 179, 0.1)' : 'rgba(255, 255, 255, 0.08)',
-              background: isLight
-                ? 'linear-gradient(120deg, #ffffff 0%, #f7fbff 100%)'
-                : 'linear-gradient(120deg, rgba(16,29,50,0.88) 0%, rgba(10,14,26,0.9) 100%)',
-            }}
-          >
-            <Stack spacing={2}>
-              <Chip
-                icon={<EventAvailableOutlinedIcon />}
-                label="Live Availability"
-                color="primary"
-                variant="outlined"
-                sx={{ alignSelf: 'flex-start', fontWeight: 700 }}
-              />
-              <Typography variant="h2" sx={{ fontWeight: 900, letterSpacing: '-0.03em' }}>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Stack spacing={3}>
+              <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 800, letterSpacing: '0.1em' }}>
                 Professional Space Booking
               </Typography>
-              <Typography variant="h6" color="text.secondary" sx={{ maxWidth: 760 }}>
-                Explore our curated spaces, review real-time calendar availability, and submit your booking request in a few clicks.
-              </Typography>
+              <Typography
+                variant="h1"
+                sx={{
+                  fontWeight: 900,
+                  letterSpacing: '-0.04em',
+                  fontSize: { xs: '2.5rem', sm: '3.5rem', md: '4rem' },
+                  lineHeight: 1.1,
+                }}
+              >
+                Explore our curated spaces, review real-time calendar availability, and submit your booking request in a few clicks.{' '}
+                <Box
+                  component="span"
+                  sx={{
+                    background: 'linear-gradient(90deg, #1e293b 0%, #64748b 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                  }}
+                >
 
+                </Box>
+              </Typography>
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.25}>
                 <Chip label={`${rooms.length} spaces available`} color="primary" variant="filled" />
-                <Chip label="Calendar synced with backend" variant="outlined" />
-                <Chip label="Conflict checks enabled" variant="outlined" />
               </Stack>
             </Stack>
-          </Paper>
+          </Grid>
+
 
           {/* Rooms Section */}
           <Box>

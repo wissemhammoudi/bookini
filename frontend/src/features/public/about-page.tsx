@@ -26,7 +26,6 @@ import HubIcon from '@mui/icons-material/Hub'
 import { useColorMode } from '@/app/use-color-mode'
 import { PublicNavbar } from './components/public-navbar'
 import { PublicFooter } from './components/public-footer'
-import { PublicPageHeader } from './components/public-page-header'
 
 export const AboutPage = () => {
   const { mode } = useColorMode()
@@ -101,13 +100,6 @@ export const AboutPage = () => {
       }}
     >
       <PublicNavbar isLight={isLight} />
-
-      <PublicPageHeader
-        isLight={isLight}
-        eyebrow="About Us"
-        title="Connecting People With the Right Spaces"
-        description="Bookini is a reservation platform designed to connect people with spaces that fit their needs. Whether you are organizing a meeting, hosting an event, conducting training, or looking for a workspace, our platform makes finding and reserving spaces simple and efficient."
-      />
 
       {/* Hero Section */}
       <Box

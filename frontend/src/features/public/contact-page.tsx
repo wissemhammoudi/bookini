@@ -111,12 +111,37 @@ export const ContactPage = () => {
     >
       <PublicNavbar isLight={isLight} />
 
-      <PublicPageHeader
-        isLight={isLight}
-        eyebrow="Contact"
-        title="Get in Touch"
-        description="Have questions or partnership requests? Contact our team and we will help you with reservations, onboarding, or business collaboration."
-      />
+      <Grid size={{ xs: 12, md: 6 }}>
+        <Stack spacing={3}>
+          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 800, letterSpacing: '0.1em' }}>
+            Contact
+          </Typography>
+          <Typography
+            variant="h1"
+            sx={{
+              fontWeight: 900,
+              letterSpacing: '-0.04em',
+              fontSize: { xs: '2.5rem', sm: '3.5rem', md: '4rem' },
+              lineHeight: 1.1,
+            }}
+          >
+            Have Questions or Partnership Requests?{' '}
+            <Box
+              component="span"
+              sx={{
+                background: 'linear-gradient(90deg, #1e293b 0%, #64748b 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+              }}
+            >
+              Spaces
+            </Box>
+          </Typography>
+          <Typography variant="body1" color="text.secondary" sx={{ fontSize: '1.15rem', lineHeight: 1.7 }}>
+            Have questions or partnership requests? Contact our team and we will help you with reservations, onboarding, or business collaboration.
+          </Typography>
+        </Stack>
+      </Grid>
 
       <Box sx={{ py: { xs: 6, md: 10 } }}>
         <Container maxWidth="lg">
