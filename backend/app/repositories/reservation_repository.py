@@ -19,6 +19,11 @@ class ReservationRepository:
         return reservation
 
     async def get_by_id(self, reservation_id: str) -> Reservation | None:
+        try:
+            import uuid
+            uuid.UUID(reservation_id)
+        except ValueError:
+            return None
         statement = select(Reservation).where(Reservation.id == reservation_id)
         result = await self._session.execute(statement)
         return result.scalar_one_or_none()

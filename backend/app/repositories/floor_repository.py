@@ -16,6 +16,11 @@ class FloorRepository:
         return floor
 
     async def get_by_id(self, floor_id: str) -> Floor | None:
+        try:
+            import uuid
+            uuid.UUID(floor_id)
+        except ValueError:
+            return None
         statement = select(Floor).where(Floor.id == floor_id)
         result = await self._session.execute(statement)
         return result.scalar_one_or_none()
@@ -53,6 +58,11 @@ class FloorRepository:
         admin_id: str,
         include_deleted: bool,
     ) -> list[Floor]:
+        try:
+            import uuid
+            uuid.UUID(admin_id)
+        except ValueError:
+            return []
         statement: Select[tuple[Floor]] = select(Floor).where(Floor.admin_id == admin_id)
 
         if not include_deleted:
