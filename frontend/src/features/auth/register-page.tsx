@@ -112,6 +112,7 @@ export const RegisterPage = () => {
           </Stack>
         </Paper>
       </Stack>
+      <PublicFooter isLight={isLight} />
     </Box>
   )
 }

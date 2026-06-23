@@ -130,6 +130,16 @@ export const RoomCard = ({
             </Stack>
             <Stack direction="row" spacing={1}>
 
+              {room.admin_id && onViewAdmin ? (
+                <Button
+                  variant="text"
+                  sx={{ fontWeight: 700 }}
+                  onClick={() => onViewAdmin(room.admin_id as string)}
+                >
+                  View Owner
+                </Button>
+              ) : null}
+
               <Button
                 variant={isSelected ? 'contained' : 'outlined'}
                 sx={{ fontWeight: 700 }}
