@@ -8,7 +8,6 @@ import EmailIcon from '@mui/icons-material/Email'
 import { useColorMode } from '@/app/use-color-mode'
 import { PublicNavbar } from './components/public-navbar'
 import { PublicFooter } from './components/public-footer'
-import { PublicPageHeader } from './components/public-page-header'
 import { createContactRequest, createPartnershipRequest } from '@/lib/api'
 
 /**

@@ -31,7 +31,6 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import { useColorMode } from '@/app/use-color-mode'
 import { PublicNavbar } from './components/public-navbar'
 import { PublicFooter } from './components/public-footer'
-import { PublicPageHeader } from './components/public-page-header'
 
 export const ReservationsInfoPage = () => {
   const { mode } = useColorMode()

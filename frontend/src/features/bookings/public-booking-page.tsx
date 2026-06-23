@@ -15,7 +15,6 @@ import {
   Typography,
   Grid,
 } from '@mui/material'
-import EventAvailableOutlinedIcon from '@mui/icons-material/EventAvailableOutlined'
 import FilterListOutlinedIcon from '@mui/icons-material/FilterListOutlined'
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined'
 
