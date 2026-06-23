@@ -5,6 +5,14 @@ import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import GridOnOutlinedIcon from '@mui/icons-material/GridOnOutlined'
 import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined'
+import RotateRightOutlinedIcon from '@mui/icons-material/RotateRightOutlined'
+import DeskOutlinedIcon from '@mui/icons-material/DeskOutlined'
+import TableBarOutlinedIcon from '@mui/icons-material/TableBarOutlined'
+import ChairOutlinedIcon from '@mui/icons-material/ChairOutlined'
+import CastConnectedOutlinedIcon from '@mui/icons-material/CastConnectedOutlined'
+import LocalFloristOutlinedIcon from '@mui/icons-material/LocalFloristOutlined'
+import DoorBackOutlinedIcon from '@mui/icons-material/DoorBackOutlined'
+import BorderAllOutlinedIcon from '@mui/icons-material/BorderAllOutlined'
 import {
   Avatar,
   Box,
@@ -21,6 +29,9 @@ import {
   DialogActions,
   IconButton,
   Alert,
+  Switch,
+  FormControlLabel,
+  MenuItem,
 } from '@mui/material'
 import Grid from '@mui/material/Grid'
 
@@ -30,7 +41,112 @@ import type { FloorRecord, PlaceRecord } from '@/lib/api-types'
 import { updateWorkspaceFloor } from '@/lib/api'
 import { workspaceQueryKey } from '@/features/admin-workspace/admin-workspace-config'
 
-type DeskZone = { name: string; x: number; y: number; w: number; h: number }
+type ElementType = 'desk' | 'table' | 'chair' | 'projector' | 'plant' | 'door' | 'wall'
+
+type DeskZone = {
+  name: string
+  x: number
+  y: number
+  w: number
+  h: number
+  type?: ElementType
+  rotation?: number
+  isReservable?: boolean
+}
+
+const TOOLBOX_TEMPLATES = [
+  { type: 'desk', label: 'Work Desk', w: 90, h: 60, isReservable: true, category: 'Furniture' },
+  { type: 'table', label: 'Meeting Table', w: 140, h: 80, isReservable: true, category: 'Furniture' },
+  { type: 'chair', label: 'Office Chair', w: 45, h: 45, isReservable: false, category: 'Furniture' },
+  { type: 'projector', label: 'Projector/Screen', w: 100, h: 40, isReservable: false, category: 'Equipment' },
+  { type: 'plant', label: 'Office Plant', w: 40, h: 40, isReservable: false, category: 'Decor' },
+  { type: 'wall', label: 'Partition Wall', w: 120, h: 20, isReservable: false, category: 'Structure' },
+  { type: 'door', label: 'Office Door', w: 60, h: 20, isReservable: false, category: 'Structure' },
+] as const
+
+const getElementIcon = (type: string, size: 'small' | 'medium' = 'medium') => {
+  const sx = { fontSize: size === 'small' ? '12px' : '20px' }
+  switch (type) {
+    case 'table':
+      return <TableBarOutlinedIcon sx={sx} />
+    case 'chair':
+      return <ChairOutlinedIcon sx={sx} />
+    case 'projector':
+      return <CastConnectedOutlinedIcon sx={sx} />
+    case 'plant':
+      return <LocalFloristOutlinedIcon sx={sx} />
+    case 'door':
+      return <DoorBackOutlinedIcon sx={sx} />
+    case 'wall':
+      return <BorderAllOutlinedIcon sx={sx} />
+    case 'desk':
+    default:
+      return <DeskOutlinedIcon sx={sx} />
+  }
+}
+
+const getElementColors = (type: string, isSelected: boolean) => {
+  if (isSelected) {
+    return {
+      border: 'primary.main',
+      bg: (theme: any) => alpha(theme.palette.primary.main, 0.15),
+      shadow: '0 0 10px rgba(0, 89, 179, 0.4)',
+      accent: 'primary.main',
+    }
+  }
+  switch (type) {
+    case 'plant':
+      return {
+        border: 'success.main',
+        bg: (theme: any) => alpha(theme.palette.success.main, 0.08),
+        shadow: 'none',
+        accent: 'success.main',
+      }
+    case 'wall':
+      return {
+        border: '#475569',
+        bg: (theme: any) => theme.palette.mode === 'light' ? '#cbd5e1' : '#334155',
+        shadow: 'none',
+        accent: '#475569',
+      }
+    case 'door':
+      return {
+        border: '#b45309',
+        bg: (theme: any) => theme.palette.mode === 'light' ? '#fef3c7' : '#78350f',
+        shadow: 'none',
+        accent: '#b45309',
+      }
+    case 'projector':
+      return {
+        border: 'secondary.main',
+        bg: (theme: any) => alpha(theme.palette.secondary.main, 0.08),
+        shadow: 'none',
+        accent: 'secondary.main',
+      }
+    case 'chair':
+      return {
+        border: '#6b7280',
+        bg: (theme: any) => theme.palette.mode === 'light' ? '#f3f4f6' : '#1f2937',
+        shadow: 'none',
+        accent: '#6b7280',
+      }
+    case 'table':
+      return {
+        border: 'info.main',
+        bg: (theme: any) => alpha(theme.palette.info.main, 0.08),
+        shadow: 'none',
+        accent: 'info.main',
+      }
+    case 'desk':
+    default:
+      return {
+        border: '#00A88F',
+        bg: (_theme: any) => alpha('#00A88F', 0.08),
+        shadow: 'none',
+        accent: '#00A88F',
+      }
+  }
+}
 
 type FloorManagementSectionProps = {
   floors: FloorRecord[]
@@ -73,7 +189,7 @@ export function FloorsSection({
           capacity: builderFloor.capacity,
           description: builderFloor.description,
           blueprint_image: JSON.stringify(desks),
-          reservation_areas: desks.map((d) => d.name),
+          reservation_areas: desks.filter((d) => d.isReservable !== false).map((d) => d.name),
           status: builderFloor.status,
         },
       })
@@ -108,6 +224,10 @@ export function FloorsSection({
           >
             {layoutDesks.map((d, index) => {
               const scale = 0.192
+              const type = d.type || 'desk'
+              const rotation = d.rotation || 0
+              const colors = getElementColors(type, false)
+
               return (
                 <Box
                   key={index}
@@ -117,18 +237,18 @@ export function FloorsSection({
                     top: d.y * scale,
                     width: d.w * scale,
                     height: d.h * scale,
-                    backgroundColor: alpha('#00A88F', 0.06),
+                    backgroundColor: colors.bg,
                     border: '1px solid',
-                    borderColor: 'success.main',
+                    borderColor: colors.border,
                     borderRadius: 0.5,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
+                    transform: `rotate(${rotation}deg)`,
+                    overflow: 'hidden',
                   }}
                 >
-                  <Typography sx={{ fontSize: '5px', fontWeight: 900, textAlign: 'center', lineHeight: 1 }}>
-                    {d.name.substring(0, 3)}
-                  </Typography>
+                  {getElementIcon(type, 'small')}
                 </Box>
               )
             })}
@@ -288,32 +408,32 @@ function FloorBuilderDialog({ open, floor, onClose, onSave, isSaving }: FloorBui
       y: 20 + Math.floor(idx / 4) * 80,
       w: 90,
       h: 60,
+      type: 'desk' as ElementType,
+      rotation: 0,
+      isReservable: true,
     }))
   })
 
-  const [newDeskName, setNewDeskName] = useState('')
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
 
   const selectedDesk = selectedIndex !== null ? desks[selectedIndex] : null
 
-  const handleAddDesk = () => {
-    const name = newDeskName.trim()
-    if (!name) return
-    if (desks.some((d) => d.name.toLowerCase() === name.toLowerCase())) {
-      alert('A zone with this name already exists.')
-      return
+  const handleAddTemplate = (template: typeof TOOLBOX_TEMPLATES[number]) => {
+    const typeCount = desks.filter((d) => (d.type || 'desk') === template.type).length + 1
+    const defaultName = `${template.label} ${typeCount}`
+
+    const newElement: DeskZone = {
+      name: defaultName,
+      x: 180,
+      y: 180,
+      w: template.w,
+      h: template.h,
+      type: template.type,
+      rotation: 0,
+      isReservable: template.isReservable,
     }
 
-    const newDesk: DeskZone = {
-      name,
-      x: 150,
-      y: 150,
-      w: 90,
-      h: 60,
-    }
-
-    setDesks((prev) => [...prev, newDesk])
-    setNewDeskName('')
+    setDesks((prev) => [...prev, newElement])
     setSelectedIndex(desks.length)
   }
 
@@ -327,6 +447,19 @@ function FloorBuilderDialog({ open, floor, onClose, onSave, isSaving }: FloorBui
     setDesks((prev) => {
       const updated = [...prev]
       updated[selectedIndex] = { ...updated[selectedIndex], [field]: val }
+      return updated
+    })
+  }
+
+  const handleRotateSelected = () => {
+    if (selectedIndex === null) return
+    setDesks((prev) => {
+      const updated = [...prev]
+      const currentRotation = updated[selectedIndex].rotation || 0
+      updated[selectedIndex] = {
+        ...updated[selectedIndex],
+        rotation: (currentRotation + 90) % 360,
+      }
       return updated
     })
   }
@@ -375,8 +508,8 @@ function FloorBuilderDialog({ open, floor, onClose, onSave, isSaving }: FloorBui
       const dy = moveEvent.clientY - startY
       setDesks((prev) => {
         const updated = [...prev]
-        const nextW = Math.max(40, Math.min(500 - desk.x, Math.round((originalW + dx) / 10) * 10))
-        const nextH = Math.max(40, Math.min(500 - desk.y, Math.round((originalH + dy) / 10) * 10))
+        const nextW = Math.max(20, Math.min(500 - desk.x, Math.round((originalW + dx) / 10) * 10))
+        const nextH = Math.max(20, Math.min(500 - desk.y, Math.round((originalH + dy) / 10) * 10))
         updated[index] = { ...updated[index], w: nextW, h: nextH }
         return updated
       })
@@ -392,7 +525,7 @@ function FloorBuilderDialog({ open, floor, onClose, onSave, isSaving }: FloorBui
   }
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+    <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
       <DialogTitle sx={{ m: 0, p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography variant="h6" sx={{ fontWeight: 800 }}>
           2D Floor Layout Builder — {floor.floor_name}
@@ -403,7 +536,104 @@ function FloorBuilderDialog({ open, floor, onClose, onSave, isSaving }: FloorBui
       </DialogTitle>
       <DialogContent dividers sx={{ p: 3 }}>
         <Grid container spacing={3}>
-          <Grid size={{ xs: 12, md: 8 }}>
+          {/* Left Panel: Toolbox */}
+          <Grid size={{ xs: 12, md: 3 }}>
+            <Stack spacing={2.5}>
+              <Paper variant="outlined" sx={{ p: 2.25, borderRadius: 2, backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.01) }}>
+                <Typography sx={{ fontWeight: 800, mb: 2 }}>Toolbox Elements</Typography>
+
+                {/* Furniture Category */}
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontWeight: 700, mb: 1, textTransform: 'uppercase' }}>
+                  Furniture
+                </Typography>
+                <Grid container spacing={1} sx={{ mb: 2.5 }}>
+                  {TOOLBOX_TEMPLATES.filter(t => t.category === 'Furniture').map((t) => (
+                    <Grid key={t.type} size={{ xs: 6 }}>
+                      <Button
+                        fullWidth
+                        variant="outlined"
+                        onClick={() => handleAddTemplate(t)}
+                        sx={{
+                          height: 72,
+                          flexDirection: 'column',
+                          borderRadius: 2,
+                          textTransform: 'none',
+                          p: 1,
+                          fontSize: '11px',
+                          fontWeight: 700,
+                          lineHeight: 1.2,
+                        }}
+                      >
+                        {getElementIcon(t.type)}
+                        <Box sx={{ mt: 0.75 }}>{t.label}</Box>
+                      </Button>
+                    </Grid>
+                  ))}
+                </Grid>
+
+                {/* Equipment & Decor Category */}
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontWeight: 700, mb: 1, textTransform: 'uppercase' }}>
+                  Equipment & Decor
+                </Typography>
+                <Grid container spacing={1} sx={{ mb: 2.5 }}>
+                  {TOOLBOX_TEMPLATES.filter(t => t.category === 'Equipment' || t.category === 'Decor').map((t) => (
+                    <Grid key={t.type} size={{ xs: 6 }}>
+                      <Button
+                        fullWidth
+                        variant="outlined"
+                        onClick={() => handleAddTemplate(t)}
+                        sx={{
+                          height: 72,
+                          flexDirection: 'column',
+                          borderRadius: 2,
+                          textTransform: 'none',
+                          p: 1,
+                          fontSize: '11px',
+                          fontWeight: 700,
+                          lineHeight: 1.2,
+                        }}
+                      >
+                        {getElementIcon(t.type)}
+                        <Box sx={{ mt: 0.75 }}>{t.label}</Box>
+                      </Button>
+                    </Grid>
+                  ))}
+                </Grid>
+
+                {/* Structure Category */}
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontWeight: 700, mb: 1, textTransform: 'uppercase' }}>
+                  Structure
+                </Typography>
+                <Grid container spacing={1}>
+                  {TOOLBOX_TEMPLATES.filter(t => t.category === 'Structure').map((t) => (
+                    <Grid key={t.type} size={{ xs: 6 }}>
+                      <Button
+                        fullWidth
+                        variant="outlined"
+                        onClick={() => handleAddTemplate(t)}
+                        sx={{
+                          height: 72,
+                          flexDirection: 'column',
+                          borderRadius: 2,
+                          textTransform: 'none',
+                          p: 1,
+                          fontSize: '11px',
+                          fontWeight: 700,
+                          lineHeight: 1.2,
+                        }}
+                      >
+                        {getElementIcon(t.type)}
+                        <Box sx={{ mt: 0.75 }}>{t.label}</Box>
+                      </Button>
+                    </Grid>
+                  ))}
+                </Grid>
+              </Paper>
+            </Stack>
+          </Grid>
+
+          {/* Center Canvas */}
+          <Grid size={{ xs: 12, md: 6 }}>
             <Box
               sx={{
                 width: 500,
@@ -424,6 +654,10 @@ function FloorBuilderDialog({ open, floor, onClose, onSave, isSaving }: FloorBui
             >
               {desks.map((desk, idx) => {
                 const isSelected = selectedIndex === idx
+                const type = desk.type || 'desk'
+                const rotation = desk.rotation || 0
+                const colors = getElementColors(type, isSelected)
+
                 return (
                   <Box
                     key={idx}
@@ -434,25 +668,57 @@ function FloorBuilderDialog({ open, floor, onClose, onSave, isSaving }: FloorBui
                       top: desk.y,
                       width: desk.w,
                       height: desk.h,
-                      backgroundColor: isSelected ? alpha('#0059B3', 0.15) : alpha('#00A88F', 0.08),
+                      backgroundColor: colors.bg,
                       border: '2px solid',
-                      borderColor: isSelected ? 'primary.main' : 'success.main',
+                      borderColor: colors.border,
                       borderRadius: 1.5,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       cursor: 'move',
-                      boxShadow: isSelected ? '0 0 10px rgba(0, 89, 179, 0.4)' : 'none',
+                      boxShadow: colors.shadow,
                       userSelect: 'none',
                       p: 0.5,
+                      transform: `rotate(${rotation}deg)`,
+                      transition: 'transform 0.15s ease-in-out',
                     }}
                   >
-                    <Typography
-                      variant="caption"
-                      sx={{ fontWeight: 800, textAlign: 'center', wordBreak: 'break-all' }}
-                    >
-                      {desk.name}
-                    </Typography>
+                    {isSelected && (
+                      <IconButton
+                        size="small"
+                        onMouseDown={(e) => {
+                          e.stopPropagation()
+                          e.preventDefault()
+                          handleRotateSelected()
+                        }}
+                        sx={{
+                          position: 'absolute',
+                          top: -12,
+                          left: '50%',
+                          transform: 'translateX(-50%)',
+                          backgroundColor: 'primary.main',
+                          color: 'primary.contrastText',
+                          width: 20,
+                          height: 20,
+                          zIndex: 10,
+                          '&:hover': {
+                            backgroundColor: 'primary.dark',
+                          },
+                        }}
+                      >
+                        <RotateRightOutlinedIcon sx={{ fontSize: '11px' }} />
+                      </IconButton>
+                    )}
+
+                    <Stack spacing={0.5} sx={{ alignItems: 'center', pointerEvents: 'none', width: '100%' }}>
+                      {getElementIcon(type)}
+                      <Typography
+                        variant="caption"
+                        sx={{ fontWeight: 800, textAlign: 'center', fontSize: '9px', wordBreak: 'break-all', display: desk.w > 40 ? 'block' : 'none' }}
+                      >
+                        {desk.name}
+                      </Typography>
+                    </Stack>
 
                     <Box
                       onMouseDown={(e) => handleResizeMouseDown(e, idx)}
@@ -463,7 +729,7 @@ function FloorBuilderDialog({ open, floor, onClose, onSave, isSaving }: FloorBui
                         width: 14,
                         height: 14,
                         cursor: 'se-resize',
-                        backgroundColor: isSelected ? 'primary.main' : 'success.main',
+                        backgroundColor: colors.accent,
                         borderTopLeftRadius: 4,
                         borderBottomRightRadius: 2,
                       }}
@@ -473,41 +739,66 @@ function FloorBuilderDialog({ open, floor, onClose, onSave, isSaving }: FloorBui
               })}
             </Box>
           </Grid>
-          <Grid size={{ xs: 12, md: 4 }}>
-            <Stack spacing={2.5}>
-              <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
-                <Typography sx={{ fontWeight: 800, mb: 1 }}>Add New Zone</Typography>
-                <Stack spacing={1.5}>
-                  <TextField
-                    placeholder="e.g. Desk B4, Zone 1"
-                    size="small"
-                    value={newDeskName}
-                    onChange={(e) => setNewDeskName(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') handleAddDesk()
-                    }}
-                  />
-                  <Button variant="contained" size="small" onClick={handleAddDesk} startIcon={<AddOutlinedIcon />}>
-                    Add Zone
-                  </Button>
-                </Stack>
-              </Paper>
 
+          {/* Right Panel: Inspector */}
+          <Grid size={{ xs: 12, md: 3 }}>
+            <Stack spacing={2.5}>
               {selectedDesk && selectedIndex !== null ? (
                 <Paper
                   variant="outlined"
-                  sx={{ p: 2, borderRadius: 2, borderColor: 'primary.main', border: '1.5px solid' }}
+                  sx={{ p: 2.25, borderRadius: 2, borderColor: 'primary.main', border: '1.5px solid' }}
                 >
-                  <Typography sx={{ fontWeight: 800, mb: 1.5 }} color="primary">
-                    Zone Properties
+                  <Typography sx={{ fontWeight: 800, mb: 2 }} color="primary">
+                    Element Properties
                   </Typography>
-                  <Stack spacing={1.5}>
+                  <Stack spacing={2}>
                     <TextField
-                      label="Zone Name"
+                      label="Element Label"
                       size="small"
                       value={selectedDesk.name}
                       onChange={(e) => handleUpdateSelected('name', e.target.value)}
                     />
+
+                    <TextField
+                      select
+                      label="Type"
+                      size="small"
+                      value={selectedDesk.type || 'desk'}
+                      onChange={(e) => handleUpdateSelected('type', e.target.value)}
+                    >
+                      <MenuItem value="desk">Work Desk</MenuItem>
+                      <MenuItem value="table">Meeting Table</MenuItem>
+                      <MenuItem value="chair">Office Chair</MenuItem>
+                      <MenuItem value="projector">Projector / Screen</MenuItem>
+                      <MenuItem value="plant">Office Plant</MenuItem>
+                      <MenuItem value="door">Office Door</MenuItem>
+                      <MenuItem value="wall">Partition Wall</MenuItem>
+                    </TextField>
+
+                    <TextField
+                      select
+                      label="Rotation"
+                      size="small"
+                      value={selectedDesk.rotation || 0}
+                      onChange={(e) => handleUpdateSelected('rotation', Number(e.target.value))}
+                    >
+                      <MenuItem value={0}>0° (Horizontal)</MenuItem>
+                      <MenuItem value={90}>90° (Vertical)</MenuItem>
+                      <MenuItem value={180}>180°</MenuItem>
+                      <MenuItem value={270}>270°</MenuItem>
+                    </TextField>
+
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={selectedDesk.isReservable !== false}
+                          onChange={(e) => handleUpdateSelected('isReservable', e.target.checked)}
+                          color="primary"
+                        />
+                      }
+                      label="Reservable Area"
+                    />
+
                     <Stack direction="row" spacing={1}>
                       <TextField
                         label="Width (px)"
@@ -524,6 +815,7 @@ function FloorBuilderDialog({ open, floor, onClose, onSave, isSaving }: FloorBui
                         onChange={(e) => handleUpdateSelected('h', Number(e.target.value))}
                       />
                     </Stack>
+
                     <Stack direction="row" spacing={1}>
                       <TextField
                         label="X Pos"
@@ -540,6 +832,7 @@ function FloorBuilderDialog({ open, floor, onClose, onSave, isSaving }: FloorBui
                         onChange={(e) => handleUpdateSelected('y', Number(e.target.value))}
                       />
                     </Stack>
+
                     <Button
                       variant="outlined"
                       color="error"
@@ -547,12 +840,14 @@ function FloorBuilderDialog({ open, floor, onClose, onSave, isSaving }: FloorBui
                       onClick={() => handleDeleteDesk(selectedIndex)}
                       startIcon={<DeleteOutlineOutlinedIcon />}
                     >
-                      Delete Zone
+                      Delete Element
                     </Button>
                   </Stack>
                 </Paper>
               ) : (
-                <Alert severity="info">Click any zone on the canvas to inspect or adjust its coordinates.</Alert>
+                <Alert severity="info" sx={{ borderRadius: 2 }}>
+                  Click any element on the canvas to inspect, rotate, or modify its properties. Or choose an element from the Toolbox to add it.
+                </Alert>
               )}
             </Stack>
           </Grid>
@@ -569,4 +864,3 @@ function FloorBuilderDialog({ open, floor, onClose, onSave, isSaving }: FloorBui
     </Dialog>
   )
 }
-
