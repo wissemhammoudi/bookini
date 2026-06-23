@@ -1,3 +1,4 @@
+from datetime import datetime
 from fastapi import APIRouter, Depends, Query, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -12,6 +13,8 @@ from app.schemas.public_booking import (
     PartnershipRequestResponse,
     PartnershipRequestUpdateRequest,
 )
+from app.schemas.admin_workspace import PartnershipRequestRecord
+from app.services.admin_workspace_state_store import AdminWorkspaceStateStore
 
 router = APIRouter(prefix="/partners", tags=["partners"])
 
@@ -39,6 +42,26 @@ async def create_partnership_request(
     
     partnership = await repository.create(request_data)
     await session.commit()
+    
+    # Also push to the in-memory workspace state to make it visible in the admin frontend
+    state = AdminWorkspaceStateStore.get_state()
+    record = PartnershipRequestRecord(
+        id=str(partnership.id),
+        company_name=partnership.company_name,
+        contact_person=partnership.contact_person,
+        email=partnership.contact_email,
+        phone=partnership.contact_phone,
+        business_description=partnership.description or "",
+        requested_date=partnership.created_at or datetime.now(),
+        status="PENDING",
+        generated_credentials=None,
+    )
+    state.partnership_requests.insert(0, record)
+    AdminWorkspaceStateStore.record_activity(
+        title=partnership.company_name,
+        description="Submitted a new partnership request.",
+        item_type="partnership",
+    )
     
     return success_response(
         message="Partnership request submitted successfully",
