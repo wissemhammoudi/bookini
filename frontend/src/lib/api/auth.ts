@@ -76,9 +76,6 @@ export const uploadAvatarRequest = async (file: File) => {
     formData,
     {
       timeout: 60000,
-      headers: {
-        'Content-Type': undefined,
-      },
     },
   )
   return response.data.data
