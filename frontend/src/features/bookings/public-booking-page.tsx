@@ -20,6 +20,7 @@ import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined'
 
 import { useColorMode } from '@/app/use-color-mode'
 import { PublicNavbar } from '@/features/public/components/public-navbar'
+import { PublicFooter } from '@/features/public/components/public-footer'
 import { RoomCard } from './components/RoomCard'
 import { listPublicRooms } from '@/lib/api'
 
@@ -245,6 +246,8 @@ export const PublicBookingPage = () => {
           </Box>
         </Stack>
       </Container>
+
+      <PublicFooter isLight={isLight} />
     </Box>
   )
 }

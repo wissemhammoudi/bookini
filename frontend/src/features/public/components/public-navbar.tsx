@@ -14,6 +14,7 @@ import {
   Toolbar,
   alpha,
 } from '@mui/material'
+import ApartmentOutlinedIcon from '@mui/icons-material/ApartmentOutlined'
 import LightModeOutlinedIcon from '@mui/icons-material/LightModeOutlined'
 import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined'
 import MenuIcon from '@mui/icons-material/Menu'
@@ -97,8 +98,6 @@ export const PublicNavbar = ({ isLight }: PublicNavbarProps) => {
 
   const [mobileAnchorEl, setMobileAnchorEl] = useState<null | HTMLElement>(null)
   const mobileOpen = Boolean(mobileAnchorEl)
-  const brandLogoSrc = '/navbar_logo.png'
-
   const userLabel = useMemo(() => getSubFromToken(token), [token])
   const avatarText = useMemo(() => getInitials(userLabel), [userLabel])
 
@@ -157,19 +156,32 @@ export const PublicNavbar = ({ isLight }: PublicNavbarProps) => {
                 sx={{
                   display: 'inline-flex',
                   alignItems: 'center',
+                  gap: 1.25,
                   textDecoration: 'none',
                 }}
               >
                 <Box
-                  component="img"
-                  src={brandLogoSrc}
-                  alt="Bookiblastek"
                   sx={{
-                    height: { xs: 36, md: 42 },
-                    width: 'auto',
-                    display: 'block',
+                    width: 42,
+                    height: 42,
+                    borderRadius: 2,
+                    display: 'grid',
+                    placeItems: 'center',
+                    background: 'linear-gradient(135deg, #0f172a 0%, #334155 100%)',
+                    color: '#ffffff',
+                    boxShadow: '0 10px 24px rgba(15, 23, 42, 0.24)',
                   }}
-                />
+                >
+                  <ApartmentOutlinedIcon />
+                </Box>
+                <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                  <Box component="span" sx={{ fontSize: '0.95rem', fontWeight: 900, lineHeight: 1, letterSpacing: '-0.02em' }}>
+                    Bookiblastek
+                  </Box>
+                  <Box component="span" sx={{ fontSize: '0.72rem', lineHeight: 1.1, color: 'text.secondary' }}>
+                    Smart space booking
+                  </Box>
+                </Box>
               </Box>
             </Stack>
 

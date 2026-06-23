@@ -28,6 +28,7 @@ import DownloadIcon from '@mui/icons-material/Download'
 
 import { useColorMode } from '@/app/use-color-mode'
 import { PublicNavbar } from '@/features/public/components/public-navbar'
+import { PublicFooter } from '@/features/public/components/public-footer'
 import { getPublicBookingByReference } from '@/lib/api'
 
 /**
@@ -408,6 +409,8 @@ END:VCALENDAR`
           </Alert>
         </Stack>
       </Container>
+
+      <PublicFooter isLight={isLight} />
     </Box>
   )
 }

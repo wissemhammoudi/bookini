@@ -25,6 +25,7 @@ import HubIcon from '@mui/icons-material/Hub'
 
 import { useColorMode } from '@/app/use-color-mode'
 import { PublicNavbar } from './components/public-navbar'
+import { PublicFooter } from './components/public-footer'
 
 export const AboutPage = () => {
   const { mode } = useColorMode()
@@ -402,6 +403,8 @@ export const AboutPage = () => {
           </Stack>
         </Paper>
       </Container>
+
+      <PublicFooter isLight={isLight} />
     </Box>
   )
 }

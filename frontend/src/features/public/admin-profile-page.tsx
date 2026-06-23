@@ -20,6 +20,7 @@ import {
 import { useParams } from 'react-router-dom'
 
 import { useColorMode } from '@/app/use-color-mode'
+import { PublicFooter } from './components/public-footer'
 import {
   deleteMyAdminRating,
   deleteMyFloorReview,
@@ -165,6 +166,7 @@ export const AdminProfilePage = () => {
         <Container maxWidth="lg" sx={{ py: 8 }}>
           <Alert severity="info">Loading admin profile...</Alert>
         </Container>
+        <PublicFooter isLight={isLight} />
       </Box>
     )
   }
@@ -178,6 +180,7 @@ export const AdminProfilePage = () => {
             Could not load this owner profile. Make sure the owner exists.
           </Alert>
         </Container>
+        <PublicFooter isLight={isLight} />
       </Box>
     )
   }
@@ -515,6 +518,8 @@ export const AdminProfilePage = () => {
           </Grid>
         </Stack>
       </Container>
+
+      <PublicFooter isLight={isLight} />
     </Box>
   )
 }

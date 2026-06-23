@@ -28,9 +28,15 @@ def _build_public_rooms_catalog() -> list[dict[str, object]]:
         for user in state.users
         if user.role == "ADMIN" and user.organization_id
     }
+    rating_by_organization_id: dict[str, tuple[float, int]] = {
+        "org-atlas": (4.9, 128),
+        "org-marina": (4.8, 96),
+        "org-oasis": (4.6, 54),
+    }
 
     rooms: list[dict[str, object]] = []
     for index, place in enumerate(state.places, start=1):
+        average_rating, rating_count = rating_by_organization_id.get(place.organization_id, (0.0, 0))
         rooms.append(
             {
                 "id": index,
@@ -48,6 +54,8 @@ def _build_public_rooms_catalog() -> list[dict[str, object]]:
                 # Placeholder for future admin-managed media URL.
                 "video_url": None,
                 "admin_id": admin_by_organization_id.get(place.organization_id),
+                "average_rating": average_rating,
+                "rating_count": rating_count,
             }
         )
 

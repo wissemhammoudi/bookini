@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link as RouterLink, useNavigate } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import {
   Box,
   Button,
@@ -31,6 +32,8 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 
 import { useColorMode } from '@/app/use-color-mode'
 import { PublicNavbar } from './components/public-navbar'
+import { PublicFooter } from './components/public-footer'
+import { listPublicRooms } from '@/lib/api'
 
 /**
  * Landing Page
@@ -40,6 +43,10 @@ export const LandingPage = () => {
   const { mode } = useColorMode()
   const isLight = mode === 'light'
   const navigate = useNavigate()
+  const roomsQuery = useQuery({
+    queryKey: ['public-rooms-catalog'],
+    queryFn: listPublicRooms,
+  })
 
   // Search form state
   const [location, setLocation] = useState('')
@@ -108,33 +115,17 @@ export const LandingPage = () => {
     },
   ]
 
-  // Monochromatic slate gradient for featured space cards
-  const featuredSpaces = [
-    {
-      name: 'Premium Boardroom A',
-      location: 'Downtown Paris',
-      capacity: 'Up to 12 people',
-      rating: 4.9,
-      price: '€15/hr',
-      gradient: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
-    },
-    {
-      name: 'Creative Events Lounge',
-      location: 'Mitte Berlin',
-      capacity: 'Up to 50 people',
-      rating: 4.8,
-      price: '€45/hr',
-      gradient: 'linear-gradient(135deg, #334155 0%, #1e293b 100%)',
-    },
-    {
-      name: 'Executive Training Hall',
-      location: 'Tunis Center',
-      capacity: 'Up to 30 people',
-      rating: 4.7,
-      price: '€25/hr',
-      gradient: 'linear-gradient(135deg, #475569 0%, #334155 100%)',
-    },
-  ]
+  const featuredSpaces = useMemo(
+    () =>
+      [...(roomsQuery.data ?? [])]
+        .sort((left, right) => {
+          const ratingDelta = (right.average_rating ?? 0) - (left.average_rating ?? 0)
+          if (ratingDelta !== 0) return ratingDelta
+          return (right.rating_count ?? 0) - (left.rating_count ?? 0)
+        })
+        .slice(0, 3),
+    [roomsQuery.data],
+  )
 
   const testimonials = [
     {
@@ -632,7 +623,7 @@ export const LandingPage = () => {
           </Typography>
         </Stack>
 
-        <Grid container spacing={3}>
+          <Grid container spacing={3}>
           {featuredSpaces.map((space, idx) => (
             <Grid size={{ xs: 12, md: 4 }} key={idx}>
               <Card
@@ -650,28 +641,35 @@ export const LandingPage = () => {
                   },
                 }}
               >
-                {/* Visual Placeholder representing image */}
+                {/* Featured space image */}
                 <Box
                   sx={{
                     height: 200,
-                    background: space.gradient,
-                    display: 'grid',
-                    placeItems: 'center',
-                    color: '#ffffff',
                     position: 'relative',
+                    overflow: 'hidden',
                   }}
                 >
-                  <Typography variant="h3" sx={{ opacity: 0.8 }}>
-                    🏢
-                  </Typography>
+                  <Box
+                    component="img"
+                    src={space.cover_image || space.gallery?.[0] || `https://picsum.photos/seed/${encodeURIComponent(space.name)}/800/500`}
+                    alt={space.name}
+                    sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      inset: 0,
+                      background: 'linear-gradient(180deg, rgba(15, 23, 42, 0.05) 0%, rgba(15, 23, 42, 0.55) 100%)',
+                    }}
+                  />
                   <Chip
-                    label={space.price}
+                    label={`${space.price}/hr`}
                     sx={{
                       position: 'absolute',
                       top: 16,
                       right: 16,
                       fontWeight: 700,
-                      bgcolor: '#0f172a',
+                      bgcolor: 'rgba(15, 23, 42, 0.92)',
                       color: '#ffffff',
                     }}
                   />
@@ -684,7 +682,7 @@ export const LandingPage = () => {
                     <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center' }}>
                       <LocationOnIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
                       <Typography variant="body2" color="text.secondary">
-                        {space.location}
+                        {space.address ?? 'Tunis, Tunisia'}
                       </Typography>
                     </Stack>
                     <Stack
@@ -697,7 +695,10 @@ export const LandingPage = () => {
                       <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center' }}>
                         <StarIcon sx={{ fontSize: 16, color: '#f59e0b' }} />
                         <Typography variant="body2" sx={{ fontWeight: 700 }}>
-                          {space.rating}
+                          {(space.average_rating ?? 0).toFixed(1)}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          ({space.rating_count ?? 0})
                         </Typography>
                       </Stack>
                     </Stack>
@@ -810,6 +811,8 @@ export const LandingPage = () => {
           </Stack>
         </Paper>
       </Container>
+
+      <PublicFooter isLight={isLight} />
     </Box>
   )
 }

@@ -3,6 +3,7 @@ import { Box, Container } from '@mui/material'
 
 import { useColorMode } from '@/app/use-color-mode'
 import { PublicNavbar } from '@/features/public/components/public-navbar'
+import { PublicFooter } from '@/features/public/components/public-footer'
 
 export const AppLayout = () => {
   const { mode } = useColorMode()
@@ -15,6 +16,8 @@ export const AppLayout = () => {
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <Outlet />
       </Container>
+
+      <PublicFooter isLight={isLight} />
     </Box>
   )
 }

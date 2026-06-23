@@ -30,6 +30,7 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 
 import { useColorMode } from '@/app/use-color-mode'
 import { PublicNavbar } from './components/public-navbar'
+import { PublicFooter } from './components/public-footer'
 
 export const ReservationsInfoPage = () => {
   const { mode } = useColorMode()
@@ -401,6 +402,8 @@ export const ReservationsInfoPage = () => {
           </Stack>
         </Paper>
       </Container>
+
+      <PublicFooter isLight={isLight} />
     </Box>
   )
 }

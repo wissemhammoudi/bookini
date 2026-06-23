@@ -26,6 +26,7 @@ import PhotoLibraryOutlinedIcon from '@mui/icons-material/PhotoLibraryOutlined'
 import { useNavigate, useParams } from 'react-router-dom'
 
 import { useColorMode } from '@/app/use-color-mode'
+import { PublicFooter } from '@/features/public/components/public-footer'
 import { PublicNavbar } from '@/features/public/components/public-navbar'
 import { BookingDialog } from './components/BookingDialog'
 import type { BookingFormData } from './types'
@@ -245,6 +246,7 @@ export const PlaceDetailsPage = () => {
         <Container maxWidth="lg" sx={{ py: 8 }}>
           <Alert severity="info">Loading place details...</Alert>
         </Container>
+        <PublicFooter isLight={isLight} />
       </Box>
     )
   }
@@ -259,6 +261,7 @@ export const PlaceDetailsPage = () => {
             <Button variant="outlined" onClick={() => navigate('/book')}>Back to spaces</Button>
           </Stack>
         </Container>
+        <PublicFooter isLight={isLight} />
       </Box>
     )
   }
@@ -736,6 +739,8 @@ export const PlaceDetailsPage = () => {
         error={bookingError}
         initialBookingDate={selectedCalendarDate}
       />
+
+      <PublicFooter isLight={isLight} />
     </Box>
   )
 }
