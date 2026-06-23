@@ -13,13 +13,13 @@ import {
   Stack,
   TextField,
   Typography,
-  Grid,
 } from '@mui/material'
 import FilterListOutlinedIcon from '@mui/icons-material/FilterListOutlined'
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined'
 
 import { useColorMode } from '@/app/use-color-mode'
 import { PublicNavbar } from '@/features/public/components/public-navbar'
+import { PublicPageHeader } from '@/features/public/components/public-page-header'
 import { PublicFooter } from '@/features/public/components/public-footer'
 import { RoomCard } from './components/RoomCard'
 import { listPublicRooms } from '@/lib/api'
@@ -91,41 +91,32 @@ export const PublicBookingPage = () => {
     >
       <PublicNavbar isLight={isLight} />
 
-      {/* Main Content */}
-      <Container maxWidth="lg" sx={{ py: { xs: 6, md: 10 } }}>
-        <Stack spacing={8}>
-          {/* Header */}
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Stack spacing={3}>
-              <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 800, letterSpacing: '0.1em' }}>
-                Professional Space Booking
-              </Typography>
-              <Typography
-                variant="h1"
-                sx={{
-                  fontWeight: 900,
-                  letterSpacing: '-0.04em',
-                  fontSize: { xs: '2.5rem', sm: '3.5rem', md: '4rem' },
-                  lineHeight: 1.1,
-                }}
-              >
-                Explore our curated spaces, review real-time calendar availability, and submit your booking request in a few clicks.{' '}
-                <Box
-                  component="span"
-                  sx={{
-                    background: 'linear-gradient(90deg, #1e293b 0%, #64748b 100%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                  }}
-                >
+      <PublicPageHeader
+        isLight={isLight}
+        eyebrow="Live Availability"
+        title={
+          <>
+            Professional{' '}
+            <Box
+              component="span"
+              sx={{
+                background: 'linear-gradient(90deg, #1e293b 0%, #64748b 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+              }}
+            >
+              Space Booking
+            </Box>
+          </>
+        }
+        description="Explore our curated spaces, review real-time calendar availability, and submit your booking request in a few clicks."
+      >
+        <Chip label={`${rooms.length} spaces available`} color="primary" variant="filled" sx={{ fontWeight: 700 }} />
+      </PublicPageHeader>
 
-                </Box>
-              </Typography>
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.25}>
-                <Chip label={`${rooms.length} spaces available`} color="primary" variant="filled" />
-              </Stack>
-            </Stack>
-          </Grid>
+      {/* Main Content */}
+      <Container maxWidth="lg" sx={{ py: { xs: 6, md: 8 } }}>
+        <Stack spacing={6}>
 
 
           {/* Rooms Section */}

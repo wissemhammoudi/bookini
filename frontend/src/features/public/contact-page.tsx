@@ -8,6 +8,7 @@ import EmailIcon from '@mui/icons-material/Email'
 import { useColorMode } from '@/app/use-color-mode'
 import { PublicNavbar } from './components/public-navbar'
 import { PublicFooter } from './components/public-footer'
+import { PublicPageHeader } from './components/public-page-header'
 import { createContactRequest, createPartnershipRequest } from '@/lib/api'
 
 /**
@@ -110,21 +111,12 @@ export const ContactPage = () => {
     >
       <PublicNavbar isLight={isLight} />
 
-      <Grid size={{ xs: 12, md: 6 }}>
-        <Stack spacing={3}>
-          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 800, letterSpacing: '0.1em' }}>
-            Contact
-          </Typography>
-          <Typography
-            variant="h1"
-            sx={{
-              fontWeight: 900,
-              letterSpacing: '-0.04em',
-              fontSize: { xs: '2.5rem', sm: '3.5rem', md: '4rem' },
-              lineHeight: 1.1,
-            }}
-          >
-            Have Questions or Partnership Requests?{' '}
+      <PublicPageHeader
+        isLight={isLight}
+        eyebrow="Contact"
+        title={
+          <>
+            Have Questions or{' '}
             <Box
               component="span"
               sx={{
@@ -133,14 +125,12 @@ export const ContactPage = () => {
                 WebkitTextFillColor: 'transparent',
               }}
             >
-              Spaces
+              Partnership Requests?
             </Box>
-          </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ fontSize: '1.15rem', lineHeight: 1.7 }}>
-            Have questions or partnership requests? Contact our team and we will help you with reservations, onboarding, or business collaboration.
-          </Typography>
-        </Stack>
-      </Grid>
+          </>
+        }
+        description="Contact our team and we will help you with reservations, onboarding, or business collaboration."
+      />
 
       <Box sx={{ py: { xs: 6, md: 10 } }}>
         <Container maxWidth="lg">

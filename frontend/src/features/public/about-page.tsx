@@ -26,6 +26,7 @@ import HubIcon from '@mui/icons-material/Hub'
 import { useColorMode } from '@/app/use-color-mode'
 import { PublicNavbar } from './components/public-navbar'
 import { PublicFooter } from './components/public-footer'
+import { PublicPageHeader } from './components/public-page-header'
 
 export const AboutPage = () => {
   const { mode } = useColorMode()
@@ -101,129 +102,99 @@ export const AboutPage = () => {
     >
       <PublicNavbar isLight={isLight} />
 
-      {/* Hero Section */}
-      <Box
-        sx={{
-          py: { xs: 8, md: 12 },
-          background: isLight
-            ? 'radial-gradient(circle at 80% 20%, rgba(15, 23, 42, 0.03) 0%, transparent 50%)'
-            : 'radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.02) 0%, transparent 50%)',
-        }}
-      >
-        <Container maxWidth="lg">
-          <Grid container spacing={6} sx={{ alignItems: 'center' }}>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Stack spacing={3}>
-                <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 800, letterSpacing: '0.1em' }}>
-                  About Us
-                </Typography>
-                <Typography
-                  variant="h1"
+      <PublicPageHeader
+        isLight={isLight}
+        eyebrow="About Us"
+        title={
+          <>
+            Connecting People With the{' '}
+            <Box
+              component="span"
+              sx={{
+                background: 'linear-gradient(90deg, #1e293b 0%, #64748b 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+              }}
+            >
+              Right Spaces
+            </Box>
+          </>
+        }
+        description="bookiblastek is a reservation platform designed to connect people with spaces that fit their needs. Whether you're organizing a meeting, hosting an event, conducting training, or looking for a workspace, our platform makes finding and reserving spaces simple and efficient."
+        rightElement={
+          <Stack spacing={3} sx={{ width: '100%' }}>
+            <Paper
+              elevation={0}
+              sx={{
+                p: 4,
+                borderRadius: 4,
+                border: '1px solid',
+                borderColor: 'divider',
+                background: isLight ? '#ffffff' : alpha('#1f2937', 0.4),
+                position: 'relative',
+                overflow: 'hidden',
+              }}
+            >
+              <Box sx={{ display: 'flex', gap: 2.5, alignItems: 'flex-start' }}>
+                <Box
                   sx={{
-                    fontWeight: 900,
-                    letterSpacing: '-0.04em',
-                    fontSize: { xs: '2.5rem', sm: '3.5rem', md: '4rem' },
-                    lineHeight: 1.1,
+                    p: 1.5,
+                    borderRadius: 2,
+                    bgcolor: isLight ? 'rgba(0, 0, 0, 0.04)' : 'rgba(255, 255, 255, 0.05)',
+                    color: 'text.primary',
                   }}
                 >
-                  Connecting People With the{' '}
-                  <Box
-                    component="span"
-                    sx={{
-                      background: 'linear-gradient(90deg, #1e293b 0%, #64748b 100%)',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                    }}
-                  >
-                    Right Spaces
-                  </Box>
-                </Typography>
-                <Typography variant="body1" color="text.secondary" sx={{ fontSize: '1.15rem', lineHeight: 1.7 }}>
-                  bookiblastek is a reservation platform designed to connect people with spaces that fit
-                  their needs. Whether you're organizing a meeting, hosting an event, conducting
-                  training, or looking for a workspace, our platform makes finding and reserving
-                  spaces simple and efficient.
-                </Typography>
-              </Stack>
-            </Grid>
+                  <FlagOutlinedIcon fontSize="medium" />
+                </Box>
+                <Stack spacing={1}>
+                  <Typography variant="h5" sx={{ fontWeight: 800 }}>
+                    Our Mission
+                  </Typography>
+                  <Typography color="text.secondary" variant="body2" sx={{ lineHeight: 1.6 }}>
+                    To simplify space reservations and help organizations maximize the use of
+                    their facilities.
+                  </Typography>
+                </Stack>
+              </Box>
+            </Paper>
 
-            {/* Mission & Vision Cards */}
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Stack spacing={3}>
-                <Paper
-                  elevation={0}
+            <Paper
+              elevation={0}
+              sx={{
+                p: 4,
+                borderRadius: 4,
+                border: '1px solid',
+                borderColor: 'divider',
+                background: isLight ? '#ffffff' : alpha('#1f2937', 0.4),
+                position: 'relative',
+                overflow: 'hidden',
+              }}
+            >
+              <Box sx={{ display: 'flex', gap: 2.5, alignItems: 'flex-start' }}>
+                <Box
                   sx={{
-                    p: 4,
-                    borderRadius: 4,
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    background: isLight ? '#ffffff' : alpha('#1f2937', 0.4),
-                    position: 'relative',
-                    overflow: 'hidden',
+                    p: 1.5,
+                    borderRadius: 2,
+                    bgcolor: isLight ? 'rgba(0, 0, 0, 0.04)' : 'rgba(255, 255, 255, 0.05)',
+                    color: 'text.primary',
                   }}
                 >
-                  <Box sx={{ display: 'flex', gap: 2.5, alignItems: 'flex-start' }}>
-                    <Box
-                      sx={{
-                        p: 1.5,
-                        borderRadius: 2,
-                        bgcolor: isLight ? 'rgba(0, 0, 0, 0.04)' : 'rgba(255, 255, 255, 0.05)',
-                        color: 'text.primary',
-                      }}
-                    >
-                      <FlagOutlinedIcon fontSize="medium" />
-                    </Box>
-                    <Stack spacing={1}>
-                      <Typography variant="h5" sx={{ fontWeight: 800 }}>
-                        Our Mission
-                      </Typography>
-                      <Typography color="text.secondary" variant="body2" sx={{ lineHeight: 1.6 }}>
-                        To simplify space reservations and help organizations maximize the use of
-                        their facilities.
-                      </Typography>
-                    </Stack>
-                  </Box>
-                </Paper>
-
-                <Paper
-                  elevation={0}
-                  sx={{
-                    p: 4,
-                    borderRadius: 4,
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    background: isLight ? '#ffffff' : alpha('#1f2937', 0.4),
-                    position: 'relative',
-                    overflow: 'hidden',
-                  }}
-                >
-                  <Box sx={{ display: 'flex', gap: 2.5, alignItems: 'flex-start' }}>
-                    <Box
-                      sx={{
-                        p: 1.5,
-                        borderRadius: 2,
-                        bgcolor: isLight ? 'rgba(0, 0, 0, 0.04)' : 'rgba(255, 255, 255, 0.05)',
-                        color: 'text.primary',
-                      }}
-                    >
-                      <VisibilityOutlinedIcon fontSize="medium" />
-                    </Box>
-                    <Stack spacing={1}>
-                      <Typography variant="h5" sx={{ fontWeight: 800 }}>
-                        Our Vision
-                      </Typography>
-                      <Typography color="text.secondary" variant="body2" sx={{ lineHeight: 1.6 }}>
-                        To become the leading platform for space reservation and management across
-                        Tunisia and beyond.
-                      </Typography>
-                    </Stack>
-                  </Box>
-                </Paper>
-              </Stack>
-            </Grid>
-          </Grid>
-        </Container>
-      </Box>
+                  <VisibilityOutlinedIcon fontSize="medium" />
+                </Box>
+                <Stack spacing={1}>
+                  <Typography variant="h5" sx={{ fontWeight: 800 }}>
+                    Our Vision
+                  </Typography>
+                  <Typography color="text.secondary" variant="body2" sx={{ lineHeight: 1.6 }}>
+                    To become the leading platform for space reservation and management across
+                    Tunisia and beyond.
+                  </Typography>
+                </Stack>
+              </Box>
+            </Paper>
+          </Stack>
+        }
+      />
 
       {/* What We Offer */}
       <Container maxWidth="lg" sx={{ py: 10 }}>

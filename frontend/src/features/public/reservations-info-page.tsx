@@ -31,6 +31,7 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import { useColorMode } from '@/app/use-color-mode'
 import { PublicNavbar } from './components/public-navbar'
 import { PublicFooter } from './components/public-footer'
+import { PublicPageHeader } from './components/public-page-header'
 
 export const ReservationsInfoPage = () => {
   const { mode } = useColorMode()
@@ -140,74 +141,41 @@ export const ReservationsInfoPage = () => {
       <PublicNavbar isLight={isLight} />
 
 
-      {/* Hero Section */}
-      <Box
-        sx={{
-          py: { xs: 8, md: 12 },
-          background: isLight
-            ? 'linear-gradient(180deg, #f8fafc 0%, #ffffff 45%, #f1f5f9 100%)'
-            : 'linear-gradient(180deg, #0b0f19 0%, #111827 45%, #0f172a 100%)',
-          position: 'relative',
-          overflow: 'hidden',
-        }}
-      >
-        <Container maxWidth="lg">
-          <Grid container spacing={3}>
-            {/* Left: Title & Description */}
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Stack spacing={3}>
-                <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 800, letterSpacing: '0.1em' }}>
-                  User Guide
-                </Typography>
-                <Typography
-                  variant="h1"
-                  sx={{
-                    fontWeight: 900,
-                    letterSpacing: '-0.04em',
-                    fontSize: { xs: '2.5rem', sm: '3.5rem', md: '4rem' },
-                    lineHeight: 1.1,
-                  }}
-                >
-                  How It Works
-                </Typography>
-                <Typography variant="body1" color="text.secondary" sx={{ fontSize: '1.15rem', lineHeight: 1.7 }}>
-                  Getting your space booked is a simple, seamless process. Follow our easy guide to get started.
-                </Typography>
-              </Stack>
-            </Grid>
-
-            {/* Right: Image */}
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Box
-                sx={{
-                  borderRadius: 3,
-                  overflow: 'hidden',
-                  boxShadow: '0 16px 40px -12px rgba(0,0,0,0.1)',
-                  position: 'relative',
-                  pt: '75%', // 4:3 aspect ratio
-                  background: isLight
-                    ? 'linear-gradient(135deg, #f1f5f9, #ffffff)'
-                    : 'linear-gradient(135deg, #1f2937, #374151)',
-                }}
-              >
-                <Box
-                  component="img"
-                  src="/how-it-works.webp"
-                  alt="Booking process visualization"
-                  sx={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
-                  }}
-                />
-              </Box>
-            </Grid>
-          </Grid>
-        </Container>
-      </Box>
+      <PublicPageHeader
+        isLight={isLight}
+        eyebrow="User Guide"
+        title="How It Works"
+        description="Getting your space booked is a simple, seamless process. Follow our easy guide to get started."
+        rightElement={
+          <Box
+            sx={{
+              borderRadius: 3,
+              overflow: 'hidden',
+              boxShadow: '0 16px 40px -12px rgba(0,0,0,0.1)',
+              position: 'relative',
+              width: '100%',
+              pt: '75%', // 4:3 aspect ratio
+              background: isLight
+                ? 'linear-gradient(135deg, #f1f5f9, #ffffff)'
+                : 'linear-gradient(135deg, #1f2937, #374151)',
+            }}
+          >
+            <Box
+              component="img"
+              src="/how-it-works.webp"
+              alt="Booking process visualization"
+              sx={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+              }}
+            />
+          </Box>
+        }
+      />
 
       {/* Stepper Timeline Section */}
       <Container maxWidth="lg" sx={{ mb: 12 }}>
