@@ -44,6 +44,7 @@ import {
   FloorsSection,
   OrganizationsSection,
   PlacesSection,
+  RatingsSection,
   RequestsSection,
   ReservationsSection,
   SettingsSection,
@@ -449,6 +450,7 @@ export const AdminWorkspacePage = () => {
             )}
           />
         ) : null}
+        {currentSection === 'ratings' ? <RatingsSection /> : null}
         {currentSection === 'reservations' ? (
           <ReservationsSection
             reservations={reservations}

@@ -47,6 +47,21 @@ class FloorRepository:
         result = await self._session.execute(statement)
         return list(result.scalars().all())
 
+    async def list_floors_by_admin(
+        self,
+        *,
+        admin_id: str,
+        include_deleted: bool,
+    ) -> list[Floor]:
+        statement: Select[tuple[Floor]] = select(Floor).where(Floor.admin_id == admin_id)
+
+        if not include_deleted:
+            statement = statement.where(Floor.is_deleted.is_(False))
+
+        statement = statement.order_by(Floor.created_at.desc())
+        result = await self._session.execute(statement)
+        return list(result.scalars().all())
+
     async def update(self, floor: Floor) -> Floor:
         await self._session.commit()
         await self._session.refresh(floor)

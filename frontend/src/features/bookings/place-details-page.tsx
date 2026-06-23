@@ -234,9 +234,16 @@ export const PlaceDetailsPage = () => {
 
       <Container maxWidth="lg" sx={{ py: { xs: 5, md: 8 } }}>
         <Stack spacing={4}>
-          <Button variant="outlined" onClick={() => navigate('/book')} sx={{ alignSelf: 'flex-start' }}>
-            Back to spaces
-          </Button>
+          <Stack direction="row" spacing={1} sx={{ alignSelf: 'flex-start' }}>
+            <Button variant="outlined" onClick={() => navigate('/book')}>
+              Back to spaces
+            </Button>
+            {room.admin_id ? (
+              <Button variant="text" onClick={() => navigate(`/admins/${room.admin_id}`)}>
+                View admin profile
+              </Button>
+            ) : null}
+          </Stack>
 
           <Paper
             elevation={0}

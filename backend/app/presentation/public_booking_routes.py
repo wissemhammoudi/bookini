@@ -23,6 +23,11 @@ router = APIRouter(prefix="/public", tags=["public"])
 
 def _build_public_rooms_catalog() -> list[dict[str, object]]:
     state = AdminWorkspaceStateStore.get_state()
+    admin_by_organization_id = {
+        user.organization_id: user.id
+        for user in state.users
+        if user.role == "ADMIN" and user.organization_id
+    }
 
     rooms: list[dict[str, object]] = []
     for index, place in enumerate(state.places, start=1):
@@ -42,6 +47,7 @@ def _build_public_rooms_catalog() -> list[dict[str, object]]:
                 "gallery": [str(url) for url in place.gallery],
                 # Placeholder for future admin-managed media URL.
                 "video_url": None,
+                "admin_id": admin_by_organization_id.get(place.organization_id),
             }
         )
 

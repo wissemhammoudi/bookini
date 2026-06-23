@@ -27,5 +27,17 @@ class User(TimestampMixin, Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     avatar_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
 
+    owned_floors = relationship("Floor", back_populates="admin")
     reservations = relationship("Reservation", back_populates="user")
     audit_logs = relationship("AuditLog", back_populates="user")
+    received_admin_ratings = relationship(
+        "AdminRating",
+        back_populates="admin",
+        foreign_keys="AdminRating.admin_id",
+    )
+    given_admin_ratings = relationship(
+        "AdminRating",
+        back_populates="reviewer",
+        foreign_keys="AdminRating.user_id",
+    )
+    floor_reviews = relationship("FloorReview", back_populates="reviewer")

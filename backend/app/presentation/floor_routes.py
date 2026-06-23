@@ -34,6 +34,7 @@ def _client_ip(request: Request) -> str:
 def _serialize_floor(floor: Floor) -> dict[str, object]:
     return {
         "id": str(floor.id),
+        "admin_id": str(floor.admin_id) if floor.admin_id else None,
         "name": floor.name,
         "capacity": floor.capacity,
         "building": floor.building,
@@ -55,7 +56,13 @@ async def create_floor(
     service = _service_from_session(session)
     audit_service = _audit_service_from_session(session)
 
-    floor = await service.create_floor(**payload.model_dump())
+    create_data = payload.model_dump()
+    if current_user.role.value == "ADMIN":
+        create_data["admin_id"] = current_user.id
+    elif current_user.role.value == "SUPER_ADMIN" and not create_data.get("admin_id"):
+        create_data["admin_id"] = current_user.id
+
+    floor = await service.create_floor(**create_data)
     await audit_service.record(
         user_id=current_user.id,
         action="FLOOR_CREATED",
@@ -79,12 +86,17 @@ async def update_floor(
     service = _service_from_session(session)
     audit_service = _audit_service_from_session(session)
 
-    floor = await service.update_floor(floor_id=floor_id, payload=payload.model_dump())
+    update_data = payload.model_dump()
+    if current_user.role.value == "ADMIN":
+        # Regular admins cannot transfer ownership through update payload.
+        update_data["admin_id"] = None
+
+    floor = await service.update_floor(floor_id=floor_id, payload=update_data)
     await audit_service.record(
         user_id=current_user.id,
         action="FLOOR_UPDATED",
         ip_address=_client_ip(request),
-        metadata={"floor_id": str(floor.id), "payload": payload.model_dump()},
+        metadata={"floor_id": str(floor.id), "payload": update_data},
     )
 
     return success_response(

@@ -1,3 +1,5 @@
+import uuid
+
 from app.core.exceptions import NotFoundException
 from app.domain.enums import FloorStatus
 from app.models.floor import Floor
@@ -11,6 +13,7 @@ class FloorService:
     async def create_floor(
         self,
         *,
+        admin_id: uuid.UUID | None,
         name: str,
         capacity: int,
         building: str,
@@ -20,6 +23,7 @@ class FloorService:
         status: FloorStatus,
     ) -> Floor:
         floor = Floor(
+            admin_id=admin_id,
             name=name,
             capacity=capacity,
             building=building,

@@ -4,6 +4,7 @@ import BusinessOutlinedIcon from '@mui/icons-material/BusinessOutlined'
 import MeetingRoomOutlinedIcon from '@mui/icons-material/MeetingRoomOutlined'
 import LayersOutlinedIcon from '@mui/icons-material/LayersOutlined'
 import EventSeatOutlinedIcon from '@mui/icons-material/EventSeatOutlined'
+import ReviewsOutlinedIcon from '@mui/icons-material/ReviewsOutlined'
 import MailOutlineOutlinedIcon from '@mui/icons-material/MailOutlineOutlined'
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined'
 
@@ -46,6 +47,13 @@ export const sections: SectionConfig[] = [
     label: 'Floor Management',
     caption: 'Configure floor plans and zones',
     icon: <LayersOutlinedIcon />,
+    roles: ['SUPER_ADMIN', 'ADMIN'],
+  },
+  {
+    key: 'ratings',
+    label: 'Ratings & Reviews',
+    caption: 'Track admin ratings and space reviews',
+    icon: <ReviewsOutlinedIcon />,
     roles: ['SUPER_ADMIN', 'ADMIN'],
   },
   {

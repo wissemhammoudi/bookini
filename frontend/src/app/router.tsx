@@ -11,7 +11,7 @@ import {
 } from '@/features/auth'
 import { DashboardPage } from '@/pages/dashboard-page'
 import { NotFoundPage } from '@/pages/not-found-page'
-import { LandingPage, AboutPage, ContactPage, ReservationsInfoPage } from '@/features/public'
+import { LandingPage, AboutPage, ContactPage, ReservationsInfoPage, AdminProfilePage } from '@/features/public'
 import { PublicBookingPage, PlaceDetailsPage, BookingConfirmationPage } from '@/features/bookings'
 
 export const AppRouter = () => {
@@ -23,6 +23,7 @@ export const AppRouter = () => {
         <Route path="/about" element={<AboutPage />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/reservations-info" element={<ReservationsInfoPage />} />
+        <Route path="/admins/:adminId" element={<AdminProfilePage />} />
         <Route path="/book" element={<PublicBookingPage />} />
         <Route path="/book/place/:roomId" element={<PlaceDetailsPage />} />
         <Route path="/booking-confirmation/:reference" element={<BookingConfirmationPage />} />

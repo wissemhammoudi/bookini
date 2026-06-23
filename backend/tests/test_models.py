@@ -11,6 +11,10 @@ def test_all_required_tables_exist() -> None:
         "reservations",
         "activities",
         "audit_logs",
+        "public_bookings",
+        "partnership_requests",
+        "admin_ratings",
+        "floor_reviews",
     }
 
 

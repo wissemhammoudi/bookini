@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import Boolean, Enum, Integer, String, Text
+from sqlalchemy import Boolean, Enum, ForeignKey, Integer, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -16,6 +16,12 @@ class Floor(TimestampMixin, Base):
         primary_key=True,
         default=uuid.uuid4,
     )
+    admin_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
     name: Mapped[str] = mapped_column(String(120), nullable=False, index=True)
     capacity: Mapped[int] = mapped_column(Integer, nullable=False)
     building: Mapped[str] = mapped_column(String(120), nullable=False, index=True)
@@ -29,4 +35,6 @@ class Floor(TimestampMixin, Base):
     )
     is_deleted: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
+    admin = relationship("User", back_populates="owned_floors")
     reservations = relationship("Reservation", back_populates="floor")
+    reviews = relationship("FloorReview", back_populates="floor")

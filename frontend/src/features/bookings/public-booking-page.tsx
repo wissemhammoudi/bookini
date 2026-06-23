@@ -75,6 +75,10 @@ export const PublicBookingPage = () => {
     navigate(`/book/place/${roomId}`)
   }
 
+  const openAdminProfile = (adminId: string) => {
+    navigate(`/admins/${adminId}`)
+  }
+
   return (
     <Box
       sx={{
@@ -214,6 +218,7 @@ export const PublicBookingPage = () => {
                     room={room}
                     isLight={isLight}
                     onBookNow={() => openPlacePage(room.id)}
+                    onViewAdmin={(adminId) => openAdminProfile(adminId)}
                     actionLabel="View Place"
                   />
                 </Box>

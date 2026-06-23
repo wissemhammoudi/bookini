@@ -289,3 +289,79 @@ export type AdminWorkspaceResponse = {
     settings: AdminWorkspaceSettings
   }
 }
+
+export type AdminRatingRecord = {
+  id: string
+  admin_id: string
+  user_id: string
+  rating: number
+  comment: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type FloorReviewRecord = {
+  id: string
+  floor_id: string
+  user_id: string
+  rating: number
+  comment: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type FloorReviewsPayload = {
+  average_rating: number
+  rating_count: number
+  reviews: FloorReviewRecord[]
+  pagination: {
+    limit: number
+    offset: number
+    returned: number
+  }
+  filters: {
+    min_rating: number | null
+    max_rating: number | null
+  }
+}
+
+export type AdminRatingsPayload = {
+  average_rating: number
+  rating_count: number
+  items: AdminRatingRecord[]
+  pagination: {
+    limit: number
+    offset: number
+    returned: number
+  }
+  filters: {
+    min_rating: number | null
+    max_rating: number | null
+  }
+}
+
+export type AdminPublicProfile = {
+  admin: {
+    id: string
+    full_name: string
+    email: string
+    avatar_url: string | null
+    role: 'ADMIN' | 'SUPER_ADMIN'
+  }
+  average_rating: number
+  rating_count: number
+  spaces: Array<{
+    id: string
+    admin_id: string | null
+    name: string
+    capacity: number
+    building: string
+    floor_number: number
+    location: string
+    description: string | null
+    status: 'AVAILABLE' | 'OCCUPIED' | 'MAINTENANCE'
+    is_deleted: boolean
+    average_rating: number
+    rating_count: number
+  }>
+}

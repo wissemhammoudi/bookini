@@ -15,6 +15,7 @@ export type SectionKey =
   | 'organizations'
   | 'places'
   | 'floors'
+  | 'ratings'
   | 'reservations'
   | 'requests'
   | 'settings'

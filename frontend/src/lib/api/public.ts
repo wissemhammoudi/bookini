@@ -18,6 +18,7 @@ export type PublicBookingCreatePayload = {
 
 export type PublicRoom = {
   id: number
+  admin_id?: string | null
   name: string
   description?: string
   capacity: number

@@ -15,14 +15,22 @@ import PeopleIcon from '@mui/icons-material/People'
 import type { Room } from '../constants'
 
 interface RoomCardProps {
-  room: Room & { cover_image?: string | null }
+  room: Room & { cover_image?: string | null; admin_id?: string | null }
   isLight: boolean
   isSelected?: boolean
   onBookNow: (room: Room) => void
+  onViewAdmin?: (adminId: string) => void
   actionLabel?: string
 }
 
-export const RoomCard = ({ room, isLight, isSelected = false, onBookNow, actionLabel }: RoomCardProps) => {
+export const RoomCard = ({
+  room,
+  isLight,
+  isSelected = false,
+  onBookNow,
+  onViewAdmin,
+  actionLabel,
+}: RoomCardProps) => {
   // Fallback to emoji if no cover image
   const hasImage = room.cover_image && room.cover_image.trim()
 
@@ -120,13 +128,24 @@ export const RoomCard = ({ room, isLight, isSelected = false, onBookNow, actionL
                 per hour
               </Typography>
             </Stack>
-            <Button
-              variant={isSelected ? 'contained' : 'outlined'}
-              sx={{ fontWeight: 700 }}
-              onClick={() => onBookNow(room)}
-            >
-              {actionLabel ?? (isSelected ? 'Book Now' : 'Select Space')}
-            </Button>
+            <Stack direction="row" spacing={1}>
+              {room.admin_id && onViewAdmin ? (
+                <Button
+                  variant="text"
+                  sx={{ fontWeight: 700 }}
+                  onClick={() => onViewAdmin(room.admin_id as string)}
+                >
+                  View Admin
+                </Button>
+              ) : null}
+              <Button
+                variant={isSelected ? 'contained' : 'outlined'}
+                sx={{ fontWeight: 700 }}
+                onClick={() => onBookNow(room)}
+              >
+                {actionLabel ?? (isSelected ? 'Book Now' : 'Select Space')}
+              </Button>
+            </Stack>
           </Stack>
         </Stack>
       </CardContent>
