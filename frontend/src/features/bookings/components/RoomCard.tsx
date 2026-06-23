@@ -12,7 +12,7 @@ import {
 } from '@mui/material'
 import PeopleIcon from '@mui/icons-material/People'
 
-import type { Room } from '../constants'
+
 
 interface RoomCardProps {
   room: any
