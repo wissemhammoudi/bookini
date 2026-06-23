@@ -175,7 +175,7 @@ export const AdminProfilePage = () => {
         <PublicNavbar isLight={isLight} />
         <Container maxWidth="lg" sx={{ py: 8 }}>
           <Alert severity="error">
-            Could not load this admin profile. Make sure you are logged in and the admin exists.
+            Could not load this owner profile. Make sure the owner exists.
           </Alert>
         </Container>
       </Box>
@@ -208,7 +208,7 @@ export const AdminProfilePage = () => {
 
                 <Box sx={{ flex: 1 }}>
                   <Typography variant="h4" sx={{ fontWeight: 900, letterSpacing: '-0.02em' }}>
-                    {profile.admin.full_name}
+                    Owner Profile
                   </Typography>
                   <Typography color="text.secondary">{profile.admin.email}</Typography>
                   <Stack direction="row" spacing={1} sx={{ mt: 1, flexWrap: 'wrap', gap: 1 }}>
@@ -220,7 +220,7 @@ export const AdminProfilePage = () => {
 
                 <Stack spacing={0.5} sx={{ minWidth: 130 }}>
                   <Typography variant="body2" color="text.secondary">
-                    Average rating
+                    Average owner rating
                   </Typography>
                   <Typography variant="h4" sx={{ fontWeight: 900 }}>
                     {profile.average_rating.toFixed(1)}
@@ -236,7 +236,7 @@ export const AdminProfilePage = () => {
                 <CardContent>
                   <Stack spacing={2}>
                     <Typography variant="h6" sx={{ fontWeight: 800 }}>
-                      Rate This Admin
+                      Rate This Owner
                     </Typography>
                     <Rating
                       value={adminRating}
@@ -273,7 +273,7 @@ export const AdminProfilePage = () => {
                       </Button>
                     </Stack>
                     {(upsertAdminRatingMutation.isError || deleteAdminRatingMutation.isError) ? (
-                      <Alert severity="error">Could not save your admin rating. You need a completed reservation.</Alert>
+                      <Alert severity="error">Could not save your owner rating. You need a completed reservation.</Alert>
                     ) : null}
                   </Stack>
                 </CardContent>
@@ -284,7 +284,7 @@ export const AdminProfilePage = () => {
               <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider', height: '100%' }}>
                 <CardContent>
                   <Typography variant="h6" sx={{ fontWeight: 800, mb: 1.5 }}>
-                    Recent Admin Ratings
+                    Recent Owner Ratings
                   </Typography>
                   <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ mb: 1 }}>
                     <TextField
@@ -351,7 +351,7 @@ export const AdminProfilePage = () => {
           </Grid>
 
           <Typography variant="h5" sx={{ fontWeight: 900 }}>
-            Spaces by {profile.admin.full_name}
+        Spaces by this owner
           </Typography>
 
           <Grid container spacing={2.5}>

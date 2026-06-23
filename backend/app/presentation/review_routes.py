@@ -67,7 +67,6 @@ def _serialize_floor_review(item: FloorReview) -> dict[str, object]:
 @router.get("/admins/{admin_id}/profile")
 async def get_admin_profile(
     admin_id: str,
-    _: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ) -> dict[str, object]:
     service = _service_from_session(session)
@@ -123,7 +122,6 @@ async def list_admin_ratings(
     offset: int = Query(default=0, ge=0),
     min_rating: int | None = Query(default=None, ge=1, le=5),
     max_rating: int | None = Query(default=None, ge=1, le=5),
-    _: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ) -> dict[str, object]:
     service = _service_from_session(session)
@@ -215,7 +213,6 @@ async def list_floor_reviews(
     offset: int = Query(default=0, ge=0),
     min_rating: int | None = Query(default=None, ge=1, le=5),
     max_rating: int | None = Query(default=None, ge=1, le=5),
-    _: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ) -> dict[str, object]:
     service = _service_from_session(session)
