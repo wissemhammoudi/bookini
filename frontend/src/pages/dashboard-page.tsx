@@ -17,6 +17,7 @@ import {
   listFloors,
   listReservationHistory,
   cancelReservationRequest,
+  listPublicRooms,
 } from '@/lib/api'
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday'
 import EventAvailableIcon from '@mui/icons-material/EventAvailable'
@@ -24,6 +25,8 @@ import HistoryIcon from '@mui/icons-material/History'
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined'
 import LocationOnIcon from '@mui/icons-material/LocationOn'
 import InfoIcon from '@mui/icons-material/Info'
+import EuroIcon from '@mui/icons-material/Euro'
+import { useMemo } from 'react'
 
 export const DashboardPage = () => {
   const queryClient = useQueryClient()
@@ -41,6 +44,10 @@ export const DashboardPage = () => {
     queryKey: ['reservations-history'],
     queryFn: listReservationHistory,
   })
+  const roomsQuery = useQuery({
+    queryKey: ['public-rooms-catalog'],
+    queryFn: listPublicRooms,
+  })
 
   const cancelMutation = useMutation({
     mutationFn: cancelReservationRequest,
@@ -57,11 +64,41 @@ export const DashboardPage = () => {
   })
 
   const isLoading =
-    floorsQuery.isLoading || currentQuery.isLoading || historyQuery.isLoading
+    floorsQuery.isLoading || currentQuery.isLoading || historyQuery.isLoading || roomsQuery.isLoading
 
   const totalRooms = floorsQuery.data?.length ?? 0
   const availableRooms =
     floorsQuery.data?.filter((item) => item.status === 'AVAILABLE').length ?? 0
+
+  const getReservationCost = (res: any) => {
+    const room = roomsQuery.data?.find((r) =>
+      r.floors?.some((f) => f.id === res.floor_id)
+    )
+    if (!room) return 0
+    try {
+      const start = new Date(res.start_time).getTime()
+      const end = new Date(res.end_time).getTime()
+      const durationHours = Math.max(0.5, (end - start) / (1000 * 60 * 60))
+      return Math.round(durationHours * room.price)
+    } catch (e) {
+      return 0
+    }
+  }
+
+  const totalSpent = useMemo(() => {
+    let sum = 0
+    currentQuery.data?.forEach((res) => {
+      if (res.status === 'CONFIRMED' || res.status === 'COMPLETED') {
+        sum += getReservationCost(res)
+      }
+    })
+    historyQuery.data?.forEach((res) => {
+      if (res.status === 'CONFIRMED' || res.status === 'COMPLETED') {
+        sum += getReservationCost(res)
+      }
+    })
+    return sum
+  }, [currentQuery.data, historyQuery.data, roomsQuery.data])
 
   const formatDateTime = (isoString: string) => {
     try {
@@ -104,7 +141,7 @@ export const DashboardPage = () => {
 
       {/* Stats Cards */}
       <Grid container spacing={3}>
-        <Grid size={{ xs: 12, md: 4 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Paper
             elevation={0}
             sx={{
@@ -135,7 +172,7 @@ export const DashboardPage = () => {
           </Paper>
         </Grid>
 
-        <Grid size={{ xs: 12, md: 4 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Paper
             elevation={0}
             sx={{
@@ -166,7 +203,7 @@ export const DashboardPage = () => {
           </Paper>
         </Grid>
 
-        <Grid size={{ xs: 12, md: 4 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Paper
             elevation={0}
             sx={{
@@ -190,6 +227,37 @@ export const DashboardPage = () => {
                 ) : (
                   <Typography variant="h5" sx={{ fontWeight: 800 }}>
                     {historyQuery.data?.length ?? 0}
+                  </Typography>
+                )}
+              </Box>
+            </Stack>
+          </Paper>
+        </Grid>
+
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <Paper
+            elevation={0}
+            sx={{
+              p: 3,
+              borderRadius: 3,
+              border: '1px solid',
+              borderColor: 'divider',
+              background: (theme) => alpha(theme.palette.warning.main, 0.03),
+            }}
+          >
+            <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
+              <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: 'warning.main', color: 'white', display: 'flex' }}>
+                <EuroIcon />
+              </Box>
+              <Box>
+                <Typography variant="subtitle2" color="text.secondary" sx={{ fontWeight: 600 }}>
+                  Total Cost Spent
+                </Typography>
+                {isLoading ? (
+                  <Skeleton width={100} height={36} />
+                ) : (
+                  <Typography variant="h5" sx={{ fontWeight: 800 }}>
+                    €{totalSpent}
                   </Typography>
                 )}
               </Box>
@@ -267,13 +335,16 @@ export const DashboardPage = () => {
                           </Typography>
                         </Box>
                       </Stack>
-                      <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', mt: 0.5 }}>
+                      <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', mt: 0.5 }}>
                         <Chip
                           label={res.status}
                           size="small"
                           color={res.status === 'CONFIRMED' ? 'success' : 'warning'}
                           sx={{ fontWeight: 700, fontSize: '0.65rem', height: 20 }}
                         />
+                        <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary' }}>
+                          Cost: €{getReservationCost(res)}
+                        </Typography>
                       </Box>
                     </Stack>
 
@@ -349,9 +420,14 @@ export const DashboardPage = () => {
                         sx={{ fontWeight: 700, fontSize: '0.6rem', height: 18 }}
                       />
                     </Stack>
-                    <Typography variant="caption" color="text.secondary">
-                      {formatDateTime(res.start_time)}
-                    </Typography>
+                    <Stack direction="row" spacing={1} sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Typography variant="caption" color="text.secondary">
+                        {formatDateTime(res.start_time)}
+                      </Typography>
+                      <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary' }}>
+                        Cost: €{getReservationCost(res)}
+                      </Typography>
+                    </Stack>
                   </Stack>
                 </Paper>
               ))}
