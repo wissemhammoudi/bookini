@@ -1,12 +1,9 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Paper, Stack, Typography, Box, IconButton, Chip, Grid, Divider, alpha } from '@mui/material'
+import { Paper, Stack, Typography, Box, IconButton, Grid, alpha } from '@mui/material'
 import LightModeOutlinedIcon from '@mui/icons-material/LightModeOutlined'
 import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined'
-import WorkspacePremiumOutlinedIcon from '@mui/icons-material/WorkspacePremiumOutlined'
-import VerifiedUserOutlinedIcon from '@mui/icons-material/VerifiedUserOutlined'
-import InsightsOutlinedIcon from '@mui/icons-material/InsightsOutlined'
 
 import { LoginForm, type LoginFormValues } from '@/features/auth/login-form'
 import { useAuth } from '@/features/auth/use-auth'
@@ -47,7 +44,6 @@ export const LoginPage = () => {
   }
 
   const isLight = mode === 'light'
-  const brandLogoSrc = '/navbar_logo.png'
 
   return (
     <Box
