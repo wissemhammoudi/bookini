@@ -31,6 +31,7 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import { useColorMode } from '@/app/use-color-mode'
 import { PublicNavbar } from './components/public-navbar'
 import { PublicFooter } from './components/public-footer'
+import { PublicPageHeader } from './components/public-page-header'
 
 export const ReservationsInfoPage = () => {
   const { mode } = useColorMode()
@@ -139,27 +140,12 @@ export const ReservationsInfoPage = () => {
     >
       <PublicNavbar isLight={isLight} />
 
-      {/* Hero Header */}
-      <Container maxWidth="lg" sx={{ pt: { xs: 8, md: 12 }, pb: 8, textAlign: 'center' }}>
-        <Stack spacing={3} sx={{ alignItems: 'center' }}>
-          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 800, letterSpacing: '0.1em' }}>
-            User Guide
-          </Typography>
-          <Typography
-            variant="h2"
-            sx={{
-              fontWeight: 900,
-              fontSize: { xs: '2.5rem', sm: '3.5rem', md: '4rem' },
-              letterSpacing: '-0.04em',
-            }}
-          >
-            How It Works
-          </Typography>
-          <Typography color="text.secondary" sx={{ maxWidth: 600, fontSize: '1.1rem', lineHeight: 1.6 }}>
-            Getting your space booked is a simple, seamless process. Follow our easy guide to get started.
-          </Typography>
-        </Stack>
-      </Container>
+      <PublicPageHeader
+        isLight={isLight}
+        eyebrow="User Guide"
+        title="How It Works"
+        description="Getting your space booked is a simple, seamless process. Follow our easy guide to get started."
+      />
 
       {/* Stepper Timeline Section */}
       <Container maxWidth="lg" sx={{ mb: 12 }}>

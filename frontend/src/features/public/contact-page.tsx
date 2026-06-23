@@ -8,6 +8,7 @@ import EmailIcon from '@mui/icons-material/Email'
 import { useColorMode } from '@/app/use-color-mode'
 import { PublicNavbar } from './components/public-navbar'
 import { PublicFooter } from './components/public-footer'
+import { PublicPageHeader } from './components/public-page-header'
 import { createContactRequest, createPartnershipRequest } from '@/lib/api'
 
 /**
@@ -110,18 +111,16 @@ export const ContactPage = () => {
     >
       <PublicNavbar isLight={isLight} />
 
+      <PublicPageHeader
+        isLight={isLight}
+        eyebrow="Contact"
+        title="Get in Touch"
+        description="Have questions or partnership requests? Contact our team and we will help you with reservations, onboarding, or business collaboration."
+      />
+
       <Box sx={{ py: { xs: 6, md: 10 } }}>
         <Container maxWidth="lg">
           <Stack spacing={6}>
-            <Box sx={{ textAlign: 'center' }}>
-              <Typography variant="h3" sx={{ fontWeight: 900, mb: 2 }}>
-                Get in Touch
-              </Typography>
-              <Typography color="text.secondary" variant="body1">
-                Have questions or partnership requests? We'd love to hear from you.
-              </Typography>
-            </Box>
-
             <Grid container spacing={5} sx={{ alignItems: 'flex-start' }}>
               {/* Contact Information (Left Column) */}
               <Grid size={{ xs: 12, md: 5 }}>

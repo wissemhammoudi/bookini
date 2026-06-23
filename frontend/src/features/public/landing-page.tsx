@@ -24,6 +24,12 @@ import CategoryIcon from '@mui/icons-material/Category'
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday'
 import PeopleIcon from '@mui/icons-material/People'
 import StarIcon from '@mui/icons-material/Star'
+import MeetingRoomOutlinedIcon from '@mui/icons-material/MeetingRoomOutlined'
+import LaptopMacOutlinedIcon from '@mui/icons-material/LaptopMacOutlined'
+import CelebrationOutlinedIcon from '@mui/icons-material/CelebrationOutlined'
+import SportsSoccerOutlinedIcon from '@mui/icons-material/SportsSoccerOutlined'
+import SchoolOutlinedIcon from '@mui/icons-material/SchoolOutlined'
+import RestaurantOutlinedIcon from '@mui/icons-material/RestaurantOutlined'
 import VerifiedIcon from '@mui/icons-material/Verified'
 import TouchAppIcon from '@mui/icons-material/TouchApp'
 import InfoIcon from '@mui/icons-material/Info'
@@ -66,21 +72,65 @@ export const LandingPage = () => {
 
   // Cohesive professional slate/blue gradients for hero items
   const heroSpaces = [
-    { name: 'Meeting Rooms', icon: '🏢', gradient: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)' },
-    { name: 'Coworking Offices', icon: '💻', gradient: 'linear-gradient(135deg, #334155 0%, #1e293b 100%)' },
-    { name: 'Event Halls', icon: '🎉', gradient: 'linear-gradient(135deg, #475569 0%, #334155 100%)' },
-    { name: 'Sports Fields', icon: '⚽', gradient: 'linear-gradient(135deg, #64748b 0%, #475569 100%)' },
-    { name: 'Training Rooms', icon: '🎓', gradient: 'linear-gradient(135deg, #94a3b8 0%, #64748b 100%)' },
+    {
+      name: 'Meeting Rooms',
+      icon: <MeetingRoomOutlinedIcon sx={{ fontSize: 22, color: '#ffffff' }} />,
+      gradient: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+    },
+    {
+      name: 'Coworking Offices',
+      icon: <LaptopMacOutlinedIcon sx={{ fontSize: 22, color: '#ffffff' }} />,
+      gradient: 'linear-gradient(135deg, #334155 0%, #1e293b 100%)',
+    },
+    {
+      name: 'Event Halls',
+      icon: <CelebrationOutlinedIcon sx={{ fontSize: 22, color: '#ffffff' }} />,
+      gradient: 'linear-gradient(135deg, #475569 0%, #334155 100%)',
+    },
+    {
+      name: 'Sports Fields',
+      icon: <SportsSoccerOutlinedIcon sx={{ fontSize: 22, color: '#ffffff' }} />,
+      gradient: 'linear-gradient(135deg, #64748b 0%, #475569 100%)',
+    },
+    {
+      name: 'Training Rooms',
+      icon: <SchoolOutlinedIcon sx={{ fontSize: 22, color: '#ffffff' }} />,
+      gradient: 'linear-gradient(135deg, #94a3b8 0%, #64748b 100%)',
+    },
   ]
 
   // Monochromatic categories
   const categories = [
-    { title: 'Meeting Rooms', icon: '🏢', desc: 'Professional spaces for private boards and team syncs.' },
-    { title: 'Coworking Spaces', icon: '💻', desc: 'Flexible hot desks and dedicated offices.' },
-    { title: 'Event Venues', icon: '🎉', desc: 'Large halls and creative spaces for gatherings.' },
-    { title: 'Sports Facilities', icon: '⚽', desc: 'Fields, courts, and training grounds.' },
-    { title: 'Training Rooms', icon: '🎓', desc: 'Classrooms fully equipped for workshops and lectures.' },
-    { title: 'Private Dining Spaces', icon: '🍽️', desc: 'Elegant dining rooms for professional lunches.' },
+    {
+      title: 'Meeting Rooms',
+      icon: <MeetingRoomOutlinedIcon sx={{ fontSize: '2rem', color: isLight ? '#0f172a' : '#e2e8f0' }} />,
+      desc: 'Professional spaces for private boards and team syncs.',
+    },
+    {
+      title: 'Coworking Spaces',
+      icon: <LaptopMacOutlinedIcon sx={{ fontSize: '2rem', color: isLight ? '#0f172a' : '#e2e8f0' }} />,
+      desc: 'Flexible hot desks and dedicated offices.',
+    },
+    {
+      title: 'Event Venues',
+      icon: <CelebrationOutlinedIcon sx={{ fontSize: '2rem', color: isLight ? '#0f172a' : '#e2e8f0' }} />,
+      desc: 'Large halls and creative spaces for gatherings.',
+    },
+    {
+      title: 'Sports Facilities',
+      icon: <SportsSoccerOutlinedIcon sx={{ fontSize: '2rem', color: isLight ? '#0f172a' : '#e2e8f0' }} />,
+      desc: 'Fields, courts, and training grounds.',
+    },
+    {
+      title: 'Training Rooms',
+      icon: <SchoolOutlinedIcon sx={{ fontSize: '2rem', color: isLight ? '#0f172a' : '#e2e8f0' }} />,
+      desc: 'Classrooms fully equipped for workshops and lectures.',
+    },
+    {
+      title: 'Private Dining Spaces',
+      icon: <RestaurantOutlinedIcon sx={{ fontSize: '2rem', color: isLight ? '#0f172a' : '#e2e8f0' }} />,
+      desc: 'Elegant dining rooms for professional lunches.',
+    },
   ]
 
   // Clean grey steps
@@ -201,7 +251,7 @@ export const LandingPage = () => {
                 color="text.secondary"
                 sx={{ fontWeight: 400, maxWidth: 600, lineHeight: 1.6 }}
               >
-                bookiblastek helps you discover and reserve meeting rooms, coworking spaces, event
+                Bookini helps you discover and reserve meeting rooms, coworking spaces, event
                 venues, sports facilities, and more—all from one platform.
               </Typography>
 
@@ -305,7 +355,6 @@ export const LandingPage = () => {
                         background: item.gradient,
                         display: 'grid',
                         placeItems: 'center',
-                        fontSize: '1.25rem',
                       }}
                     >
                       {item.icon}
@@ -487,9 +536,9 @@ export const LandingPage = () => {
                 onClick={() => navigate(`/book?type=${encodeURIComponent(cat.title)}`)}
               >
                 <CardContent sx={{ p: 0 }}>
-                  <Typography variant="h2" sx={{ mb: 2, fontSize: '2rem' }}>
+                  <Box sx={{ mb: 2 }}>
                     {cat.icon}
-                  </Typography>
+                  </Box>
                   <Typography variant="h5" sx={{ fontWeight: 800, mb: 1 }}>
                     {cat.title}
                   </Typography>
@@ -689,9 +738,12 @@ export const LandingPage = () => {
                       direction="row"
                       sx={{ justifyContent: 'space-between', alignItems: 'center', pt: 1 }}
                     >
-                      <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
-                        👥 {space.capacity}
-                      </Typography>
+                      <Stack direction="row" spacing={0.75} sx={{ alignItems: 'center' }}>
+                        <PeopleIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
+                        <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
+                          {space.capacity}
+                        </Typography>
+                      </Stack>
                       <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center' }}>
                         <StarIcon sx={{ fontSize: 16, color: '#f59e0b' }} />
                         <Typography variant="body2" sx={{ fontWeight: 700 }}>

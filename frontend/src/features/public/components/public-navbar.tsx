@@ -176,10 +176,10 @@ export const PublicNavbar = ({ isLight }: PublicNavbarProps) => {
                 </Box>
                 <Box sx={{ display: 'flex', flexDirection: 'column' }}>
                   <Box component="span" sx={{ fontSize: '0.95rem', fontWeight: 900, lineHeight: 1, letterSpacing: '-0.02em' }}>
-                    Bookiblastek
+                    Bookini
                   </Box>
                   <Box component="span" sx={{ fontSize: '0.72rem', lineHeight: 1.1, color: 'text.secondary' }}>
-                    Smart space booking
+                    Professional space booking
                   </Box>
                 </Box>
               </Box>

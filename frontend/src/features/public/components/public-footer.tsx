@@ -52,7 +52,7 @@ export const PublicFooter = ({ isLight }: PublicFooterProps) => {
                 </Box>
                 <Box>
                   <Typography variant="h6" sx={{ fontWeight: 900, letterSpacing: '-0.02em' }}>
-                    Bookiblastek
+                    Bookini
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
                     Professional space booking
@@ -115,7 +115,7 @@ export const PublicFooter = ({ isLight }: PublicFooterProps) => {
 
           <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} sx={{ justifyContent: 'space-between' }}>
             <Typography variant="body2" color="text.secondary">
-              © 2026 Bookiblastek. All rights reserved.
+              © 2026 Bookini. All rights reserved.
             </Typography>
             <Typography variant="body2" color="text.secondary">
               Built for trusted bookings, reviews, and professional space discovery.
