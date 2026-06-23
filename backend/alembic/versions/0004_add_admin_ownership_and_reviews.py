@@ -1,6 +1,6 @@
 """add floor ownership and review tables
 
-Revision ID: 0004_add_admin_ownership_and_reviews
+Revision ID: 0004_admin_ownership_reviews
 Revises: 0003_add_avatar_url_to_user
 Create Date: 2026-06-23 00:00:00
 
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql
 
-revision: str = "0004_add_admin_ownership_and_reviews"
+revision: str = "0004_admin_ownership_reviews"
 down_revision: str | None = "0003_add_avatar_url_to_user"
 branch_labels: Sequence[str] | None = None
 depends_on: Sequence[str] | None = None
