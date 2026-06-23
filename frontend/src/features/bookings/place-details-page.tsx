@@ -399,7 +399,7 @@ export const PlaceDetailsPage = () => {
           <Paper
             elevation={0}
             sx={{
-              p: 3,
+              p: { xs: 1.5, sm: 3 },
               borderRadius: 3,
               border: '1px solid',
               borderColor: isLight ? 'rgba(0, 89, 179, 0.08)' : 'rgba(255, 255, 255, 0.05)',
@@ -639,20 +639,32 @@ export const PlaceDetailsPage = () => {
                 sx={{
                   display: 'grid',
                   gridTemplateColumns: 'repeat(7, minmax(0, 1fr))',
-                  gap: 1,
+                  gap: { xs: 0.5, sm: 1 },
                 }}
               >
                 {WEEK_DAYS.map((dayName) => (
-                  <Box key={dayName} sx={{ px: 0.5, py: 1 }}>
-                    <Typography variant="caption" sx={{ fontWeight: 700 }} color="text.secondary">
-                      {dayName}
+                  <Box key={dayName} sx={{ py: 1, textAlign: 'center' }}>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        fontWeight: 700,
+                        fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                      }}
+                      color="text.secondary"
+                    >
+                      <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>
+                        {dayName.charAt(0)}
+                      </Box>
+                      <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+                        {dayName}
+                      </Box>
                     </Typography>
                   </Box>
                 ))}
 
                 {dayCells.map((day, index) => {
                   if (!day) {
-                    return <Box key={`empty-${index}`} sx={{ height: 86 }} />
+                    return <Box key={`empty-${index}`} sx={{ height: { xs: 52, sm: 86 } }} />
                   }
 
                   const iso = toIsoDate(day)
@@ -665,21 +677,38 @@ export const PlaceDetailsPage = () => {
                       variant={isSelected ? 'contained' : 'outlined'}
                       onClick={() => handleCalendarDateClick(day)}
                       sx={{
-                        height: 86,
-                        alignItems: 'flex-start',
-                        justifyContent: 'space-between',
+                        height: { xs: 52, sm: 86 },
+                        alignItems: { xs: 'center', sm: 'flex-start' },
+                        justifyContent: { xs: 'center', sm: 'space-between' },
                         flexDirection: 'column',
-                        p: 1,
+                        p: { xs: 0.5, sm: 1 },
                         textTransform: 'none',
                         borderRadius: 2,
+                        minWidth: 0,
                       }}
                     >
-                      <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                      <Typography variant="body2" sx={{ fontWeight: 700, fontSize: { xs: '0.875rem', sm: '1rem' } }}>
                         {day.getDate()}
                       </Typography>
-                      <Typography variant="caption" color={isSelected ? 'inherit' : 'text.secondary'}>
+                      <Typography
+                        variant="caption"
+                        color={isSelected ? 'inherit' : 'text.secondary'}
+                        sx={{ display: { xs: 'none', sm: 'block' } }}
+                      >
                         {reservedSlots.length > 0 ? `${reservedSlots.length} reserved` : 'Available'}
                       </Typography>
+                      {reservedSlots.length > 0 && (
+                        <Box
+                          sx={{
+                            display: { xs: 'block', sm: 'none' },
+                            width: 6,
+                            height: 6,
+                            borderRadius: '50%',
+                            bgcolor: isSelected ? 'common.white' : 'primary.main',
+                            mt: 0.5,
+                          }}
+                        />
+                      )}
                     </Button>
                   )
                 })}
