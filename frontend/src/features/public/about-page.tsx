@@ -138,7 +138,7 @@ export const AboutPage = () => {
                   </Box>
                 </Typography>
                 <Typography variant="body1" color="text.secondary" sx={{ fontSize: '1.15rem', lineHeight: 1.7 }}>
-                  BookiWa7dek is a reservation platform designed to connect people with spaces that fit
+                  bookiblastek is a reservation platform designed to connect people with spaces that fit
                   their needs. Whether you're organizing a meeting, hosting an event, conducting
                   training, or looking for a workspace, our platform makes finding and reserving
                   spaces simple and efficient.

@@ -210,7 +210,7 @@ export const LandingPage = () => {
                 color="text.secondary"
                 sx={{ fontWeight: 400, maxWidth: 600, lineHeight: 1.6 }}
               >
-                BookiWa7dek helps you discover and reserve meeting rooms, coworking spaces, event
+                bookiblastek helps you discover and reserve meeting rooms, coworking spaces, event
                 venues, sports facilities, and more—all from one platform.
               </Typography>
 
@@ -570,7 +570,7 @@ export const LandingPage = () => {
         </Container>
       </Box>
 
-      {/* 5. Why Choose BookiWa7dek */}
+      {/* 5. Why Choose bookiblastek */}
       <Container maxWidth="lg" sx={{ mb: 12 }}>
         <Grid container spacing={6} sx={{ alignItems: 'center' }}>
           <Grid size={{ xs: 12, md: 5 }}>
@@ -579,7 +579,7 @@ export const LandingPage = () => {
                 Benefits
               </Typography>
               <Typography variant="h3" sx={{ fontWeight: 900, lineHeight: 1.2 }}>
-                Why Choose BookiWa7dek
+                Why Choose bookiblastek
               </Typography>
               <Typography variant="body1" color="text.secondary" sx={{ lineHeight: 1.7, pt: 1 }}>
                 We provide a professional and unified interface designed to handle reservations of
