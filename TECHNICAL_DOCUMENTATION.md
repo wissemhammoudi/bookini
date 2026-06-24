@@ -115,100 +115,376 @@ The python backend follows **Clean Architecture** principles to separate concern
 
 ## 4. Database Schema
 
-The database utilizes PostgreSQL 16. The schema tables, relationships, and constraints are detailed below:
+The database utilizes PostgreSQL 16. The database schema has been designed with strict constraints, foreign keys, cascade policies, and index optimizations. 
+
+### Entity-Relationship Diagram (Mermaid)
 
 ```mermaid
 erDiagram
     USERS {
         uuid id PK
-        string full_name
-        string email UK
-        string password_hash
-        string role "SUPER_ADMIN | ADMIN | USER"
-        boolean is_active
-        datetime created_at
-        datetime updated_at
+        string full_name "varchar(120)"
+        string email UK "varchar(255)"
+        string password_hash "varchar(255)"
+        string role "ENUM: SUPER_ADMIN | ADMIN | USER"
+        boolean is_active "default true"
+        string avatar_url "varchar(512) nullable"
+        datetime created_at "timestamp with timezone"
+        datetime updated_at "timestamp with timezone"
     }
     FLOORS {
         uuid id PK
-        string name
+        uuid admin_id FK "nullable, set null on delete"
+        string name "varchar(120)"
         int capacity
-        string building
+        string building "varchar(120)"
         int floor_number
-        string location
-        string description
-        string status "AVAILABLE | OCCUPIED | MAINTENANCE"
-        boolean is_deleted
-        datetime created_at
-        datetime updated_at
+        string location "varchar(255)"
+        string description "text nullable"
+        string status "ENUM: AVAILABLE | OCCUPIED | MAINTENANCE"
+        boolean is_deleted "default false"
+        datetime created_at "timestamp with timezone"
+        datetime updated_at "timestamp with timezone"
     }
     RESERVATIONS {
         uuid id PK
-        uuid user_id FK
-        uuid floor_id FK
-        datetime start_time
-        datetime end_time
-        string status "PENDING | CONFIRMED | CANCELLED | COMPLETED"
-        datetime created_at
-        datetime updated_at
+        uuid user_id FK "cascade on delete"
+        uuid floor_id FK "restrict on delete"
+        datetime start_time "timestamp"
+        datetime end_time "timestamp"
+        string status "ENUM: PENDING | CONFIRMED | CANCELLED | COMPLETED"
+        datetime created_at "timestamp with timezone"
+        datetime updated_at "timestamp with timezone"
     }
     ACTIVITIES {
         uuid id PK
-        uuid reservation_id FK
-        string title
-        string description
-        datetime created_at
+        uuid reservation_id FK "cascade on delete"
+        string title "varchar(255)"
+        string description "text nullable"
+        datetime created_at "timestamp with timezone"
     }
     AUDIT_LOGS {
         uuid id PK
-        uuid user_id FK "nullable"
-        string action "LOGIN | LOGOUT | REGISTER | FLOOR_... | RESERVATION_..."
-        string ip_address
+        uuid user_id FK "cascade on delete"
+        string action "varchar(100)"
+        string ip_address "varchar(45)"
         jsonb metadata
-        datetime timestamp
+        datetime timestamp "timestamp with timezone"
+    }
+    ADMIN_RATINGS {
+        uuid id PK
+        uuid admin_id FK "cascade on delete"
+        uuid user_id FK "cascade on delete"
+        int rating "check: 1..5"
+        string comment "text nullable"
+        datetime created_at "timestamp with timezone"
+        datetime updated_at "timestamp with timezone"
+    }
+    FLOOR_REVIEWS {
+        uuid id PK
+        uuid floor_id FK "cascade on delete"
+        uuid user_id FK "cascade on delete"
+        int rating "check: 1..5"
+        string comment "text nullable"
+        datetime created_at "timestamp with timezone"
+        datetime updated_at "timestamp with timezone"
+    }
+    PARTNERSHIP_REQUESTS {
+        uuid id PK
+        string company_name "varchar(255)"
+        string contact_person "varchar(255)"
+        string contact_email "varchar(255) indexed"
+        string contact_phone "varchar(20)"
+        int number_of_floors
+        int expected_users
+        string description "text"
+        string status "ENUM: PENDING | APPROVED | REJECTED"
+        string admin_notes "text nullable"
+        uuid reviewed_by_admin_id "nullable"
+        jsonb metadata
+        datetime created_at "timestamp with timezone"
+        datetime updated_at "timestamp with timezone"
+    }
+    PUBLIC_BOOKINGS {
+        uuid id PK
+        string booking_reference UK "varchar(50) indexed"
+        int room_id
+        string room_name "varchar(255)"
+        string plan_id "varchar(50)"
+        string guest_name "varchar(255)"
+        string guest_email "varchar(255) indexed"
+        string guest_phone "varchar(20)"
+        string booking_date "varchar(10) indexed"
+        string start_time "varchar(5)"
+        string end_time "varchar(5)"
+        int participants
+        string notes "text nullable"
+        float price
+        string status "ENUM: PENDING | CONFIRMED | CANCELLED"
+        string admin_notes "text nullable"
+        jsonb metadata
+        datetime created_at "timestamp with timezone"
+        datetime updated_at "timestamp with timezone"
     }
 
-    USERS ||--o{ RESERVATIONS : places
-    FLOORS ||--o{ RESERVATIONS : contains
-    RESERVATIONS ||--o| ACTIVITIES : triggers
-    USERS ||--o{ AUDIT_LOGS : performs
+    USERS ||--o{ FLOORS : "manages (admin)"
+    USERS ||--o{ RESERVATIONS : "makes"
+    FLOORS ||--o{ RESERVATIONS : "has"
+    RESERVATIONS ||--o{ ACTIVITIES : "records"
+    USERS ||--o{ AUDIT_LOGS : "triggers"
+    USERS ||--o{ ADMIN_RATINGS : "received by (admin_id)"
+    USERS ||--o{ ADMIN_RATINGS : "reviewed by (user_id)"
+    FLOORS ||--o{ FLOOR_REVIEWS : "reviewed"
+    USERS ||--o{ FLOOR_REVIEWS : "authored"
 ```
+
+---
+
+### Detailed Database Tables Reference
+
+#### 1. `users` Table
+Stores user account profiles, system roles, authentication parameters, and profile details.
+* **Indexes**: Primary Key `pk_users` (on `id`), Unique Index `uq_users_email` (on `email`).
+
+| Column Name | Data Type | Constraints | Default Value | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `id` | `UUID` | Primary Key, Not Null | `uuid_generate_v4()` | Globally unique user identifier. |
+| `full_name` | `VARCHAR(120)`| Not Null | None | The complete name of the user. |
+| `email` | `VARCHAR(255)`| Unique, Not Null, Indexed | None | The unique login email address (case-insensitive). |
+| `password_hash`| `VARCHAR(255)`| Not Null | None | Hashed password stored securely using bcrypt. |
+| `role` | `VARCHAR(50)` | Not Null | `USER` | Role enum values: `SUPER_ADMIN`, `ADMIN`, `USER`. |
+| `is_active` | `BOOLEAN` | Not Null | `TRUE` | Toggle flag for enabling/disabling access. |
+| `avatar_url` | `VARCHAR(512)`| Nullable | `NULL` | Public path link to upload profile photo avatar. |
+| `created_at` | `TIMESTAMP` | Not Null | `NOW()` | Timestamp indicating account registration time. |
+| `updated_at` | `TIMESTAMP` | Not Null | `NOW()` | Timestamp showing last profile modifications. |
+
+---
+
+#### 2. `floors` Table
+Represents floors within building coordinates mapped to workspace layouts.
+* **Indexes**: Primary Key `pk_floors` (on `id`), Index `ix_floors_name` (on `name`), Index `ix_floors_building` (on `building`), Index `ix_floors_floor_number` (on `floor_number`).
+
+| Column Name | Data Type | Constraints | Default Value | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `id` | `UUID` | Primary Key, Not Null | `uuid_generate_v4()` | Globally unique floor identifier. |
+| `admin_id` | `UUID` | Foreign Key (`users.id`), Nullable | `NULL` | Manager in charge of the floor. Set null on user deletion. |
+| `name` | `VARCHAR(120)`| Not Null, Indexed | None | Custom label or tag of the floor. |
+| `capacity` | `INTEGER` | Not Null | None | Maximum number of people allowed simultaneously. |
+| `building` | `VARCHAR(120)`| Not Null, Indexed | None | Building block or wing identifier. |
+| `floor_number` | `INTEGER` | Not Null, Indexed | None | Numerical floor level (e.g. 0 for ground). |
+| `location` | `VARCHAR(255)`| Not Null | None | Coordinates, office zone, or physical location info. |
+| `description` | `TEXT` | Nullable | `NULL` | Description of the floor, equipment, or target teams. |
+| `status` | `VARCHAR(50)` | Not Null | `AVAILABLE` | ENUM statuses: `AVAILABLE`, `OCCUPIED`, `MAINTENANCE`. |
+| `is_deleted` | `BOOLEAN` | Not Null | `FALSE` | Soft deletion indicator flag. |
+| `created_at` | `TIMESTAMP` | Not Null | `NOW()` | Time when floor metadata was registered. |
+| `updated_at` | `TIMESTAMP` | Not Null | `NOW()` | Last floor details update timestamp. |
+
+---
+
+#### 3. `reservations` Table
+Core reservations database linking workspace users with reserved office levels or rooms.
+* **Constraints**: CHECK constraint `end_time > start_time` (validates end boundary occurs chronologically after starting boundary).
+* **Indexes**: Primary Key `pk_reservations` (on `id`), Multi-column Index `ix_reservations_floor_time` (on `floor_id, start_time, end_time`), Index `ix_reservations_user_start` (on `user_id, start_time`).
+
+| Column Name | Data Type | Constraints | Default Value | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `id` | `UUID` | Primary Key, Not Null | `uuid_generate_v4()` | Unique reservation identifier. |
+| `user_id` | `UUID` | Foreign Key (`users.id`), Not Null | None | User booking reference. Cascade deletes on user removal. |
+| `floor_id` | `UUID` | Foreign Key (`floors.id`), Not Null | None | target floor level. Restricts delete if reservations exist. |
+| `start_time` | `TIMESTAMP` | Not Null | None | Starting date and time of reservation window. |
+| `end_time` | `TIMESTAMP` | Not Null | None | Ending date and time of reservation window. |
+| `status` | `VARCHAR(50)` | Not Null | `PENDING` | ENUM statuses: `PENDING`, `CONFIRMED`, `CANCELLED`, `COMPLETED`. |
+| `created_at` | `TIMESTAMP` | Not Null | `NOW()` | Log entry booking creation time. |
+| `updated_at` | `TIMESTAMP` | Not Null | `NOW()` | Reservation change timestamp. |
+
+---
+
+#### 4. `activities` Table
+Documents meetings, events, or specific activities planned during reserved slots.
+* **Indexes**: Primary Key `pk_activities` (on `id`), Index `ix_activities_reservation_id` (on `reservation_id`).
+
+| Column Name | Data Type | Constraints | Default Value | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `id` | `UUID` | Primary Key, Not Null | `uuid_generate_v4()` | Unique activity identifier. |
+| `reservation_id`| `UUID` | Foreign Key (`reservations.id`), Not Null | None | Associated reservation. Cascade deletes on reservation removal. |
+| `title` | `VARCHAR(255)`| Not Null | None | Quick description or topic of the planned activity. |
+| `description` | `TEXT` | Nullable | `NULL` | Rich details, materials required, or schedule. |
+| `created_at` | `TIMESTAMP` | Not Null | `NOW()` | Timestamp representing database creation. |
+
+---
+
+#### 5. `audit_logs` Table
+A security audit trail that logs all sensitive admin modifications, login actions, and deletion tasks.
+* **Indexes**: Primary Key `pk_audit_logs` (on `id`), Index `ix_audit_logs_user_id` (on `user_id`), Index `ix_audit_logs_action` (on `action`).
+
+| Column Name | Data Type | Constraints | Default Value | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `id` | `UUID` | Primary Key, Not Null | `uuid_generate_v4()` | Unique audit log row identifier. |
+| `user_id` | `UUID` | Foreign Key (`users.id`), Not Null | None | User executing the action. Cascade deletes on user removal. |
+| `action` | `VARCHAR(100)`| Not Null, Indexed | None | Categorized system action (e.g. `LOGIN`, `DELETE_USER`, `MUTATE_FLOOR`). |
+| `ip_address` | `VARCHAR(45)` | Not Null | None | User IPv4 or IPv6 client address for audit tracking. |
+| `metadata` | `JSON` | Not Null | `{}` | Key-value JSON payload listing parameters or target states. |
+| `timestamp` | `TIMESTAMP` | Not Null | `NOW()` | Time indicating when the audited action took place. |
+
+---
+
+#### 6. `admin_ratings` Table
+Stores user feedback scores evaluating office administrators and level managers.
+* **Constraints**: CHECK constraint `rating >= 1 AND rating <= 5` (ensures valid feedback score limits), Unique Constraint `uq_admin_rating_admin_user` (prevents double reviews from the same user to the same admin).
+* **Indexes**: Primary Key `pk_admin_ratings` (on `id`), Index `ix_admin_ratings_admin_id` (on `admin_id`), Index `ix_admin_ratings_user_id` (on `user_id`).
+
+| Column Name | Data Type | Constraints | Default Value | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `id` | `UUID` | Primary Key, Not Null | `uuid_generate_v4()` | Unique rating identifier. |
+| `admin_id` | `UUID` | Foreign Key (`users.id`), Not Null | None | Target admin user ID receiving the rating score. |
+| `user_id` | `UUID` | Foreign Key (`users.id`), Not Null | None | Reviewer user ID posting the score rating. |
+| `rating` | `INTEGER` | Not Null | None | Score rating value between 1 (poor) and 5 (excellent). |
+| `comment` | `TEXT` | Nullable | `NULL` | Feedback text detailing reasons or improvement comments. |
+| `created_at` | `TIMESTAMP` | Not Null | `NOW()` | Timestamp marking submission. |
+| `updated_at` | `TIMESTAMP` | Not Null | `NOW()` | Date of rating edits. |
+
+---
+
+#### 7. `floor_reviews` Table
+Allows corporate users to submit reviews and feedback on floor configurations, space facilities, and occupancy quality.
+* **Constraints**: CHECK constraint `rating >= 1 AND rating <= 5`, Unique Constraint `uq_floor_review_floor_user` (restricts each reviewer to a single review per floor).
+* **Indexes**: Primary Key `pk_floor_reviews` (on `id`), Index `ix_floor_reviews_floor_id` (on `floor_id`), Index `ix_floor_reviews_user_id` (on `user_id`).
+
+| Column Name | Data Type | Constraints | Default Value | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `id` | `UUID` | Primary Key, Not Null | `uuid_generate_v4()` | Unique review identifier. |
+| `floor_id` | `UUID` | Foreign Key (`floors.id`), Not Null | None | Targeted floor level. Cascade deletes on floor removal. |
+| `user_id` | `UUID` | Foreign Key (`users.id`), Not Null | None | Author user ID. Cascade deletes on user removal. |
+| `rating` | `INTEGER` | Not Null | None | Floor score rating between 1 and 5. |
+| `comment` | `TEXT` | Nullable | `NULL` | Optional review note outlining desk quality or facilities. |
+| `created_at` | `TIMESTAMP` | Not Null | `NOW()` | Date review was published. |
+| `updated_at` | `TIMESTAMP` | Not Null | `NOW()` | Date review was edited. |
+
+---
+
+#### 8. `partnership_requests` Table
+Tracks business development requests submitted by external companies seeking custom reservation space access.
+* **Indexes**: Primary Key `pk_partnership_requests` (on `id`), Index `ix_partnership_email` (on `contact_email`), Index `ix_partnership_status` (on `status`).
+
+| Column Name | Data Type | Constraints | Default Value | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `id` | `UUID` | Primary Key, Not Null | `uuid_generate_v4()` | Unique request identifier. |
+| `company_name` | `VARCHAR(255)`| Not Null | None | Name of the prospective client company. |
+| `contact_person`| `VARCHAR(255)`| Not Null | None | Full name of client contact representative. |
+| `contact_email` | `VARCHAR(255)`| Indexed, Not Null | None | Email address of company contact. |
+| `contact_phone` | `VARCHAR(20)` | Not Null | None | Phone number of company contact. |
+| `number_of_floors`| `INTEGER` | Not Null | None | Number of floors requested to manage. |
+| `expected_users`| `INTEGER` | Not Null | None | Total expected user seats required. |
+| `description` | `TEXT` | Not Null | None | Detailed space request or business plan details. |
+| `status` | `VARCHAR(50)` | Not Null | `PENDING` | ENUM statuses: `PENDING`, `APPROVED`, `REJECTED`. |
+| `admin_notes` | `TEXT` | Nullable | `NULL` | Review response notes from Super Admin. |
+| `reviewed_by_admin_id`| `UUID` | Nullable | `NULL` | Super Admin identifier performing reviews. |
+| `metadata` | `JSON` | Not Null | `{}` | Extra parameter payload tracking metadata fields. |
+| `created_at` | `TIMESTAMP` | Not Null | `NOW()` | Submission time of form. |
+| `updated_at` | `TIMESTAMP` | Not Null | `NOW()` | Timestamp tracking administrative changes. |
+
+---
+
+#### 9. `public_bookings` Table
+Registers Pay-As-You-Go single-slot space reservations submitted by guest/public non-registered users.
+* **Indexes**: Primary Key `pk_public_bookings` (on `id`), Unique Index `uq_public_booking_ref` (on `booking_reference`), Index `ix_public_bookings_date` (on `booking_date`), Index `ix_public_bookings_email` (on `guest_email`), Index `ix_public_bookings_status` (on `status`).
+
+| Column Name | Data Type | Constraints | Default Value | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `id` | `UUID` | Primary Key, Not Null | `uuid_generate_v4()` | Unique public booking identifier. |
+| `booking_reference`| `VARCHAR(50)`| Unique, Indexed, Not Null | None | Auto-generated tracking reference string (e.g. `BKN-2026-X1`). |
+| `room_id` | `INTEGER` | Not Null | None | Catalog identifier for public rooms. |
+| `room_name` | `VARCHAR(255)`| Not Null | None | Cached room name for fast queries. |
+| `plan_id` | `VARCHAR(50)` | Not Null | None | Subscription / booking plan identifier. |
+| `guest_name` | `VARCHAR(255)`| Not Null | None | Full name of guest customer. |
+| `guest_email` | `VARCHAR(255)`| Indexed, Not Null | None | Contact email address of guest. |
+| `guest_phone` | `VARCHAR(20)` | Not Null | None | Contact phone number of guest. |
+| `booking_date` | `VARCHAR(10)` | Indexed, Not Null | None | Date of booking in standard format `YYYY-MM-DD`. |
+| `start_time` | `VARCHAR(5)`  | Not Null | None | Starting time of slot in standard format `HH:MM`. |
+| `end_time` | `VARCHAR(5)`  | Not Null | None | Ending time of slot in standard format `HH:MM`. |
+| `participants` | `INTEGER` | Not Null | None | Expected headcount attending room. |
+| `notes` | `TEXT` | Nullable | `NULL` | Custom guest notes (e.g., catering, projector setup). |
+| `price` | `FLOAT` | Not Null | None | Calculated cost rate paid or pending. |
+| `status` | `VARCHAR(50)` | Not Null | `PENDING` | ENUM statuses: `PENDING`, `CONFIRMED`, `CANCELLED`. |
+| `admin_notes` | `TEXT` | Nullable | `NULL` | Internal admin records or rejection justification notes. |
+| `metadata` | `JSON` | Not Null | `{}` | Key-value logging data (e.g., payment ID, session token). |
+| `created_at` | `TIMESTAMP` | Not Null | `NOW()` | Timestamp booking transaction log creation. |
+| `updated_at` | `TIMESTAMP` | Not Null | `NOW()` | Last booking update timestamp. |
 
 ---
 
 ## 5. Environment Variables Reference
 
-The system relies on environment variables for runtime configuration. They are divided by service:
+### Settings Loading Mechanism
+Configuration variables are mapped in [config.py](file:///c:/Users/WISSEM%20HAMOUDI/Desktop/Projects/bookini/backend/app/core/config.py) using **Pydantic Settings** (`BaseSettings`). 
+1. **Source Precedence**: The configuration parser searches for settings values in the system shell environment first, then cascades to search the `.env` configuration file in the application running directory.
+2. **Strict Validation**: Pydantic validates data-types at boot. For instance:
+   - `secret_key` raises validation errors if string length is under 16 characters.
+   - `api_port` enforces constraints between `1` and `65535`.
+3. **Fail-Fast Boot**: If any required configuration field (like `DATABASE_URL` or `SECRET_KEY`) is missing or fails validation checks, the FastAPI application logs critical errors and immediately aborts the server startup process.
 
-### Backend Configuration
-| Variable Name | Description | Default Value | Required |
-| :--- | :--- | :--- | :--- |
-| `APP_ENV` | Running environment (`development`, `staging`, `production`) | `development` | No |
-| `LOG_LEVEL` | Logging verbosity (`DEBUG`, `INFO`, `WARNING`, `ERROR`) | `INFO` | No |
-| `SECRET_KEY` | Symmetric key used to sign JWT tokens (Min 16 chars) | None | **Yes** |
-| `DATABASE_URL` | SQLAlchemy async connection string to PostgreSQL | None | **Yes** |
-| `REDIS_URL` | Connection string to Redis instance for caching | `redis://redis:6379/0` | No |
-| `SEED_SUPER_ADMIN` | Toggle whether to bootstrap the Super Admin account | `true` | No |
-| `SEED_SUPER_ADMIN_EMAIL` | Email for the bootstrapped Super Admin | `superadmin@bookiwa7dek.com` | No |
-| `SEED_SUPER_ADMIN_PASSWORD`| Password for the bootstrapped Super Admin | `SuperAdmin123456!` | No |
-| `MINIO_ENDPOINT` | Host and port of the S3-compatible MinIO server | `minio:9000` | No |
-| `MINIO_ACCESS_KEY` | MinIO admin access username | `minioadmin` | No |
-| `MINIO_SECRET_KEY` | MinIO admin access secret key | `minioadmin` | No |
-| `MINIO_BUCKET` | The bucket name where blueprint images are stored | `bookini` | No |
+---
 
-### Frontend & Admin Configuration
-| Variable Name | Description | Default Value | Required |
-| :--- | :--- | :--- | :--- |
-| `BACKEND_IMAGE` | Pushed backend Docker tag to pull on VPS | None | **Yes (CI)** |
-| `FRONTEND_IMAGE` | Pushed frontend Docker tag to pull on VPS | None | **Yes (CI)** |
-| `ADMIN_FRONTEND_IMAGE`| Pushed admin-frontend Docker tag to pull on VPS | None | **Yes (CI)** |
-| `DOMAIN_NAME` | Main domain used by Traefik for reverse proxy routing | None | **Yes** |
+### Detailed Service Configurations
 
-### Monitoring & Dashboard Configuration
-| Variable Name | Description | Default Value | Required |
-| :--- | :--- | :--- | :--- |
-| `GRAFANA_ADMIN_USER` | Grafana dashboard administrator username | None | **Yes** |
-| `GRAFANA_ADMIN_PASSWORD`| Grafana dashboard administrator password | None | **Yes** |
+#### 1. Core Backend Configuration (`backend/`)
+
+| Variable Name | Type / Format | Default Value | Required | Description / Usage |
+| :--- | :--- | :--- | :--- | :--- |
+| `APP_ENV` | `development \| staging \| production` | `development` | No | Dictates CORS settings, dev/prod routing priorities, and stack warning configurations. |
+| `LOG_LEVEL` | `DEBUG \| INFO \| WARNING \| ERROR` | `INFO` | No | Filters output console logs. Set `DEBUG` locally to inspect database transactions. |
+| `API_HOST` | IPv4 address string | `0.0.0.0` | No | Binding network adapter address for Uvicorn listener. |
+| `API_PORT` | `1..65535` | `8000` | No | Port number on which the API engine serves requests. |
+| `DATABASE_URL` | SQLAlchemy Connection URL | None | **Yes** | Sync/Async engine connection URL for PostgreSQL. Format: `postgresql+psycopg://[user]:[password]@[host]:[port]/[database]`. |
+| `REDIS_URL` | Redis Connection URL | `redis://redis:6379/0` | No | Connection parameters for Redis caching, session states, and request throttling. |
+| `SECRET_KEY` | Hexadecimal String (min 16 chars) | None | **Yes** | Cryptographic key used to sign JWT access and refresh tokens. Must be a secure random hex key in production. |
+| `JWT_ALGORITHM` | Hashing Algorithm string | `HS256` | No | Signing algorithm selected for JWT encryption. Defaults to symmetric SHA-256. |
+| `ACCESS_TOKEN_EXPIRE_MINUTES`| Integer | `15` | No | Lifetime duration for the signed access tokens before token expiry. |
+| `REFRESH_TOKEN_EXPIRE_DAYS`| Integer | `7` | No | Lifetime duration of refresh tokens stored in cookies or headers. |
+| `CORS_ALLOW_ORIGINS` | JSON list of domains | *Preset list* | No | Authorized CORS header source domains (must include frontend addresses). |
+
+---
+
+#### 2. MinIO S3 Object Storage Configuration
+
+| Variable Name | Type / Format | Default Value | Required | Description / Usage |
+| :--- | :--- | :--- | :--- | :--- |
+| `MINIO_ENDPOINT` | Hostname and Port | `minio:9000` | No | Address coordinates pointing to the object storage client server. |
+| `MINIO_ACCESS_KEY` | Plaintext string | `minioadmin` | No | Access username matching the MinIO target credentials. |
+| `MINIO_SECRET_KEY` | Plaintext string | `minioadmin` | No | Private authorization token matching the MinIO target credentials. |
+| `MINIO_BUCKET` | String | `bookini` | No | Target S3 bucket folder where blueprint plans and profile photos are uploaded. |
+| `MINIO_SECURE` | Boolean | `false` | No | Instructs client libraries to use HTTPS secure SSL connection loops instead of HTTP. |
+
+---
+
+#### 3. Database Bootstrap Seeding Configuration
+
+| Variable Name | Type / Format | Default Value | Required | Description / Usage |
+| :--- | :--- | :--- | :--- | :--- |
+| `SEED_SUPER_ADMIN` | Boolean | `true` | No | Toggle checking whether to seed the master database with a Super Admin. |
+| `SEED_SUPER_ADMIN_EMAIL` | Email address string | `superadmin@bookiwa7dek.com` | No | The default email credential generated on initialization for Super Admin. |
+| `SEED_SUPER_ADMIN_PASSWORD`| Plaintext string | `SuperAdmin123456!` | No | Password credential used for the bootstrapped Super Admin account. |
+| `SEED_DEFAULT_USERS` | Boolean | `false` | No | Controls whether default test users are seeded. Kept to `false` in production. |
+
+---
+
+#### 4. Frontend & Proxy Deployment Configuration (`frontend/` & `admin-frontend/`)
+
+| Variable Name | Type / Format | Default Value | Required | Description / Usage |
+| :--- | :--- | :--- | :--- | :--- |
+| `DOMAIN_NAME` | Fully Qualified Domain Name (FQDN) | None | **Yes** | Root domain (e.g. `bookini.example.com`) routing reverse proxy targets. |
+| `BACKEND_IMAGE` | Docker Hub Image Tag | None | **Yes (CI)** | Fully qualified Docker tag for backend container version (injected during CI). |
+| `FRONTEND_IMAGE` | Docker Hub Image Tag | None | **Yes (CI)** | Fully qualified Docker tag for user booking portal (injected during CI). |
+| `ADMIN_FRONTEND_IMAGE`| Docker Hub Image Tag | None | **Yes (CI)** | Fully qualified Docker tag for admin frontend workspace (injected during CI). |
+
+---
+
+#### 5. Monitoring & Obsv Stack Configuration (`monitoring/`)
+
+| Variable Name | Type / Format | Default Value | Required | Description / Usage |
+| :--- | :--- | :--- | :--- | :--- |
+| `GRAFANA_ADMIN_USER` | Plaintext string | None | **Yes** | Admin username utilized by Grafana service for control dashboard logins. |
+| `GRAFANA_ADMIN_PASSWORD`| Secure plaintext password string | None | **Yes** | Admin password utilized by Grafana service for control dashboard logins. |
 
 ---
 
