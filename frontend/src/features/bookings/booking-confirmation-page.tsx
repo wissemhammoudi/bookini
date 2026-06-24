@@ -67,7 +67,7 @@ export const BookingConfirmationPage = () => {
   const downloadICalendar = () => {
     if (!booking) return
 
-    const endDateRaw = booking.metadata_payload?.end_date || booking.booking_date
+    const endDateRaw = (booking.metadata_payload?.end_date as string) || booking.booking_date
     const dtstart = `${booking.booking_date.replace(/-/g, '')}T${booking.start_time.replace(/:/g, '')}00`
     const dtend = `${endDateRaw.replace(/-/g, '')}T${booking.end_time.replace(/:/g, '')}00`
 
@@ -175,7 +175,7 @@ END:VCALENDAR`
                   <Chip label={booking.room_name} variant="outlined" />
                   {booking.metadata_payload?.end_date ? (
                     <Chip
-                      label={`${new Date(booking.booking_date).toLocaleDateString()} - ${new Date(booking.metadata_payload.end_date).toLocaleDateString()} (${booking.metadata_payload.number_of_days} days)`}
+                      label={`${new Date(booking.booking_date).toLocaleDateString()} - ${new Date(booking.metadata_payload.end_date as string).toLocaleDateString()} (${booking.metadata_payload.number_of_days as number} days)`}
                       variant="outlined"
                     />
                   ) : (
@@ -268,12 +268,12 @@ END:VCALENDAR`
                                     day: 'numeric',
                                   })}
                                   {' - '}
-                                  {new Date(booking.metadata_payload.end_date).toLocaleDateString('en-US', {
+                                  {new Date(booking.metadata_payload.end_date as string).toLocaleDateString('en-US', {
                                     year: 'numeric',
                                     month: 'long',
                                     day: 'numeric',
                                   })}
-                                  {` (${booking.metadata_payload.number_of_days} days)`}
+                                  {` (${booking.metadata_payload.number_of_days as number} days)`}
                                 </>
                               ) : (
                                 new Date(booking.booking_date).toLocaleDateString('en-US', {
