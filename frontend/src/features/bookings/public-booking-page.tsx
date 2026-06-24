@@ -119,6 +119,16 @@ export const PublicBookingPage = () => {
   const handleFloorChange = (val: string) => {
     setFloorFilter(val)
     setRoomFilter('ALL')
+
+    if (val === 'ALL') return
+
+    const roomForFloor = rooms.find((room) => room.floors?.some((floor) => floor.id === val))
+    if (!roomForFloor) return
+
+    setSpaceFilter(roomForFloor.id.toString())
+    if (roomForFloor.organization_id) {
+      setOrganizationFilter(roomForFloor.organization_id)
+    }
   }
 
   const selectedPlace = useMemo(() => rooms.find((item) => item.id.toString() === spaceFilter), [rooms, spaceFilter])

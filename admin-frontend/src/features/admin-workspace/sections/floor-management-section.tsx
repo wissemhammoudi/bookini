@@ -39,7 +39,7 @@ import Grid from '@mui/material/Grid'
 import type { FloorActionHandler } from '@/features/admin-workspace/admin-workspace-types'
 import { EmptyState, SectionHeader, StatusChip } from '@/features/admin-workspace/admin-workspace-utils'
 import type { FloorRecord, PlaceRecord } from '@/lib/api-types'
-import { updateWorkspaceFloor } from '@/lib/api'
+import { updateWorkspaceFloor, uploadImageRequest } from '@/lib/api'
 import { workspaceQueryKey } from '@/features/admin-workspace/admin-workspace-config'
 
 type ElementType = 'desk' | 'table' | 'chair' | 'projector' | 'plant' | 'door' | 'wall'
@@ -53,6 +53,7 @@ type DeskZone = {
   type?: ElementType
   rotation?: number
   isReservable?: boolean
+  image_urls?: string[]
 }
 
 const parseBlueprintLayout = (blueprintImage?: string | null): DeskZone[] | null => {
@@ -76,6 +77,9 @@ const parseBlueprintLayout = (blueprintImage?: string | null): DeskZone[] | null
         type: (item.type as ElementType | undefined) ?? 'desk',
         rotation: Number(item.rotation ?? 0),
         isReservable: item.isReservable === false ? false : true,
+        image_urls: Array.isArray(item.image_urls)
+          ? item.image_urls.filter((url): url is string => typeof url === 'string' && url.trim().length > 0)
+          : [],
       }))
 
     return layout.length ? layout : null
@@ -404,6 +408,8 @@ type FloorBuilderDialogProps = {
 }
 
 function FloorBuilderDialog({ open, floor, onClose, onSave, isSaving }: FloorBuilderDialogProps) {
+  const [isUploadingRoomImages, setIsUploadingRoomImages] = useState(false)
+  const [roomImageError, setRoomImageError] = useState<string | null>(null)
   const [desks, setDesks] = useState<DeskZone[]>(() => {
     const parsedLayout = parseBlueprintLayout(floor.blueprint_image)
     if (parsedLayout) return parsedLayout
@@ -417,12 +423,47 @@ function FloorBuilderDialog({ open, floor, onClose, onSave, isSaving }: FloorBui
       type: 'desk' as ElementType,
       rotation: 0,
       isReservable: true,
+      image_urls: [],
     }))
   })
 
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
 
   const selectedDesk = selectedIndex !== null ? desks[selectedIndex] : null
+
+  const handleUploadSelectedRoomImages = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (selectedIndex === null || !files || files.length === 0) {
+      return
+    }
+
+    setIsUploadingRoomImages(true)
+    setRoomImageError(null)
+    try {
+      const uploadedUrls = await Promise.all(
+        Array.from(files).map(async (file) => {
+          const response = await uploadImageRequest(file)
+          return response.url
+        }),
+      )
+
+      const existing = selectedDesk?.image_urls ?? []
+      const merged = Array.from(new Set([...existing, ...uploadedUrls]))
+      handleUpdateSelected('image_urls', merged)
+    } catch (error) {
+      const uploadError = error as { response?: { data?: { message?: string } }; message?: string }
+      setRoomImageError(uploadError.response?.data?.message || uploadError.message || 'Failed to upload room images')
+    } finally {
+      setIsUploadingRoomImages(false)
+      e.target.value = ''
+    }
+  }
+
+  const removeSelectedRoomImage = (targetIndex: number) => {
+    if (!selectedDesk) return
+    const nextImages = (selectedDesk.image_urls ?? []).filter((_, index) => index !== targetIndex)
+    handleUpdateSelected('image_urls', nextImages)
+  }
 
   const handleAddTemplate = (template: typeof TOOLBOX_TEMPLATES[number]) => {
     const typeCount = desks.filter((d) => (d.type || 'desk') === template.type).length + 1
@@ -758,6 +799,7 @@ function FloorBuilderDialog({ open, floor, onClose, onSave, isSaving }: FloorBui
                     Element Properties
                   </Typography>
                   <Stack spacing={2}>
+                    {roomImageError ? <Alert severity="error">{roomImageError}</Alert> : null}
                     <TextField
                       label="Element Label"
                       size="small"
@@ -804,6 +846,69 @@ function FloorBuilderDialog({ open, floor, onClose, onSave, isSaving }: FloorBui
                       }
                       label="Reservable Area"
                     />
+
+                    <Stack direction="row" spacing={1.25} sx={{ alignItems: 'flex-start' }}>
+                      <TextField
+                        label="Room Image URLs"
+                        size="small"
+                        value={(selectedDesk.image_urls ?? []).join(', ')}
+                        onChange={(e) => {
+                          const values = e.target.value
+                            .split(',')
+                            .map((item) => item.trim())
+                            .filter(Boolean)
+                          handleUpdateSelected('image_urls', values)
+                        }}
+                        helperText="Comma separated image URLs"
+                        fullWidth
+                      />
+                      <Button
+                        variant="outlined"
+                        component="label"
+                        disabled={isUploadingRoomImages}
+                        sx={{ height: 40, whiteSpace: 'nowrap', mt: 0.25 }}
+                      >
+                        {isUploadingRoomImages ? 'Uploading...' : 'Upload'}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          hidden
+                          onChange={handleUploadSelectedRoomImages}
+                        />
+                      </Button>
+                    </Stack>
+
+                    {(selectedDesk.image_urls ?? []).length > 0 ? (
+                      <Stack spacing={1}>
+                        <Typography variant="caption" sx={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'text.secondary' }}>
+                          Room Images
+                        </Typography>
+                        <Box
+                          sx={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                            gap: 0.75,
+                          }}
+                        >
+                          {(selectedDesk.image_urls ?? []).map((imageUrl, imageIndex) => (
+                            <Paper key={`${imageUrl}-${imageIndex}`} variant="outlined" sx={{ p: 0.5, borderRadius: 1.5 }}>
+                              <Stack spacing={0.5}>
+                                <Box
+                                  component="img"
+                                  src={imageUrl}
+                                  alt={`Room image ${imageIndex + 1}`}
+                                  sx={{ width: '100%', height: 56, objectFit: 'cover', borderRadius: 1 }}
+                                />
+                                <Button size="small" color="error" onClick={() => removeSelectedRoomImage(imageIndex)}>
+                                  Remove
+                                </Button>
+                              </Stack>
+                            </Paper>
+                          ))}
+                        </Box>
+                      </Stack>
+                    ) : null}
 
                     <Stack direction="row" spacing={1}>
                       <TextField
