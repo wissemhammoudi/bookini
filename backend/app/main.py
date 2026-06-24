@@ -1,5 +1,5 @@
-import sys
 import asyncio
+import sys
 
 if sys.platform == "win32":
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
@@ -34,6 +34,7 @@ async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
     # Initialize MinIO Bucket
     try:
         from app.infrastructure.minio_client import MinioClient
+
         minio_client = MinioClient()
         minio_client.ensure_bucket_exists()
         logger.info("MinIO bucket initialization complete")

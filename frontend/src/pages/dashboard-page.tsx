@@ -10,7 +10,7 @@ import {
   Typography,
   alpha,
 } from '@mui/material'
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 
 import {
   listCurrentReservations,
@@ -18,6 +18,7 @@ import {
   listReservationHistory,
   cancelReservationRequest,
   listPublicRooms,
+  ReservationItem,
 } from '@/lib/api'
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday'
 import EventAvailableIcon from '@mui/icons-material/EventAvailable'
@@ -70,7 +71,7 @@ export const DashboardPage = () => {
   const availableRooms =
     floorsQuery.data?.filter((item) => item.status === 'AVAILABLE').length ?? 0
 
-  const getReservationCost = (res: any) => {
+  const getReservationCost = useCallback((res: ReservationItem) => {
     const room = roomsQuery.data?.find((r) =>
       r.floors?.some((f) => f.id === res.floor_id)
     )
@@ -80,10 +81,10 @@ export const DashboardPage = () => {
       const end = new Date(res.end_time).getTime()
       const durationHours = Math.max(0.5, (end - start) / (1000 * 60 * 60))
       return Math.round(durationHours * room.price)
-    } catch (e) {
+    } catch {
       return 0
     }
-  }
+  }, [roomsQuery.data])
 
   const totalSpent = useMemo(() => {
     let sum = 0
@@ -98,7 +99,7 @@ export const DashboardPage = () => {
       }
     })
     return sum
-  }, [currentQuery.data, historyQuery.data, roomsQuery.data])
+  }, [currentQuery.data, historyQuery.data, getReservationCost])
 
   const formatDateTime = (isoString: string) => {
     try {
@@ -110,7 +111,7 @@ export const DashboardPage = () => {
         hour: '2-digit',
         minute: '2-digit',
       })
-    } catch (e) {
+    } catch {
       return isoString
     }
   }

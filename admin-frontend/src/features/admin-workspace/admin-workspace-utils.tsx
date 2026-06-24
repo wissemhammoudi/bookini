@@ -2,13 +2,6 @@ import InboxOutlinedIcon from '@mui/icons-material/InboxOutlined'
 import HourglassBottomOutlinedIcon from '@mui/icons-material/HourglassBottomOutlined'
 import { Box, Button, Chip, CircularProgress, Paper, Stack, Typography, alpha } from '@mui/material'
 
-export const getErrorMessage = (error: unknown): string => {
-  if (error instanceof Error) {
-    return error.message
-  }
-
-  return 'Something went wrong. Please try again.'
-}
 
 export const SectionHeader = ({
   title,

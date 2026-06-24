@@ -44,17 +44,28 @@ class AdminWorkspaceDashboardService:
 
         admin_user = next((user for user in state.users if user.role == "ADMIN"), None)
         organization_ids = admin_user.organization_ids if admin_user else []
-        places = [item for item in state.places if item.organization_id in organization_ids]
+        places = [
+            item for item in state.places if item.organization_id in organization_ids
+        ]
         place_ids = {item.id for item in places}
         floors = [item for item in state.floors if item.place_id in place_ids]
         floor_ids = {item.id for item in floors}
-        reservations = [item for item in state.reservations if item.floor_id in floor_ids]
+        reservations = [
+            item for item in state.reservations if item.floor_id in floor_ids
+        ]
         users = [
             item
             for item in state.users
-            if (any(org_id in organization_ids for org_id in item.organization_ids) if item.organization_ids else False) or item.role == "USER"
+            if (
+                any(org_id in organization_ids for org_id in item.organization_ids)
+                if item.organization_ids
+                else False
+            )
+            or item.role == "USER"
         ]
-        organizations = [item for item in state.organizations if item.id in organization_ids]
+        organizations = [
+            item for item in state.organizations if item.id in organization_ids
+        ]
         return WorkspaceCollections(
             users=users,
             organizations=organizations,
@@ -99,7 +110,10 @@ class AdminWorkspaceDashboardService:
             DashboardStatCard(
                 key="partnerships",
                 label="Pending Partnership Requests",
-                value=sum(item.status == "PENDING" for item in collections.partnership_requests),
+                value=sum(
+                    item.status == "PENDING"
+                    for item in collections.partnership_requests
+                ),
                 trend="Review queue updated",
             ),
             DashboardStatCard(
@@ -124,7 +138,9 @@ class AdminWorkspaceDashboardService:
 
         place_counts: dict[str, int] = {}
         for reservation in collections.reservations:
-            place_counts[reservation.place_name] = place_counts.get(reservation.place_name, 0) + 1
+            place_counts[reservation.place_name] = (
+                place_counts.get(reservation.place_name, 0) + 1
+            )
 
         most_reserved_places = [
             ChartPoint(label=name, value=count)
@@ -138,7 +154,8 @@ class AdminWorkspaceDashboardService:
         activity_counts: dict[str, int] = {}
         for place in collections.places:
             activity_counts[place.name] = sum(
-                reservation.place_id == place.id for reservation in collections.reservations
+                reservation.place_id == place.id
+                for reservation in collections.reservations
             )
 
         organization_activity = [

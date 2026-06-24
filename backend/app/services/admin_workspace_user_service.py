@@ -52,7 +52,9 @@ class AdminWorkspaceUserService:
                     "user",
                 )
                 return updated
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
 
     @staticmethod
     def delete_user(user_id: str) -> None:
@@ -60,7 +62,9 @@ class AdminWorkspaceUserService:
         previous_count = len(state.users)
         state.users = [user for user in state.users if user.id != user_id]
         if len(state.users) == previous_count:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+            )
         AdminWorkspaceStateStore.record_activity(
             "User deleted",
             f"User {user_id} was removed.",
@@ -80,4 +84,6 @@ class AdminWorkspaceUserService:
                     "user",
                 )
                 return updated
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )

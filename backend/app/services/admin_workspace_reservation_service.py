@@ -23,4 +23,6 @@ class AdminWorkspaceReservationService:
                     "reservation",
                 )
                 return updated
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Reservation not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Reservation not found"
+        )

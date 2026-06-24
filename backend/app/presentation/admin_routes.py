@@ -1,19 +1,25 @@
-from fastapi import APIRouter, Depends, Query, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import ValidationException
 from app.core.responses import success_response
 from app.dependencies.rbac import require_roles
-from app.domain.enums import UserRole, PublicBookingStatus, PartnershipRequestStatus
+from app.domain.enums import PartnershipRequestStatus, PublicBookingStatus, UserRole
 from app.infrastructure.session import get_db_session
 from app.models.user import User
+from app.presentation.admin_workspace_dashboard_routes import (
+    router as admin_workspace_dashboard_router,
+)
+from app.presentation.admin_workspace_management_routes import (
+    router as admin_workspace_management_router,
+)
+from app.presentation.admin_workspace_request_routes import (
+    router as admin_workspace_request_router,
+)
 from app.repositories.audit_log_repository import AuditLogRepository
-from app.repositories.user_repository import UserRepository
-from app.repositories.public_booking_repository import PublicBookingRepository
 from app.repositories.partnership_request_repository import PartnershipRequestRepository
-from app.presentation.admin_workspace_dashboard_routes import router as admin_workspace_dashboard_router
-from app.presentation.admin_workspace_management_routes import router as admin_workspace_management_router
-from app.presentation.admin_workspace_request_routes import router as admin_workspace_request_router
+from app.repositories.public_booking_repository import PublicBookingRepository
+from app.repositories.user_repository import UserRepository
 from app.schemas.admin import AdminRoleUpdateRequest
 from app.schemas.public_booking import PartnershipRequestUpdateRequest
 
@@ -179,7 +185,9 @@ async def list_public_bookings(
     if status:
         try:
             booking_status = PublicBookingStatus(status)
-            bookings = await repository.list_by_status(booking_status, skip=skip, limit=limit)
+            bookings = await repository.list_by_status(
+                booking_status, skip=skip, limit=limit
+            )
         except ValueError:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -222,6 +230,7 @@ async def get_public_booking(
 
     try:
         import uuid
+
         bid = uuid.UUID(booking_id)
     except ValueError:
         raise HTTPException(
@@ -274,6 +283,7 @@ async def update_booking_status(
 
     try:
         import uuid
+
         bid = uuid.UUID(booking_id)
     except ValueError:
         raise HTTPException(
@@ -324,7 +334,9 @@ async def list_partnership_requests(
     if status:
         try:
             req_status = PartnershipRequestStatus(status)
-            requests = await repository.list_by_status(req_status, skip=skip, limit=limit)
+            requests = await repository.list_by_status(
+                req_status, skip=skip, limit=limit
+            )
         except ValueError:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -364,6 +376,7 @@ async def get_partnership_request_admin(
 
     try:
         import uuid
+
         rid = uuid.UUID(request_id)
     except ValueError:
         raise HTTPException(
@@ -410,6 +423,7 @@ async def update_partnership_request(
 
     try:
         import uuid
+
         rid = uuid.UUID(request_id)
     except ValueError:
         raise HTTPException(

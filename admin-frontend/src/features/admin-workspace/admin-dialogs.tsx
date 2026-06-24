@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import {
   Alert,
@@ -21,6 +21,7 @@ import {
 } from '@mui/material'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
+import type { Theme } from '@mui/material'
 
 import { uploadImageRequest } from '@/lib/api'
 
@@ -109,7 +110,7 @@ const dialogPaperSx = {
     border: '1px solid',
     borderColor: 'divider',
     backgroundImage: 'none',
-    background: (theme: any) => theme.palette.mode === 'light' ? 'linear-gradient(180deg, #FFFFFF 0%, #F7FAFF 100%)' : 'linear-gradient(180deg, #101D32 0%, #0C1525 100%)',
+    background: (theme: Theme) => theme.palette.mode === 'light' ? 'linear-gradient(180deg, #FFFFFF 0%, #F7FAFF 100%)' : 'linear-gradient(180deg, #101D32 0%, #0C1525 100%)',
     boxShadow: '0 28px 70px rgba(16, 24, 40, 0.16)',
   },
 }
@@ -192,11 +193,16 @@ export const UserDialog = ({
     },
   })
 
-  useEffect(() => {
+  const [prevOpen, setPrevOpen] = useState(open)
+  const [prevValue, setPrevValue] = useState(value)
+
+  if (open !== prevOpen || value !== prevValue) {
+    setPrevOpen(open)
+    setPrevValue(value)
     if (open) {
       setSelectedOrgs(value?.organization_ids ?? [])
     }
-  }, [open, value])
+  }
 
   const handleClose = () => {
     reset()
@@ -241,7 +247,7 @@ export const UserDialog = ({
             slotProps={{
               select: {
                 multiple: true,
-                renderValue: (selected: any) => (
+                renderValue: (selected: unknown) => (
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                     {(selected as string[]).map((val) => {
                       const org = organizations.find((o) => o.id === val)
@@ -435,8 +441,9 @@ export const PlaceDialog = ({
     try {
       const response = await uploadImageRequest(file)
       setValue('cover_image', response.url)
-    } catch (err: any) {
-      setUploadError(err.response?.data?.message || err.message || 'Failed to upload image')
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } }; message?: string }
+      setUploadError(error.response?.data?.message || error.message || 'Failed to upload image')
     } finally {
       setIsUploadingCover(false)
       e.target.value = ''
@@ -585,8 +592,9 @@ export const FloorDialog = ({
     try {
       const response = await uploadImageRequest(file)
       setValue('blueprint_image', response.url)
-    } catch (err: any) {
-      setUploadError(err.response?.data?.message || err.message || 'Failed to upload blueprint')
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } }; message?: string }
+      setUploadError(error.response?.data?.message || error.message || 'Failed to upload blueprint')
     } finally {
       setIsUploadingBlueprint(false)
       e.target.value = ''

@@ -9,6 +9,7 @@ Create Date: 2026-06-22 00:00:00
 from collections.abc import Sequence
 
 import sqlalchemy as sa
+
 from alembic import op
 
 revision: str = "0003_add_avatar_url_to_user"
@@ -18,7 +19,9 @@ depends_on: Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    op.add_column("users", sa.Column("avatar_url", sa.String(length=512), nullable=True))
+    op.add_column(
+        "users", sa.Column("avatar_url", sa.String(length=512), nullable=True)
+    )
 
 
 def downgrade() -> None:

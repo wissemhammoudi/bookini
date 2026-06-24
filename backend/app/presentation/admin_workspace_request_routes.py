@@ -17,8 +17,12 @@ async def update_contact_status(
     payload: ContactRequestStatusUpdateRequest,
     _: SuperAdminAccessUser,
 ) -> dict[str, object]:
-    contact = AdminWorkspaceRequestService.update_contact_status(request_id, payload.status)
-    return success_response(message="Contact request updated", data=contact.model_dump(mode="json"))
+    contact = AdminWorkspaceRequestService.update_contact_status(
+        request_id, payload.status
+    )
+    return success_response(
+        message="Contact request updated", data=contact.model_dump(mode="json")
+    )
 
 
 @router.delete("/workspace/contact-requests/{request_id}", status_code=204)
@@ -36,7 +40,9 @@ async def update_partnership_status(
     payload: PartnershipRequestStatusUpdateRequest,
     _: SuperAdminAccessUser,
 ) -> dict[str, object]:
-    request = AdminWorkspaceRequestService.update_partnership_status(request_id, payload.status)
+    request = AdminWorkspaceRequestService.update_partnership_status(
+        request_id, payload.status
+    )
     return success_response(
         message="Partnership request updated",
         data=request.model_dump(mode="json"),

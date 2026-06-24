@@ -144,23 +144,13 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    op.drop_index(
-        op.f("ix_partnership_status"), table_name="partnership_requests"
-    )
-    op.drop_index(
-        op.f("ix_partnership_email"), table_name="partnership_requests"
-    )
+    op.drop_index(op.f("ix_partnership_status"), table_name="partnership_requests")
+    op.drop_index(op.f("ix_partnership_email"), table_name="partnership_requests")
     op.drop_table("partnership_requests")
 
-    op.drop_index(
-        op.f("ix_public_bookings_status"), table_name="public_bookings"
-    )
-    op.drop_index(
-        op.f("ix_public_bookings_email"), table_name="public_bookings"
-    )
-    op.drop_index(
-        op.f("ix_public_bookings_date"), table_name="public_bookings"
-    )
+    op.drop_index(op.f("ix_public_bookings_status"), table_name="public_bookings")
+    op.drop_index(op.f("ix_public_bookings_email"), table_name="public_bookings")
+    op.drop_index(op.f("ix_public_bookings_date"), table_name="public_bookings")
     op.drop_index(
         op.f("ix_public_bookings_booking_reference"),
         table_name="public_bookings",

@@ -5,7 +5,11 @@ from threading import Lock
 from uuid import uuid4
 
 from app.schemas.admin_workspace import RecentActivityItem
-from app.services.admin_workspace_seed import WorkspaceState, build_workspace_state, utc_now
+from app.services.admin_workspace_seed import (
+    WorkspaceState,
+    build_workspace_state,
+    utc_now,
+)
 
 
 class AdminWorkspaceStateStore:

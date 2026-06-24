@@ -39,8 +39,9 @@ export const ForgotPasswordPage = () => {
         setDevToken(response.reset_token)
       }
       setStep('confirm')
-    } catch (err: any) {
-      setError(err?.response?.data?.message || 'Could not request password reset. Please try again.')
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } } }
+      setError(error?.response?.data?.message || 'Could not request password reset. Please try again.')
     }
   }
 
@@ -52,8 +53,9 @@ export const ForgotPasswordPage = () => {
         new_password: values.new_password,
       })
       setStep('success')
-    } catch (err: any) {
-      setError(err?.response?.data?.message || 'Could not reset password. Please check your token and try again.')
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } } }
+      setError(error?.response?.data?.message || 'Could not reset password. Please check your token and try again.')
     }
   }
 

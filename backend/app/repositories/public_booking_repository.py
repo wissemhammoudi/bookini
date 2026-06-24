@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import select, desc, and_
+from sqlalchemy import and_, desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.enums import PublicBookingStatus
@@ -18,9 +18,7 @@ class PublicBookingRepository:
         return booking
 
     async def get_by_reference(self, reference: str) -> PublicBooking | None:
-        stmt = select(PublicBooking).where(
-            PublicBooking.booking_reference == reference
-        )
+        stmt = select(PublicBooking).where(PublicBooking.booking_reference == reference)
         result = await self.session.execute(stmt)
         return result.scalars().first()
 
@@ -50,7 +48,9 @@ class PublicBookingRepository:
         result = await self.session.execute(stmt)
         return result.scalars().all()
 
-    async def list_by_email(self, email: str, skip: int = 0, limit: int = 50) -> list[PublicBooking]:
+    async def list_by_email(
+        self, email: str, skip: int = 0, limit: int = 50
+    ) -> list[PublicBooking]:
         stmt = (
             select(PublicBooking)
             .where(PublicBooking.guest_email == email)
@@ -87,7 +87,10 @@ class PublicBookingRepository:
         return result.scalars().all()
 
     async def update_status(
-        self, booking_id: uuid.UUID, status: PublicBookingStatus, admin_notes: str | None = None
+        self,
+        booking_id: uuid.UUID,
+        status: PublicBookingStatus,
+        admin_notes: str | None = None,
     ) -> PublicBooking | None:
         booking = await self.get_by_id(booking_id)
         if not booking:
@@ -111,7 +114,7 @@ class PublicBookingRepository:
 
     async def count_all(self) -> int:
         stmt = select(PublicBooking).with_only_columns(PublicBooking.id)
-        result = await self.session.execute(select(PublicBooking))
+        result = await self.session.execute(stmt)
         return len(result.scalars().all())
 
     async def count_by_status(self, status: PublicBookingStatus) -> int:

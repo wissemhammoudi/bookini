@@ -1,25 +1,23 @@
-from datetime import datetime
 import uuid
+from datetime import datetime
 
-from fastapi import APIRouter, Depends, Query, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.responses import success_response
 from app.core.exceptions import ValidationException
-from app.dependencies.rbac import require_roles
+from app.core.responses import success_response
 from app.domain.enums import PublicBookingStatus
 from app.infrastructure.session import get_db_session
-from app.models.user import User
 from app.repositories.public_booking_repository import PublicBookingRepository
+from app.schemas.admin_workspace import ContactRequestRecord
 from app.schemas.public_booking import (
     ContactRequestCreateRequest,
     PublicBookingCreateRequest,
-    PublicBookingResponse,
 )
-from app.schemas.admin_workspace import ContactRequestRecord
 from app.services.admin_workspace_state_store import AdminWorkspaceStateStore
 
 router = APIRouter(prefix="/public", tags=["public"])
+
 
 def _build_public_rooms_catalog() -> list[dict[str, object]]:
     state = AdminWorkspaceStateStore.get_state()
@@ -36,10 +34,14 @@ def _build_public_rooms_catalog() -> list[dict[str, object]]:
 
     rooms: list[dict[str, object]] = []
     for index, place in enumerate(state.places, start=1):
-        average_rating, rating_count = rating_by_organization_id.get(place.organization_id, (0.0, 0))
-        org = next((o for o in state.organizations if o.id == place.organization_id), None)
+        average_rating, rating_count = rating_by_organization_id.get(
+            place.organization_id, (0.0, 0)
+        )
+        org = next(
+            (o for o in state.organizations if o.id == place.organization_id), None
+        )
         org_name = org.name if org else "Unknown Organization"
-        
+
         floors = [
             {
                 "id": f.id,
@@ -150,7 +152,8 @@ async def create_booking(
     )
     if conflicting:
         raise ValidationException(
-            f"Selected time overlaps an existing reservation ({conflicting.start_time}-{conflicting.end_time})"
+            "Selected time overlaps an existing reservation"
+            f" ({conflicting.start_time}-{conflicting.end_time})"
         )
 
     booking_data = {
@@ -194,7 +197,9 @@ async def list_booking_calendar_slots(
     """Expose booked time slots by room and date range for public calendar rendering."""
 
     if end_date < start_date:
-        raise ValidationException("end_date must be greater than or equal to start_date")
+        raise ValidationException(
+            "end_date must be greater than or equal to start_date"
+        )
 
     repository = PublicBookingRepository(session)
     bookings = await repository.list_by_room_and_date_range(

@@ -27,7 +27,9 @@ class ReviewService:
         self._admin_rating_repository = admin_rating_repository
         self._floor_review_repository = floor_review_repository
 
-    async def get_admin_profile(self, *, admin_id: str) -> tuple[User, list[Floor], float, int]:
+    async def get_admin_profile(
+        self, *, admin_id: str
+    ) -> tuple[User, list[Floor], float, int]:
         admin = await self._user_repository.get_by_id(admin_id)
         if not admin or admin.role not in {UserRole.ADMIN, UserRole.SUPER_ADMIN}:
             raise NotFoundException("Admin not found")
@@ -36,7 +38,10 @@ class ReviewService:
             admin_id=admin_id,
             include_deleted=False,
         )
-        avg_rating, rating_count = await self._admin_rating_repository.get_aggregate_for_admin(
+        (
+            avg_rating,
+            rating_count,
+        ) = await self._admin_rating_repository.get_aggregate_for_admin(
             admin_id=admin_id
         )
         return admin, floors, avg_rating, rating_count
@@ -72,9 +77,11 @@ class ReviewService:
         if str(current_user.id) == admin_id:
             raise ForbiddenException("You cannot rate your own admin profile")
 
-        eligible = await self._reservation_repository.has_completed_reservation_with_admin(
-            user_id=str(current_user.id),
-            admin_id=admin_id,
+        eligible = (
+            await self._reservation_repository.has_completed_reservation_with_admin(
+                user_id=str(current_user.id),
+                admin_id=admin_id,
+            )
         )
         if not eligible:
             raise ForbiddenException(
@@ -140,9 +147,11 @@ class ReviewService:
         if not floor or floor.is_deleted:
             raise NotFoundException("Floor not found")
 
-        eligible = await self._reservation_repository.has_completed_reservation_for_floor(
-            user_id=str(current_user.id),
-            floor_id=floor_id,
+        eligible = (
+            await self._reservation_repository.has_completed_reservation_for_floor(
+                user_id=str(current_user.id),
+                floor_id=floor_id,
+            )
         )
         if not eligible:
             raise ForbiddenException(

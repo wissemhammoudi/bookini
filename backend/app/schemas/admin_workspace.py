@@ -5,7 +5,6 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, HttpUrl
 
-
 RoleValue = Literal["SUPER_ADMIN", "ADMIN", "USER"]
 StatusValue = Literal["ACTIVE", "SUSPENDED"]
 ReservationStatusValue = Literal[

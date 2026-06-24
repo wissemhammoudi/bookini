@@ -33,6 +33,7 @@ import {
   FormControlLabel,
   MenuItem,
 } from '@mui/material'
+import type { Theme } from '@mui/material'
 import Grid from '@mui/material/Grid'
 
 import type { FloorActionHandler } from '@/features/admin-workspace/admin-workspace-types'
@@ -89,7 +90,7 @@ const getElementColors = (type: string, isSelected: boolean) => {
   if (isSelected) {
     return {
       border: 'primary.main',
-      bg: (theme: any) => alpha(theme.palette.primary.main, 0.15),
+      bg: (theme: Theme) => alpha(theme.palette.primary.main, 0.15),
       shadow: '0 0 10px rgba(0, 89, 179, 0.4)',
       accent: 'primary.main',
     }
@@ -98,42 +99,42 @@ const getElementColors = (type: string, isSelected: boolean) => {
     case 'plant':
       return {
         border: 'success.main',
-        bg: (theme: any) => alpha(theme.palette.success.main, 0.08),
+        bg: (theme: Theme) => alpha(theme.palette.success.main, 0.08),
         shadow: 'none',
         accent: 'success.main',
       }
     case 'wall':
       return {
         border: '#475569',
-        bg: (theme: any) => theme.palette.mode === 'light' ? '#cbd5e1' : '#334155',
+        bg: (theme: Theme) => theme.palette.mode === 'light' ? '#cbd5e1' : '#334155',
         shadow: 'none',
         accent: '#475569',
       }
     case 'door':
       return {
         border: '#b45309',
-        bg: (theme: any) => theme.palette.mode === 'light' ? '#fef3c7' : '#78350f',
+        bg: (theme: Theme) => theme.palette.mode === 'light' ? '#fef3c7' : '#78350f',
         shadow: 'none',
         accent: '#b45309',
       }
     case 'projector':
       return {
         border: 'secondary.main',
-        bg: (theme: any) => alpha(theme.palette.secondary.main, 0.08),
+        bg: (theme: Theme) => alpha(theme.palette.secondary.main, 0.08),
         shadow: 'none',
         accent: 'secondary.main',
       }
     case 'chair':
       return {
         border: '#6b7280',
-        bg: (theme: any) => theme.palette.mode === 'light' ? '#f3f4f6' : '#1f2937',
+        bg: (theme: Theme) => theme.palette.mode === 'light' ? '#f3f4f6' : '#1f2937',
         shadow: 'none',
         accent: '#6b7280',
       }
     case 'table':
       return {
         border: 'info.main',
-        bg: (theme: any) => alpha(theme.palette.info.main, 0.08),
+        bg: (theme: Theme) => alpha(theme.palette.info.main, 0.08),
         shadow: 'none',
         accent: 'info.main',
       }
@@ -141,7 +142,7 @@ const getElementColors = (type: string, isSelected: boolean) => {
     default:
       return {
         border: '#00A88F',
-        bg: (_theme: any) => alpha('#00A88F', 0.08),
+        bg: () => alpha('#00A88F', 0.08),
         shadow: 'none',
         accent: '#00A88F',
       }
@@ -171,7 +172,7 @@ export function FloorsSection({
   const queryClient = useQueryClient()
 
   const saveLayoutMutation = useMutation({
-    mutationFn: (payload: { id: string; data: any }) => updateWorkspaceFloor(payload.id, payload.data),
+    mutationFn: (payload: { id: string; data: Parameters<typeof updateWorkspaceFloor>[1] }) => updateWorkspaceFloor(payload.id, payload.data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: workspaceQueryKey })
     },
@@ -442,7 +443,7 @@ function FloorBuilderDialog({ open, floor, onClose, onSave, isSaving }: FloorBui
     setSelectedIndex(null)
   }
 
-  const handleUpdateSelected = (field: keyof DeskZone, val: any) => {
+  const handleUpdateSelected = <K extends keyof DeskZone>(field: K, val: DeskZone[K]) => {
     if (selectedIndex === null) return
     setDesks((prev) => {
       const updated = [...prev]

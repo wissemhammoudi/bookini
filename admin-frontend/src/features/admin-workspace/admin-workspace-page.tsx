@@ -38,7 +38,7 @@ import {
   type RoleFilter,
   type SectionKey,
 } from '@/features/admin-workspace/admin-workspace-types'
-import { getErrorMessage } from '@/features/admin-workspace/admin-workspace-utils'
+import { getErrorMessage } from '@/features/admin-workspace/utils'
 import {
   DashboardSection,
   FloorsSection,

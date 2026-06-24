@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Request, File, UploadFile
+from fastapi import APIRouter, Depends, File, Request, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.responses import success_response
@@ -215,9 +215,11 @@ async def upload_avatar(
 ) -> dict[str, object]:
     if not file.content_type or not file.content_type.startswith("image/"):
         from fastapi import HTTPException
+
         raise HTTPException(status_code=400, detail="Uploaded file must be an image")
 
     import os
+
     file_ext = os.path.splitext(file.filename)[1] if file.filename else ".jpg"
     if not file_ext:
         file_ext = ".jpg"
@@ -225,11 +227,10 @@ async def upload_avatar(
 
     file_data = await file.read()
     from app.infrastructure.minio_client import MinioClient
+
     minio_client = MinioClient()
     minio_client.upload_file(
-        file_data=file_data,
-        object_name=object_name,
-        content_type=file.content_type
+        file_data=file_data, object_name=object_name, content_type=file.content_type
     )
 
     avatar_url = f"/api/v1/auth/uploads/{object_name}"
@@ -249,10 +250,12 @@ async def upload_file(
 ) -> dict[str, object]:
     if not file.content_type or not file.content_type.startswith("image/"):
         from fastapi import HTTPException
+
         raise HTTPException(status_code=400, detail="Uploaded file must be an image")
 
     import os
     import uuid
+
     file_ext = os.path.splitext(file.filename)[1] if file.filename else ".jpg"
     if not file_ext:
         file_ext = ".jpg"
@@ -260,11 +263,10 @@ async def upload_file(
 
     file_data = await file.read()
     from app.infrastructure.minio_client import MinioClient
+
     minio_client = MinioClient()
     minio_client.upload_file(
-        file_data=file_data,
-        object_name=object_name,
-        content_type=file.content_type
+        file_data=file_data, object_name=object_name, content_type=file.content_type
     )
 
     file_url = f"/api/v1/auth/uploads/{object_name}"
@@ -276,9 +278,11 @@ async def upload_file(
 
 @router.get("/uploads/{filename:path}")
 async def get_upload(filename: str):
-    from app.infrastructure.minio_client import MinioClient
-    from fastapi.responses import StreamingResponse
     import io
+
+    from fastapi.responses import StreamingResponse
+
+    from app.infrastructure.minio_client import MinioClient
 
     minio_client = MinioClient()
     try:
@@ -298,5 +302,5 @@ async def get_upload(filename: str):
         return StreamingResponse(io.BytesIO(file_bytes), media_type=content_type)
     except Exception:
         from fastapi import HTTPException
-        raise HTTPException(status_code=404, detail="File not found")
 
+        raise HTTPException(status_code=404, detail="File not found")

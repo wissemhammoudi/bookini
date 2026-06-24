@@ -18,6 +18,7 @@ class FloorRepository:
     async def get_by_id(self, floor_id: str) -> Floor | None:
         try:
             import uuid
+
             uuid.UUID(floor_id)
         except ValueError:
             return None
@@ -60,10 +61,13 @@ class FloorRepository:
     ) -> list[Floor]:
         try:
             import uuid
+
             uuid.UUID(admin_id)
         except ValueError:
             return []
-        statement: Select[tuple[Floor]] = select(Floor).where(Floor.admin_id == admin_id)
+        statement: Select[tuple[Floor]] = select(Floor).where(
+            Floor.admin_id == admin_id
+        )
 
         if not include_deleted:
             statement = statement.where(Floor.is_deleted.is_(False))

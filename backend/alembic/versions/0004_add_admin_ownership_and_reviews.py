@@ -9,8 +9,9 @@ Create Date: 2026-06-23 00:00:00
 from collections.abc import Sequence
 
 import sqlalchemy as sa
-from alembic import op
 from sqlalchemy.dialects import postgresql
+
+from alembic import op
 
 revision: str = "0004_admin_ownership_reviews"
 down_revision: str | None = "0003_add_avatar_url_to_user"
@@ -58,8 +59,12 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("admin_id", "user_id", name="uq_admin_rating_admin_user"),
     )
-    op.create_index(op.f("ix_admin_ratings_admin_id"), "admin_ratings", ["admin_id"], unique=False)
-    op.create_index(op.f("ix_admin_ratings_user_id"), "admin_ratings", ["user_id"], unique=False)
+    op.create_index(
+        op.f("ix_admin_ratings_admin_id"), "admin_ratings", ["admin_id"], unique=False
+    )
+    op.create_index(
+        op.f("ix_admin_ratings_user_id"), "admin_ratings", ["user_id"], unique=False
+    )
 
     op.create_table(
         "floor_reviews",
@@ -89,8 +94,12 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("floor_id", "user_id", name="uq_floor_review_floor_user"),
     )
-    op.create_index(op.f("ix_floor_reviews_floor_id"), "floor_reviews", ["floor_id"], unique=False)
-    op.create_index(op.f("ix_floor_reviews_user_id"), "floor_reviews", ["user_id"], unique=False)
+    op.create_index(
+        op.f("ix_floor_reviews_floor_id"), "floor_reviews", ["floor_id"], unique=False
+    )
+    op.create_index(
+        op.f("ix_floor_reviews_user_id"), "floor_reviews", ["user_id"], unique=False
+    )
 
 
 def downgrade() -> None:

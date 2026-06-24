@@ -1,19 +1,16 @@
 from datetime import datetime
-from fastapi import APIRouter, Depends, Query, HTTPException, status
+
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.responses import success_response
-from app.dependencies.rbac import require_roles
 from app.domain.enums import PartnershipRequestStatus
 from app.infrastructure.session import get_db_session
-from app.models.user import User
 from app.repositories.partnership_request_repository import PartnershipRequestRepository
+from app.schemas.admin_workspace import PartnershipRequestRecord
 from app.schemas.public_booking import (
     PartnershipRequestCreateRequest,
-    PartnershipRequestResponse,
-    PartnershipRequestUpdateRequest,
 )
-from app.schemas.admin_workspace import PartnershipRequestRecord
 from app.services.admin_workspace_state_store import AdminWorkspaceStateStore
 
 router = APIRouter(prefix="/partners", tags=["partners"])
@@ -25,9 +22,9 @@ async def create_partnership_request(
     session: AsyncSession = Depends(get_db_session),
 ) -> dict[str, object]:
     """Create a new partnership request (no auth required)"""
-    
+
     repository = PartnershipRequestRepository(session)
-    
+
     request_data = {
         "company_name": request.company_name,
         "contact_person": request.contact_person,
@@ -39,11 +36,12 @@ async def create_partnership_request(
         "status": PartnershipRequestStatus.PENDING,
         "metadata_payload": {"source": "web_form"},
     }
-    
+
     partnership = await repository.create(request_data)
     await session.commit()
-    
-    # Also push to the in-memory workspace state to make it visible in the admin frontend
+
+    # Also push to the in-memory workspace state to make it visible in the
+    # admin frontend
     state = AdminWorkspaceStateStore.get_state()
     record = PartnershipRequestRecord(
         id=str(partnership.id),
@@ -62,7 +60,7 @@ async def create_partnership_request(
         description="Submitted a new partnership request.",
         item_type="partnership",
     )
-    
+
     return success_response(
         message="Partnership request submitted successfully",
         data={
@@ -79,25 +77,26 @@ async def get_partnership_request(
     session: AsyncSession = Depends(get_db_session),
 ) -> dict[str, object]:
     """Get partnership request details (no auth required)"""
-    
+
     try:
         import uuid
+
         req_id = uuid.UUID(request_id)
     except ValueError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid request ID",
         )
-    
+
     repository = PartnershipRequestRepository(session)
     partnership = await repository.get_by_id(req_id)
-    
+
     if not partnership:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Partnership request not found",
         )
-    
+
     return success_response(
         message="Partnership request retrieved",
         data={

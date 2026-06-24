@@ -21,6 +21,7 @@ class ReservationRepository:
     async def get_by_id(self, reservation_id: str) -> Reservation | None:
         try:
             import uuid
+
             uuid.UUID(reservation_id)
         except ValueError:
             return None

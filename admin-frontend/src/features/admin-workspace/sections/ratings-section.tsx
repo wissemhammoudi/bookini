@@ -78,7 +78,7 @@ export const RatingsSection = () => {
     enabled: Boolean(selectedFloorId),
   })
 
-  const floorOptions = profileQuery.data?.spaces ?? []
+  const floorOptions = useMemo(() => profileQuery.data?.spaces ?? [], [profileQuery.data])
   const adminRatings = adminRatingsQuery.data?.items ?? []
   const canGoNextAdminRatings = adminRatings.length === adminRatingsLimit
   const floorReviews = floorReviewsQuery.data?.reviews ?? []

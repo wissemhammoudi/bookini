@@ -59,7 +59,7 @@ apiClient.interceptors.response.use(
               setStoredTokens(data.access_token, data.refresh_token)
               return data.access_token
             })
-            .catch((err) => {
+            .catch(() => {
               clearStoredTokens()
               return null
             })

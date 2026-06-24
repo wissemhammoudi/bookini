@@ -11,14 +11,15 @@ import {
   alpha,
 } from '@mui/material'
 import PeopleIcon from '@mui/icons-material/People'
+import type { PublicRoom, PublicFloor } from '@/lib/api'
 
 
 
 interface RoomCardProps {
-  room: any
+  room: PublicRoom
   isLight: boolean
   isSelected?: boolean
-  onBookNow: (room: any) => void
+  onBookNow: (room: PublicRoom) => void
   onViewAdmin?: (adminId: string) => void
   actionLabel?: string
 }
@@ -127,7 +128,7 @@ export const RoomCard = ({
                 Available Floors
               </Typography>
               <Stack direction="row" spacing={0.75} sx={{ flexWrap: 'wrap', gap: 0.5 }}>
-                {room.floors.map((floor: any) => (
+                {room.floors.map((floor: PublicFloor) => (
                   <Chip
                     key={floor.id}
                     label={`${floor.floor_name} (Lvl ${floor.floor_number})`}

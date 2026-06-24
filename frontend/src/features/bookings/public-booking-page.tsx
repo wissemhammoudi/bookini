@@ -52,7 +52,7 @@ export const PublicBookingPage = () => {
     queryKey: ['public-rooms-catalog'],
     queryFn: listPublicRooms,
   })
-  const rooms = roomsQuery.data ?? []
+  const rooms = useMemo(() => roomsQuery.data ?? [], [roomsQuery.data])
 
   const [search, setSearch] = useState('')
   const [capacityFilter, setCapacityFilter] = useState<'ALL' | 'SMALL' | 'MEDIUM' | 'LARGE'>('ALL')

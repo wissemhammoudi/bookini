@@ -72,7 +72,9 @@ def build_workspace_state() -> WorkspaceState:
             logo="https://images.unsplash.com/photo-1577412647305-991150c7d163?auto=format&fit=crop&w=200&q=80",
             cover_image="https://images.unsplash.com/photo-1524758631624-e2822e304c36?auto=format&fit=crop&w=1600&q=80",
             name="Oasis Studios",
-            description="Creative studios designed for production teams and content creators.",
+            description=(
+                "Creative studios designed for production teams and content creators."
+            ),
             address="9 Palm District, Sousse",
             contact_email="team@oasis-studios.com",
             contact_phone="+216 25 500 600",
@@ -176,7 +178,11 @@ def build_workspace_state() -> WorkspaceState:
                 "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800&q=80",
                 "https://images.unsplash.com/photo-1517502884422-41eaead166d4?auto=format&fit=crop&w=800&q=80",
             ],
-            features=["Interactive Floor Layout", "Reservation Zones", "Availability Calendar"],
+            features=[
+                "Interactive Floor Layout",
+                "Reservation Zones",
+                "Availability Calendar",
+            ],
             status="ACTIVE",
             created_date=now - timedelta(days=205),
         ),
@@ -191,7 +197,9 @@ def build_workspace_state() -> WorkspaceState:
             pricing=95.0,
             availability="Sun-Fri, 10:00-20:00",
             cover_image="https://images.unsplash.com/photo-1524758631624-e2822e304c36?auto=format&fit=crop&w=1200&q=80",
-            gallery=["https://images.unsplash.com/photo-1517502884422-41eaead166d4?auto=format&fit=crop&w=800&q=80"],
+            gallery=[
+                "https://images.unsplash.com/photo-1517502884422-41eaead166d4?auto=format&fit=crop&w=800&q=80"
+            ],
             features=["Gallery", "2D Floor Plan Generation"],
             status="SUSPENDED",
             created_date=now - timedelta(days=110),
@@ -205,7 +213,7 @@ def build_workspace_state() -> WorkspaceState:
             floor_number=0,
             capacity=50,
             description="Reception and collaborative lounge.",
-            blueprint_image='[{"name": "Reception Desk", "x": 50, "y": 50, "w": 120, "h": 60, "type": "desk", "rotation": 0, "isReservable": true}, {"name": "Projector Screen A", "x": 200, "y": 30, "w": 100, "h": 20, "type": "projector", "rotation": 0, "isReservable": false}, {"name": "Team Table 1", "x": 100, "y": 200, "w": 140, "h": 80, "type": "table", "rotation": 90, "isReservable": true}, {"name": "Lounge Plant 1", "x": 350, "y": 80, "w": 40, "h": 40, "type": "plant", "rotation": 0, "isReservable": false}, {"name": "Lounge Chair 1", "x": 350, "y": 140, "w": 40, "h": 40, "type": "chair", "rotation": 180, "isReservable": false}, {"name": "Partition Wall", "x": 20, "y": 320, "w": 200, "h": 20, "type": "wall", "rotation": 0, "isReservable": false}]',
+            blueprint_image='[{"name": "Reception Desk", "x": 50, "y": 50, "w": 120, "h": 60, "type": "desk", "rotation": 0, "isReservable": true}, {"name": "Projector Screen A", "x": 200, "y": 30, "w": 100, "h": 20, "type": "projector", "rotation": 0, "isReservable": false}, {"name": "Team Table 1", "x": 100, "y": 200, "w": 140, "h": 80, "type": "table", "rotation": 90, "isReservable": true}, {"name": "Lounge Plant 1", "x": 350, "y": 80, "w": 40, "h": 40, "type": "plant", "rotation": 0, "isReservable": false}, {"name": "Lounge Chair 1", "x": 350, "y": 140, "w": 40, "h": 40, "type": "chair", "rotation": 180, "isReservable": false}, {"name": "Partition Wall", "x": 20, "y": 320, "w": 200, "h": 20, "type": "wall", "rotation": 0, "isReservable": false}]',  # noqa: E501
             reservation_areas=["Reception Desk", "Team Table 1"],
             status="ACTIVE",
             created_date=now - timedelta(days=275),
@@ -305,7 +313,9 @@ def build_workspace_state() -> WorkspaceState:
             contact_person="Nour Haddad",
             email="nour@northstar.com",
             phone="+216 27 111 999",
-            business_description="We operate serviced offices and want to list 4 floors in Tunis.",
+            business_description=(
+                "We operate serviced offices and want to list 4 floors in Tunis."
+            ),
             requested_date=now - timedelta(days=1),
             status="PENDING",
         ),
@@ -315,7 +325,9 @@ def build_workspace_state() -> WorkspaceState:
             contact_person="Adel Mabrouk",
             email="adel@cedarevents.com",
             phone="+216 28 202 303",
-            business_description="Boutique event spaces across Sfax for workshops and training.",
+            business_description=(
+                "Boutique event spaces across Sfax for workshops and training."
+            ),
             requested_date=now - timedelta(days=6),
             status="APPROVED",
             generated_credentials={

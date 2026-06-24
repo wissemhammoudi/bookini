@@ -130,4 +130,3 @@ class AuthService:
         await self._user_repository._session.commit()
         await self._user_repository._session.refresh(user)
         return user
-

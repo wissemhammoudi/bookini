@@ -8,7 +8,9 @@ from app.services.admin_workspace_state_store import AdminWorkspaceStateStore
 
 class AdminWorkspaceRequestService:
     @staticmethod
-    def update_contact_status(request_id: str, status_value: str) -> ContactRequestRecord:
+    def update_contact_status(
+        request_id: str, status_value: str
+    ) -> ContactRequestRecord:
         state = AdminWorkspaceStateStore.get_state()
         for index, contact in enumerate(state.contact_requests):
             if contact.id == request_id:
@@ -20,15 +22,22 @@ class AdminWorkspaceRequestService:
                     "contact",
                 )
                 return updated
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Contact request not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Contact request not found"
+        )
 
     @staticmethod
     def delete_contact(request_id: str) -> None:
         state = AdminWorkspaceStateStore.get_state()
         previous = len(state.contact_requests)
-        state.contact_requests = [item for item in state.contact_requests if item.id != request_id]
+        state.contact_requests = [
+            item for item in state.contact_requests if item.id != request_id
+        ]
         if len(state.contact_requests) == previous:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Contact request not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Contact request not found",
+            )
         AdminWorkspaceStateStore.record_activity(
             "Contact request deleted",
             f"Request {request_id} was removed.",
@@ -40,7 +49,8 @@ class AdminWorkspaceRequestService:
         request_id: str,
         status_value: str,
     ) -> PartnershipRequestRecord:
-        from datetime import datetime, UTC
+        from datetime import UTC, datetime
+
         state = AdminWorkspaceStateStore.get_state()
         for index, request in enumerate(state.partnership_requests):
             if request.id == request_id:
@@ -48,17 +58,22 @@ class AdminWorkspaceRequestService:
                 if status_value == "APPROVED" and request.status != "APPROVED":
                     email_prefix = request.company_name.lower().replace(" ", "")[:12]
                     generated_email = f"admin@{email_prefix}.com"
-                    company_clean = request.company_name.split()[0] if request.company_name.split() else "partner"
+                    company_clean = (
+                        request.company_name.split()[0]
+                        if request.company_name.split()
+                        else "partner"
+                    )
                     temp_password = f"{company_clean}2026!"
                     generated_credentials = {
                         "email": generated_email,
                         "temporary_password": temp_password,
                     }
-                    
+
                     # Create simulated organization
                     org_id = f"org-{email_prefix}"
                     if not any(org.id == org_id for org in state.organizations):
                         from app.schemas.admin_workspace import OrganizationRecord
+
                         new_org = OrganizationRecord(
                             id=org_id,
                             logo=None,
@@ -74,11 +89,12 @@ class AdminWorkspaceRequestService:
                             created_date=datetime.now(UTC),
                         )
                         state.organizations.append(new_org)
-                    
+
                     # Create simulated admin user
                     user_id = f"user-{email_prefix}"
                     if not any(user.id == user_id for user in state.users):
                         from app.schemas.admin_workspace import UserRecord
+
                         new_user = UserRecord(
                             id=user_id,
                             profile_image=None,
@@ -110,4 +126,7 @@ class AdminWorkspaceRequestService:
                     "partnership",
                 )
                 return updated
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Partnership request not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Partnership request not found",
+        )

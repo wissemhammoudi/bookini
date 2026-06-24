@@ -15,10 +15,16 @@ from app.schemas.admin_workspace import (
     UserUpsertRequest,
     WorkspaceResponse,
 )
-from app.services.admin_workspace_dashboard_service import AdminWorkspaceDashboardService
-from app.services.admin_workspace_organization_service import AdminWorkspaceOrganizationService
+from app.services.admin_workspace_dashboard_service import (
+    AdminWorkspaceDashboardService,
+)
+from app.services.admin_workspace_organization_service import (
+    AdminWorkspaceOrganizationService,
+)
 from app.services.admin_workspace_request_service import AdminWorkspaceRequestService
-from app.services.admin_workspace_reservation_service import AdminWorkspaceReservationService
+from app.services.admin_workspace_reservation_service import (
+    AdminWorkspaceReservationService,
+)
 from app.services.admin_workspace_user_service import AdminWorkspaceUserService
 
 
@@ -52,7 +58,9 @@ class AdminWorkspaceService:
         organization_id: str,
         payload: OrganizationUpsertRequest,
     ) -> OrganizationRecord:
-        return AdminWorkspaceOrganizationService.update_organization(organization_id, payload)
+        return AdminWorkspaceOrganizationService.update_organization(
+            organization_id, payload
+        )
 
     @staticmethod
     def delete_organization(organization_id: str) -> None:
@@ -107,7 +115,9 @@ class AdminWorkspaceService:
         request_id: str,
         status_value: str,
     ) -> ContactRequestRecord:
-        return AdminWorkspaceRequestService.update_contact_status(request_id, status_value)
+        return AdminWorkspaceRequestService.update_contact_status(
+            request_id, status_value
+        )
 
     @staticmethod
     def delete_contact(request_id: str) -> None:
@@ -118,7 +128,9 @@ class AdminWorkspaceService:
         request_id: str,
         status_value: str,
     ) -> PartnershipRequestRecord:
-        return AdminWorkspaceRequestService.update_partnership_status(request_id, status_value)
+        return AdminWorkspaceRequestService.update_partnership_status(
+            request_id, status_value
+        )
 
     @staticmethod
     def update_settings(payload: SettingsUpdateRequest) -> SettingsRecord:

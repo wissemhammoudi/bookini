@@ -1,7 +1,10 @@
 from fastapi import APIRouter, Response
 
 from app.core.responses import success_response
-from app.presentation.admin_workspace_common import AdminAccessUser, SuperAdminAccessUser
+from app.presentation.admin_workspace_common import (
+    AdminAccessUser,
+    SuperAdminAccessUser,
+)
 from app.schemas.admin_workspace import (
     FloorUpsertRequest,
     OrganizationUpsertRequest,
@@ -10,8 +13,12 @@ from app.schemas.admin_workspace import (
     SettingsUpdateRequest,
     UserUpsertRequest,
 )
-from app.services.admin_workspace_organization_service import AdminWorkspaceOrganizationService
-from app.services.admin_workspace_reservation_service import AdminWorkspaceReservationService
+from app.services.admin_workspace_organization_service import (
+    AdminWorkspaceOrganizationService,
+)
+from app.services.admin_workspace_reservation_service import (
+    AdminWorkspaceReservationService,
+)
 from app.services.admin_workspace_user_service import AdminWorkspaceUserService
 
 router = APIRouter(tags=["admin"])
@@ -43,7 +50,9 @@ async def update_user_status(
     _: SuperAdminAccessUser,
 ) -> dict[str, object]:
     user = AdminWorkspaceUserService.set_user_status(user_id, status_value.upper())
-    return success_response(message="User status updated", data=user.model_dump(mode="json"))
+    return success_response(
+        message="User status updated", data=user.model_dump(mode="json")
+    )
 
 
 @router.delete("/workspace/users/{user_id}", status_code=204)
@@ -73,7 +82,9 @@ async def update_organization(
     payload: OrganizationUpsertRequest,
     _: AdminAccessUser,
 ) -> dict[str, object]:
-    organization = AdminWorkspaceOrganizationService.update_organization(organization_id, payload)
+    organization = AdminWorkspaceOrganizationService.update_organization(
+        organization_id, payload
+    )
     return success_response(
         message="Organization updated",
         data=organization.model_dump(mode="json"),
@@ -183,4 +194,6 @@ async def update_settings(
     _: AdminAccessUser,
 ) -> dict[str, object]:
     settings = AdminWorkspaceOrganizationService.update_settings(payload)
-    return success_response(message="Settings updated", data=settings.model_dump(mode="json"))
+    return success_response(
+        message="Settings updated", data=settings.model_dump(mode="json")
+    )

@@ -9,7 +9,6 @@ from app.domain.enums import UserRole
 from app.models.user import User
 from app.repositories.user_repository import UserRepository
 
-
 logger = get_logger(__name__)
 
 
@@ -73,8 +72,18 @@ async def seed_default_users(
         return
 
     default_users: Sequence[tuple[str, str, str, UserRole]] = (
-        ("Default User", settings.seed_user_email, settings.seed_user_password, UserRole.USER),
-        ("Default Admin", settings.seed_admin_email, settings.seed_admin_password, UserRole.ADMIN),
+        (
+            "Default User",
+            settings.seed_user_email,
+            settings.seed_user_password,
+            UserRole.USER,
+        ),
+        (
+            "Default Admin",
+            settings.seed_admin_email,
+            settings.seed_admin_password,
+            UserRole.ADMIN,
+        ),
     )
 
     async with session_factory() as session:

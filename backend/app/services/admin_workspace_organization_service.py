@@ -49,26 +49,45 @@ class AdminWorkspaceOrganizationService:
                     "organization",
                 )
                 return updated
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Organization not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Organization not found"
+        )
 
     @staticmethod
     def delete_organization(organization_id: str) -> None:
         state = AdminWorkspaceStateStore.get_state()
         previous = len(state.organizations)
-        state.organizations = [item for item in state.organizations if item.id != organization_id]
+        state.organizations = [
+            item for item in state.organizations if item.id != organization_id
+        ]
         for user in state.users:
             if user.organization_ids and organization_id in user.organization_ids:
-                user.organization_ids = [org_id for org_id in user.organization_ids if org_id != organization_id]
+                user.organization_ids = [
+                    org_id
+                    for org_id in user.organization_ids
+                    if org_id != organization_id
+                ]
         state.users = [
-            user for user in state.users
-            if not user.organization_ids or len(user.organization_ids) > 0 or user.role != "ADMIN"
+            user
+            for user in state.users
+            if not user.organization_ids
+            or len(user.organization_ids) > 0
+            or user.role != "ADMIN"
         ]
-        place_ids = {item.id for item in state.places if item.organization_id == organization_id}
-        state.places = [item for item in state.places if item.organization_id != organization_id]
+        place_ids = {
+            item.id for item in state.places if item.organization_id == organization_id
+        }
+        state.places = [
+            item for item in state.places if item.organization_id != organization_id
+        ]
         state.floors = [item for item in state.floors if item.place_id not in place_ids]
-        state.reservations = [item for item in state.reservations if item.place_id not in place_ids]
+        state.reservations = [
+            item for item in state.reservations if item.place_id not in place_ids
+        ]
         if len(state.organizations) == previous:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Organization not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Organization not found"
+            )
         AdminWorkspaceStateStore.record_activity(
             "Organization deleted",
             f"Organization {organization_id} was removed.",
@@ -91,7 +110,9 @@ class AdminWorkspaceOrganizationService:
                     "organization",
                 )
                 return updated
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Organization not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Organization not found"
+        )
 
     @staticmethod
     def create_place(payload: PlaceUpsertRequest) -> PlaceRecord:
@@ -102,7 +123,9 @@ class AdminWorkspaceOrganizationService:
             **payload.model_dump(),
         )
         state.places.insert(0, place)
-        AdminWorkspaceStateStore.record_activity(place.name, "Place created.", "organization")
+        AdminWorkspaceStateStore.record_activity(
+            place.name, "Place created.", "organization"
+        )
         return place
 
     @staticmethod
@@ -112,9 +135,13 @@ class AdminWorkspaceOrganizationService:
             if place.id == place_id:
                 updated = place.model_copy(update=payload.model_dump())
                 state.places[index] = updated
-                AdminWorkspaceStateStore.record_activity(updated.name, "Place updated.", "organization")
+                AdminWorkspaceStateStore.record_activity(
+                    updated.name, "Place updated.", "organization"
+                )
                 return updated
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Place not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Place not found"
+        )
 
     @staticmethod
     def delete_place(place_id: str) -> None:
@@ -123,9 +150,13 @@ class AdminWorkspaceOrganizationService:
         state.places = [item for item in state.places if item.id != place_id]
         floor_ids = {item.id for item in state.floors if item.place_id == place_id}
         state.floors = [item for item in state.floors if item.place_id != place_id]
-        state.reservations = [item for item in state.reservations if item.floor_id not in floor_ids]
+        state.reservations = [
+            item for item in state.reservations if item.floor_id not in floor_ids
+        ]
         if len(state.places) == previous:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Place not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Place not found"
+            )
         AdminWorkspaceStateStore.record_activity(
             "Place deleted",
             f"Place {place_id} was removed.",
@@ -141,7 +172,9 @@ class AdminWorkspaceOrganizationService:
             **payload.model_dump(),
         )
         state.floors.insert(0, floor)
-        AdminWorkspaceStateStore.record_activity(floor.floor_name, "Floor created.", "organization")
+        AdminWorkspaceStateStore.record_activity(
+            floor.floor_name, "Floor created.", "organization"
+        )
         return floor
 
     @staticmethod
@@ -151,18 +184,26 @@ class AdminWorkspaceOrganizationService:
             if floor.id == floor_id:
                 updated = floor.model_copy(update=payload.model_dump())
                 state.floors[index] = updated
-                AdminWorkspaceStateStore.record_activity(updated.floor_name, "Floor updated.", "organization")
+                AdminWorkspaceStateStore.record_activity(
+                    updated.floor_name, "Floor updated.", "organization"
+                )
                 return updated
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Floor not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Floor not found"
+        )
 
     @staticmethod
     def delete_floor(floor_id: str) -> None:
         state = AdminWorkspaceStateStore.get_state()
         previous = len(state.floors)
         state.floors = [item for item in state.floors if item.id != floor_id]
-        state.reservations = [item for item in state.reservations if item.floor_id != floor_id]
+        state.reservations = [
+            item for item in state.reservations if item.floor_id != floor_id
+        ]
         if len(state.floors) == previous:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Floor not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Floor not found"
+            )
         AdminWorkspaceStateStore.record_activity(
             "Floor deleted",
             f"Floor {floor_id} was removed.",

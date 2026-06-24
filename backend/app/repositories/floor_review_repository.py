@@ -39,8 +39,10 @@ class FloorReviewRepository:
         if max_rating is not None:
             statement = statement.where(FloorReview.rating <= max_rating)
 
-        statement = statement.order_by(FloorReview.created_at.desc()).offset(offset).limit(
-            limit
+        statement = (
+            statement.order_by(FloorReview.created_at.desc())
+            .offset(offset)
+            .limit(limit)
         )
         result = await self._session.execute(statement)
         return list(result.scalars().all())

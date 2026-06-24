@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import select, desc
+from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.enums import PartnershipRequestStatus
@@ -20,7 +20,9 @@ class PartnershipRequestRepository:
     async def get_by_id(self, request_id: uuid.UUID) -> PartnershipRequest | None:
         return await self.session.get(PartnershipRequest, request_id)
 
-    async def list_all(self, skip: int = 0, limit: int = 50) -> list[PartnershipRequest]:
+    async def list_all(
+        self, skip: int = 0, limit: int = 50
+    ) -> list[PartnershipRequest]:
         stmt = (
             select(PartnershipRequest)
             .order_by(desc(PartnershipRequest.created_at))

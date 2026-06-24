@@ -1,7 +1,9 @@
 import logging
 from io import BytesIO
+
 import boto3
 from botocore.exceptions import ClientError
+
 from app.core.config import get_settings
 
 logger = logging.getLogger(__name__)
@@ -34,9 +36,11 @@ class MinioClient:
                     self.s3.create_bucket(Bucket=self.bucket_name)
                     logger.info(f"Created MinIO bucket '{self.bucket_name}'.")
 
-                    # Optional: Set bucket policy to allow anonymous read (since they are public profiles/avatars)
+                    # Optional: Set bucket policy to allow anonymous read
+                    # (since they are public profiles/avatars)
                     # We are proxying, but this is a nice fallback.
                     import json
+
                     policy = {
                         "Version": "2012-10-17",
                         "Statement": [
@@ -45,13 +49,12 @@ class MinioClient:
                                 "Effect": "Allow",
                                 "Principal": "*",
                                 "Action": ["s3:GetObject"],
-                                "Resource": [f"arn:aws:s3:::{self.bucket_name}/*"]
+                                "Resource": [f"arn:aws:s3:::{self.bucket_name}/*"],
                             }
-                        ]
+                        ],
                     }
                     self.s3.put_bucket_policy(
-                        Bucket=self.bucket_name,
-                        Policy=json.dumps(policy)
+                        Bucket=self.bucket_name, Policy=json.dumps(policy)
                     )
                 except Exception as create_err:
                     logger.error(f"Failed to create MinIO bucket: {create_err}")
@@ -60,7 +63,9 @@ class MinioClient:
                 logger.error(f"Failed checking MinIO bucket: {e}")
                 raise e
 
-    def upload_file(self, file_data: bytes, object_name: str, content_type: str) -> None:
+    def upload_file(
+        self, file_data: bytes, object_name: str, content_type: str
+    ) -> None:
         try:
             self.s3.put_object(
                 Bucket=self.bucket_name,

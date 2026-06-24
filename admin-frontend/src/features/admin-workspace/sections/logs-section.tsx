@@ -38,7 +38,7 @@ export const LogsSection = () => {
     refetchInterval: 5000, // Live auto-refresh logs every 5 seconds
   })
 
-  const logs = logsQuery.data ?? []
+  const logs = useMemo(() => logsQuery.data ?? [], [logsQuery.data])
 
   // Filter logs
   const filteredLogs = useMemo(() => {

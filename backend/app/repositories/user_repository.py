@@ -17,6 +17,7 @@ class UserRepository:
     async def get_by_id(self, user_id: str) -> User | None:
         try:
             import uuid
+
             uuid.UUID(user_id)
         except ValueError:
             return None
