@@ -106,9 +106,31 @@ npm run test
 
 GitHub Actions workflow:
 
-- Backend lint + test + pip-audit
-- User Frontend lint + vitest + build + npm audit
-- Admin Frontend lint + vitest + build
+- Pull Request to `master`: quality gates only (lint, tests, dependency audits)
+- Push to `master`: quality gates -> Docker image build/push (Docker Hub) -> image vulnerability scan -> staging deploy -> smoke tests
+- Production deploy: runs only after staging succeeds and requires GitHub Environment approval
+
+The production deployment uses image tags based on commit SHA and pulls images on the VPS instead of rebuilding in-place.
+
+Required GitHub Environment secrets (`staging` and `production`):
+
+- `DOCKERHUB_USERNAME`
+- `DOCKERHUB_TOKEN`
+- `SSH_HOST`
+- `SSH_USER`
+- `SSH_PRIVATE_KEY`
+- `SSH_PORT`
+- `SSH_TARGET_DIR`
+- `DOMAIN_NAME`
+- `POSTGRES_DB`
+- `POSTGRES_USER`
+- `POSTGRES_PASSWORD`
+- `SECRET_KEY`
+- `GRAFANA_ADMIN_USER`
+- `GRAFANA_ADMIN_PASSWORD`
+- `FRONTEND_URL`
+- `ADMIN_FRONTEND_URL`
+- `API_HEALTH_URL`
 
 See:
 
