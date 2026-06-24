@@ -91,35 +91,6 @@ export type PublicBookingCalendarSlot = {
   status: string
 }
 
-export type PartnershipRequestCreatePayload = {
-  company_name: string
-  contact_person: string
-  contact_email: string
-  contact_phone: string
-  number_of_floors: number
-  expected_users: number
-  description: string
-}
-
-export type PartnershipRequestCreateResponse = {
-  id: string
-  company_name: string
-  status: string
-}
-
-export type PartnershipRequestDetails = {
-  id: string
-  company_name: string
-  contact_person: string
-  contact_email: string
-  contact_phone: string
-  number_of_floors: number
-  expected_users: number
-  description: string
-  status: string
-  created_at: string
-}
-
 export type ContactRequestCreatePayload = {
   full_name: string
   email: string
@@ -172,25 +143,10 @@ export const listPublicBookingCalendarSlots = async (params: {
   return response.data.data
 }
 
-export const createPartnershipRequest = async (payload: PartnershipRequestCreatePayload) => {
-  const response = await apiClient.post<ApiResponse<PartnershipRequestCreateResponse>>(
-    '/partners/request',
-    payload,
-  )
-  return response.data.data
-}
-
 export const createContactRequest = async (payload: ContactRequestCreatePayload) => {
   const response = await apiClient.post<ApiResponse<ContactRequestCreateResponse>>(
     '/public/contact-requests',
     payload,
-  )
-  return response.data.data
-}
-
-export const getPartnershipRequest = async (requestId: string) => {
-  const response = await apiClient.get<ApiResponse<PartnershipRequestDetails>>(
-    `/partners/request/${requestId}`,
   )
   return response.data.data
 }

@@ -6,6 +6,9 @@ import {
   Box,
   Button,
   Divider,
+  Dialog,
+  DialogContent,
+  DialogTitle,
   Drawer,
   IconButton,
   List,
@@ -67,13 +70,13 @@ import {
   updateWorkspaceFloor,
   updateWorkspaceOrganization,
   updateWorkspaceOrganizationStatus,
-  updateWorkspacePartnershipRequest,
   updateWorkspacePlace,
   updateWorkspaceReservation,
   updateWorkspaceSettings,
   updateWorkspaceUser,
   updateWorkspaceUserStatus,
 } from '@/lib/api'
+import type { ContactRequestRecord } from '@/lib/api-types'
 import { LoadingState } from '@/features/admin-workspace/admin-workspace-utils'
 
 export const AdminWorkspacePage = () => {
@@ -88,6 +91,7 @@ export const AdminWorkspacePage = () => {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [feedback, setFeedback] = useState<FeedbackState | null>(null)
   const [dialogState, setDialogState] = useState<DialogState>(null)
+  const [previewRequest, setPreviewRequest] = useState<ContactRequestRecord | null>(null)
   const [search, setSearch] = useState('')
   const [roleFilter, setRoleFilter] = useState<RoleFilter>('ALL')
   const [reservationFilter, setReservationFilter] = useState<ReservationFilter>('ALL')
@@ -214,7 +218,6 @@ export const AdminWorkspacePage = () => {
   }, [deferredSearch, reservationFilter, workspace])
 
   const requests = workspace?.contact_requests ?? []
-  const partnerships = workspace?.partnership_requests ?? []
 
   const openConfirm = (
     title: string,
@@ -485,8 +488,7 @@ export const AdminWorkspacePage = () => {
         {currentSection === 'requests' ? (
           <RequestsSection
             contactRequests={requests}
-            partnerRequests={partnerships}
-            onPreviewMessage={showSuccess}
+            onPreviewMessage={(request) => setPreviewRequest(request)}
             onMarkProcessed={(request) => openConfirm(
               'Mark as processed',
               `Mark ${request.subject} as processed.`,
@@ -498,19 +500,6 @@ export const AdminWorkspacePage = () => {
               'This removes the request from the demo queue.',
               'Delete request',
               () => handleMutation(() => deleteWorkspaceContact(request.id), 'Contact request deleted'),
-              'error',
-            )}
-            onApprovePartnership={(request) => openConfirm(
-              'Approve partnership request',
-              'Approving will generate organization admin credentials in the demo backend.',
-              'Approve request',
-              () => handleMutation(() => updateWorkspacePartnershipRequest(request.id, 'APPROVED'), 'Partnership request approved'),
-            )}
-            onRejectPartnership={(request) => openConfirm(
-              'Reject partnership request',
-              'Reject this partnership application and keep it in the audit trail.',
-              'Reject request',
-              () => handleMutation(() => updateWorkspacePartnershipRequest(request.id, 'REJECTED'), 'Partnership request rejected'),
               'error',
             )}
           />
@@ -631,6 +620,64 @@ export const AdminWorkspacePage = () => {
           onConfirm={dialogState.onConfirm}
         />
       ) : null}
+
+      <Dialog
+        open={Boolean(previewRequest)}
+        onClose={() => setPreviewRequest(null)}
+        maxWidth="sm"
+        fullWidth
+        sx={{
+          '& .MuiDialog-paper': {
+            borderRadius: 4,
+            border: '1px solid',
+            borderColor: 'divider',
+            background: mode === 'light'
+              ? 'linear-gradient(180deg, #FFFFFF 0%, #F7FAFF 100%)'
+              : 'linear-gradient(180deg, #101D32 0%, #0C1525 100%)',
+          },
+        }}
+      >
+        <DialogTitle sx={{ pb: 1.25 }}>
+          <Stack spacing={0.75}>
+            <Typography variant="overline" color="primary.main" sx={{ letterSpacing: '0.12em', fontWeight: 800 }}>
+              Message Preview
+            </Typography>
+            <Typography variant="h5" sx={{ fontWeight: 900 }}>
+              {previewRequest?.subject}
+            </Typography>
+            <Typography color="text.secondary">
+              {previewRequest?.full_name} · {previewRequest?.email}
+            </Typography>
+          </Stack>
+        </DialogTitle>
+        <DialogContent sx={{ pt: 1, pb: 3 }}>
+          <Paper
+            variant="outlined"
+            sx={{
+              p: 2.5,
+              borderRadius: 3,
+              backgroundColor: mode === 'light' ? 'rgba(0, 89, 179, 0.03)' : 'rgba(66, 165, 245, 0.08)',
+            }}
+          >
+            <Typography sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.75 }}>
+              {previewRequest?.message}
+            </Typography>
+          </Paper>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ mt: 2, justifyContent: 'space-between' }}>
+            <Typography variant="body2" color="text.secondary">
+              Phone: {previewRequest?.phone || 'Not provided'}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Received {previewRequest ? new Date(previewRequest.date).toLocaleString() : ''}
+            </Typography>
+          </Stack>
+          <Stack direction="row" spacing={1} sx={{ mt: 2.5, justifyContent: 'flex-end' }}>
+            <Button variant="outlined" onClick={() => setPreviewRequest(null)}>
+              Close
+            </Button>
+          </Stack>
+        </DialogContent>
+      </Dialog>
 
       <Snackbar open={Boolean(feedback)} autoHideDuration={3500} onClose={() => setFeedback(null)} anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}>
         {feedback ? <Alert severity={feedback.severity} onClose={() => setFeedback(null)}>{feedback.message}</Alert> : <span />}

@@ -1,4 +1,4 @@
-import { Box, Button, Container, Stack, Tabs, Tab, Paper, TextField, Typography, alpha, Alert, Grid, Avatar } from '@mui/material'
+import { Box, Button, Container, Stack, Paper, TextField, Typography, alpha, Alert, Grid, Avatar } from '@mui/material'
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import SendIcon from '@mui/icons-material/Send'
@@ -9,7 +9,7 @@ import { useColorMode } from '@/app/use-color-mode'
 import { PublicNavbar } from './components/public-navbar'
 import { PublicFooter } from './components/public-footer'
 import { PublicPageHeader } from './components/public-page-header'
-import { createContactRequest, createPartnershipRequest } from '@/lib/api'
+import { createContactRequest } from '@/lib/api'
 
 /**
  * Contact Page
@@ -18,44 +18,23 @@ import { createContactRequest, createPartnershipRequest } from '@/lib/api'
 export const ContactPage = () => {
   const { mode } = useColorMode()
   const isLight = mode === 'light'
-  const [tab, setTab] = useState(0)
   const [formData, setFormData] = useState({
     name: '',
-    contactPerson: '',
     email: '',
     phone: '',
     subject: '',
     message: '',
-    floors: '1',
-    expectedUsers: '10',
   })
   const [submittedMessage, setSubmittedMessage] = useState<string | null>(null)
   const [submitError, setSubmitError] = useState<string | null>(null)
 
   const contactMutation = useMutation({ mutationFn: createContactRequest })
-  const partnershipMutation = useMutation({ mutationFn: createPartnershipRequest })
-
-  const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
-    setTab(newValue)
-    setFormData({
-      name: '',
-      contactPerson: '',
-      email: '',
-      phone: '',
-      subject: '',
-      message: '',
-      floors: '1',
-      expectedUsers: '10',
-    })
-    setSubmittedMessage(null)
-    setSubmitError(null)
-  }
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
-  const isSubmitting = tab === 0 ? contactMutation.isPending : partnershipMutation.isPending
+  const isSubmitting = contactMutation.isPending
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -63,37 +42,21 @@ export const ContactPage = () => {
     setSubmitError(null)
 
     try {
-      if (tab === 0) {
-        await contactMutation.mutateAsync({
-          full_name: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          subject: formData.subject || 'General inquiry',
-          message: formData.message,
-        })
-        setSubmittedMessage('Thank you! Your contact request was submitted successfully.')
-      } else {
-        await partnershipMutation.mutateAsync({
-          company_name: formData.name,
-          contact_person: formData.contactPerson || formData.name,
-          contact_email: formData.email,
-          contact_phone: formData.phone,
-          number_of_floors: Number.parseInt(formData.floors, 10) || 1,
-          expected_users: Number.parseInt(formData.expectedUsers, 10) || 1,
-          description: formData.message,
-        })
-        setSubmittedMessage('Partnership request sent. Our team will contact you shortly.')
-      }
+      await contactMutation.mutateAsync({
+        full_name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        subject: formData.subject || 'General inquiry',
+        message: formData.message,
+      })
+      setSubmittedMessage('Thank you! Your contact request was submitted successfully.')
 
       setFormData({
         name: '',
-        contactPerson: '',
         email: '',
         phone: '',
         subject: '',
         message: '',
-        floors: '1',
-        expectedUsers: '10',
       })
     } catch {
       setSubmitError('Could not submit the form right now. Please try again in a moment.')
@@ -125,11 +88,11 @@ export const ContactPage = () => {
                 WebkitTextFillColor: 'transparent',
               }}
             >
-              Partnership Requests?
+              Need Help?
             </Box>
           </>
         }
-        description="Contact our team and we will help you with reservations, onboarding, or business collaboration."
+        description="Contact our team and we will help you with reservations, onboarding, or general support inquiries."
       />
 
       <Box sx={{ py: { xs: 6, md: 10 } }}>
@@ -233,18 +196,11 @@ export const ContactPage = () => {
                     boxShadow: 'none',
                   }}
                 >
-                  <Tabs
-                    value={tab}
-                    onChange={handleTabChange}
-                    sx={{
-                      borderBottom: '1px solid',
-                      borderColor: 'divider',
-                      px: 2,
-                    }}
-                  >
-                    <Tab label="Contact Us" sx={{ fontWeight: 700 }} />
-                    <Tab label="Become Partner" sx={{ fontWeight: 700 }} />
-                  </Tabs>
+                  <Box sx={{ borderBottom: '1px solid', borderColor: 'divider', px: 4, py: 2 }}>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
+                      Send Us a Message
+                    </Typography>
+                  </Box>
 
                   <form onSubmit={handleSubmit}>
                     <Box sx={{ p: 4 }}>
@@ -262,24 +218,13 @@ export const ContactPage = () => {
                         ) : null}
 
                         <TextField
-                          label={tab === 0 ? 'Full Name' : 'Company Name'}
+                          label="Full Name"
                           value={formData.name}
                           onChange={(e) => handleInputChange('name', e.target.value)}
                           fullWidth
                           required
                           size="small"
                         />
-
-                        {tab === 1 ? (
-                          <TextField
-                            label="Contact Person"
-                            value={formData.contactPerson}
-                            onChange={(e) => handleInputChange('contactPerson', e.target.value)}
-                            fullWidth
-                            required
-                            size="small"
-                          />
-                        ) : null}
 
                         <TextField
                           label="Email"
@@ -300,56 +245,25 @@ export const ContactPage = () => {
                           size="small"
                         />
 
-                        {tab === 0 ? (
-                          <TextField
-                            label="Subject"
-                            value={formData.subject}
-                            onChange={(e) => handleInputChange('subject', e.target.value)}
-                            fullWidth
-                            required
-                            size="small"
-                          />
-                        ) : null}
-
-                        {tab === 1 ? (
-                          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                            <TextField
-                              label="Number of Floors"
-                              type="number"
-                              value={formData.floors}
-                              onChange={(e) => handleInputChange('floors', e.target.value)}
-                              fullWidth
-                              required
-                              size="small"
-                              slotProps={{ htmlInput: { min: 1 } }}
-                            />
-                            <TextField
-                              label="Expected Users"
-                              type="number"
-                              value={formData.expectedUsers}
-                              onChange={(e) => handleInputChange('expectedUsers', e.target.value)}
-                              fullWidth
-                              required
-                              size="small"
-                              slotProps={{ htmlInput: { min: 1 } }}
-                            />
-                          </Stack>
-                        ) : null}
+                        <TextField
+                          label="Subject"
+                          value={formData.subject}
+                          onChange={(e) => handleInputChange('subject', e.target.value)}
+                          fullWidth
+                          required
+                          size="small"
+                        />
 
                         <TextField
                           label="Message"
                           multiline
-                          minRows={tab === 0 ? 5 : 4}
+                          minRows={5}
                           value={formData.message}
                           onChange={(e) => handleInputChange('message', e.target.value)}
                           fullWidth
                           required
                           size="small"
-                          placeholder={
-                            tab === 0
-                              ? "Tell us what you'd like to discuss..."
-                              : "Tell us about your business and why you'd like to partner with us..."
-                          }
+                          placeholder="Tell us what you'd like to discuss..."
                         />
 
                         <Button

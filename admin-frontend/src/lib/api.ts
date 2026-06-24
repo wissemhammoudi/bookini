@@ -464,15 +464,6 @@ export const deleteWorkspaceContact = async (requestId: string) => {
   await apiClient.delete(`/admin/workspace/contact-requests/${requestId}`)
 }
 
-export const updateWorkspacePartnershipRequest = async (
-  requestId: string,
-  statusValue: 'APPROVED' | 'REJECTED',
-) => {
-  const response = await apiClient.patch(`/admin/workspace/partnership-requests/${requestId}`, {
-    status: statusValue,
-  })
-  return unwrap(response.data)
-}
 
 export const updateWorkspaceSettings = async (payload: AdminWorkspaceSettings) => {
   const response = await apiClient.put<ApiResponse<AdminWorkspaceSettings>>('/admin/workspace/settings', payload)

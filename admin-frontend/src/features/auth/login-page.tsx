@@ -82,8 +82,8 @@ export const LoginPage = () => {
         </IconButton>
       </Box>
 
-      <Grid container spacing={0} sx={{ width: '100%', maxWidth: 1180, zIndex: 1 }}>
-        <Grid size={{ xs: 12, lg: 7 }}>
+      <Grid container spacing={0} sx={{ width: '100%', maxWidth: 1180, zIndex: 1, justifyContent: 'center' }}>
+        <Grid size={{ xs: 12, lg: 6 }}>
           <Paper
             sx={{
               height: '100%',
@@ -98,7 +98,7 @@ export const LoginPage = () => {
               alignItems: 'center',
             }}
           >
-            <Stack spacing={3.5} sx={{ width: '100%', maxWidth: 520, mx: 'auto' }}>
+            <Stack spacing={3.5} sx={{ width: '100%' }}>
               <Stack spacing={0.75}>
                 <Typography variant="h5" sx={{ fontWeight: 900 }}>
                   Sign in to continue
