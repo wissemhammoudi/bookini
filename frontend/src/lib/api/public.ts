@@ -28,6 +28,7 @@ export type PublicFloor = {
 
 export type PublicRoom = {
   id: number
+  primary_floor_id?: string
   admin_id?: string | null
   average_rating?: number
   rating_count?: number

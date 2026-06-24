@@ -56,43 +56,19 @@ export const PublicBookingPage = () => {
 
   const [search, setSearch] = useState('')
   const [capacityFilter, setCapacityFilter] = useState<'ALL' | 'SMALL' | 'MEDIUM' | 'LARGE'>('ALL')
-  const [amenityFilter, setAmenityFilter] = useState('ALL')
   const [organizationFilter, setOrganizationFilter] = useState('ALL')
   const [spaceFilter, setSpaceFilter] = useState('ALL')
   const [floorFilter, setFloorFilter] = useState('ALL')
   const [viewMode, setViewMode] = useState<'grid' | 'hierarchy'>('grid')
 
-  const allAmenities = useMemo(
-    () => Array.from(new Set(rooms.flatMap((room) => room.amenities))).sort((a, b) => a.localeCompare(b)),
-    [rooms],
-  )
-
   const allOrganizations = useMemo(() => {
     const orgs = new Map<string, { name: string; description?: string; logo?: string; address?: string }>()
-    orgs.set("org-atlas", {
-      name: "Atlas Business Hub",
-      description: "Premium coworking spaces for teams and enterprise events.",
-      logo: "https://images.unsplash.com/photo-1554469384-e58fac16e23a?auto=format&fit=crop&w=200&q=80",
-      address: "12 Riverside Avenue, Tunis"
-    })
-    orgs.set("org-marina", {
-      name: "Marina Event Spaces",
-      description: "Flexible venues for workshops, meetups, and private bookings.",
-      logo: "https://images.unsplash.com/photo-1560179707-f14e90ef3623?auto=format&fit=crop&w=200&q=80",
-      address: "44 Lac View, Tunis"
-    })
-    orgs.set("org-oasis", {
-      name: "Oasis Studios",
-      description: "Creative studios designed for production teams and content creators.",
-      logo: "https://images.unsplash.com/photo-1577412647305-991150c7d163?auto=format&fit=crop&w=200&q=80",
-      address: "9 Palm District, Sousse"
-    })
     rooms.forEach((room) => {
       if (room.organization_id && room.organization_name && !orgs.has(room.organization_id)) {
         orgs.set(room.organization_id, {
           name: room.organization_name,
-          description: "Professional workspaces and meeting rooms operator.",
-          address: room.address || "Tunis, Tunisia"
+          description: room.description,
+          address: room.address,
         })
       }
     })
@@ -150,17 +126,15 @@ export const PublicBookingPage = () => {
         || (capacityFilter === 'MEDIUM' && room.capacity > 6 && room.capacity <= 12)
         || (capacityFilter === 'LARGE' && room.capacity > 12)
 
-      const matchesAmenity = amenityFilter === 'ALL' || room.amenities.includes(amenityFilter)
-
       const matchesOrganization = organizationFilter === 'ALL' || room.organization_id === organizationFilter
 
       const matchesSpace = spaceFilter === 'ALL' || room.id === Number(spaceFilter)
 
       const matchesFloor = floorFilter === 'ALL' || (room.floors && room.floors.some(f => f.id === floorFilter))
 
-      return matchesSearch && matchesCapacity && matchesAmenity && matchesOrganization && matchesSpace && matchesFloor
+      return matchesSearch && matchesCapacity && matchesOrganization && matchesSpace && matchesFloor
     })
-  }, [rooms, search, capacityFilter, amenityFilter, organizationFilter, spaceFilter, floorFilter])
+  }, [rooms, search, capacityFilter, organizationFilter, spaceFilter, floorFilter])
 
   const openPlacePage = (roomId: number) => {
     navigate(`/book/place/${roomId}`)
@@ -264,7 +238,7 @@ export const PublicBookingPage = () => {
                         <TextField
                           value={search}
                           onChange={(event) => setSearch(event.target.value)}
-                          placeholder="Search by name or amenity"
+                          placeholder="Search by name"
                           fullWidth
                           size="small"
                           slotProps={{
@@ -288,21 +262,6 @@ export const PublicBookingPage = () => {
                           </Select>
                         </FormControl>
 
-                        <FormControl size="small" sx={{ minWidth: { xs: '100%', md: 210 } }}>
-                          <InputLabel>Amenity</InputLabel>
-                          <Select
-                            value={amenityFilter}
-                            label="Amenity"
-                            onChange={(event) => setAmenityFilter(event.target.value)}
-                          >
-                            <MenuItem value="ALL">All amenities</MenuItem>
-                            {allAmenities.map((amenity) => (
-                              <MenuItem key={amenity} value={amenity}>
-                                {amenity}
-                              </MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
                       </Stack>
 
                       <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5}>
@@ -486,7 +445,7 @@ export const PublicBookingPage = () => {
                                       sx={{ height: 20, fontSize: '0.7rem', fontWeight: 600 }}
                                     />
                                     <Typography variant="caption" color="text.secondary">
-                                      · {org.address?.split(',')[1]?.trim() || "Tunis"}
+                                      {org.address ? `· ${org.address}` : ''}
                                     </Typography>
                                   </Stack>
                                 </Stack>

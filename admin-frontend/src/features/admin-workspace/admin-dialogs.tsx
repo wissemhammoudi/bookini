@@ -517,9 +517,10 @@ export const PlaceDialog = ({
   value,
 }: PlaceDialogProps) => {
   const [isUploadingCover, setIsUploadingCover] = useState(false)
+  const [isUploadingGallery, setIsUploadingGallery] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
 
-  const { handleSubmit, register, reset, setValue, formState: { errors } } = useForm<PlaceFormValues>({
+  const { handleSubmit, register, reset, setValue, getValues, formState: { errors } } = useForm<PlaceFormValues>({
     resolver: zodResolver(placeSchema),
     values: {
       organization_id: value?.organization_id ?? organizations[0]?.id ?? '',
@@ -550,6 +551,35 @@ export const PlaceDialog = ({
       setUploadError(error.response?.data?.message || error.message || 'Failed to upload image')
     } finally {
       setIsUploadingCover(false)
+      e.target.value = ''
+    }
+  }
+
+  const handleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+
+    setIsUploadingGallery(true)
+    setUploadError(null)
+    try {
+      const uploadedUrls = await Promise.all(
+        Array.from(files).map(async (file) => {
+          const response = await uploadImageRequest(file)
+          return response.url
+        }),
+      )
+
+      const existingGallery = getValues('gallery')
+      const mergedGallery = [
+        ...existingGallery.split(',').map((item: string) => item.trim()).filter(Boolean),
+        ...uploadedUrls,
+      ]
+      setValue('gallery', mergedGallery.join(', '))
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } }; message?: string }
+      setUploadError(error.response?.data?.message || error.message || 'Failed to upload gallery images')
+    } finally {
+      setIsUploadingGallery(false)
       e.target.value = ''
     }
   }
@@ -627,7 +657,30 @@ export const PlaceDialog = ({
             </Button>
           </Stack>
 
-          <TextField label="Gallery URLs" {...register('gallery')} error={Boolean(errors.gallery)} helperText={errors.gallery?.message ?? 'Comma separated URLs'} />
+          <Stack direction="row" spacing={1.5} sx={{ alignItems: 'flex-start' }}>
+            <TextField
+              label="Gallery URLs"
+              {...register('gallery')}
+              error={Boolean(errors.gallery)}
+              helperText={errors.gallery?.message ?? 'Comma separated URLs or upload multiple images'}
+              fullWidth
+            />
+            <Button
+              variant="outlined"
+              component="label"
+              disabled={isUploadingGallery}
+              sx={{ height: 40, mt: 0.5, whiteSpace: 'nowrap' }}
+            >
+              {isUploadingGallery ? 'Uploading...' : 'Upload Gallery'}
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                hidden
+                onChange={handleGalleryUpload}
+              />
+            </Button>
+          </Stack>
           <TextField label="Feature Tags" {...register('features')} error={Boolean(errors.features)} helperText={errors.features?.message ?? 'Comma separated values'} />
           <TextField select label="Status" defaultValue={value?.status ?? 'ACTIVE'} {...register('status')} error={Boolean(errors.status)} helperText={errors.status?.message}>
             <MenuItem value="ACTIVE">Active</MenuItem>
@@ -746,10 +799,10 @@ export const FloorDialog = ({
           
           <Stack direction="row" spacing={1.5} sx={{ alignItems: 'flex-start' }}>
             <TextField
-              label="Blueprint URL"
+              label="Building Blueprint"
               {...register('blueprint_image')}
               error={Boolean(errors.blueprint_image)}
-              helperText={errors.blueprint_image?.message ?? 'Optional URL or upload blueprint'}
+              helperText={errors.blueprint_image?.message ?? 'Optional URL or choose building blueprint image'}
               fullWidth
             />
             <Button
@@ -758,7 +811,7 @@ export const FloorDialog = ({
               disabled={isUploadingBlueprint}
               sx={{ height: 40, mt: 0.5, whiteSpace: 'nowrap' }}
             >
-              {isUploadingBlueprint ? 'Uploading...' : 'Upload File'}
+              {isUploadingBlueprint ? 'Uploading...' : 'Building Blueprint'}
               <input
                 type="file"
                 accept="image/*"

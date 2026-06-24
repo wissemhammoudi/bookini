@@ -112,21 +112,22 @@ export const PlaceDetailsPage = () => {
 
   const createBookingMutation = useMutation({ mutationFn: createPublicBookingRequest })
   const floorReviewsLimit = 5
+  const reviewFloorId = room?.primary_floor_id ?? room?.floors?.[0]?.id
 
   const floorReviewsQuery = useQuery({
-    queryKey: ['floor-reviews', room?.id, floorReviewsPage, floorReviewsMinFilter],
+    queryKey: ['floor-reviews', reviewFloorId, floorReviewsPage, floorReviewsMinFilter],
     queryFn: () =>
-      listFloorReviews(String(room!.id), {
+      listFloorReviews(reviewFloorId!, {
         limit: floorReviewsLimit,
         offset: floorReviewsPage * floorReviewsLimit,
         min_rating: floorReviewsMinFilter > 0 ? floorReviewsMinFilter : undefined,
       }),
-    enabled: Boolean(room),
+    enabled: Boolean(reviewFloorId),
   })
 
   const upsertFloorReviewMutation = useMutation({
     mutationFn: (payload: { rating: number; comment?: string }) =>
-      upsertMyFloorReview(String(room!.id), payload),
+      upsertMyFloorReview(reviewFloorId!, payload),
     onSuccess: async () => {
       await floorReviewsQuery.refetch()
       setFloorComment('')
@@ -135,7 +136,7 @@ export const PlaceDetailsPage = () => {
   })
 
   const deleteFloorReviewMutation = useMutation({
-    mutationFn: () => deleteMyFloorReview(String(room!.id)),
+    mutationFn: () => deleteMyFloorReview(reviewFloorId!),
     onSuccess: async () => {
       await floorReviewsQuery.refetch()
     },

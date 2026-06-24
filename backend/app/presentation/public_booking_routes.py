@@ -2,12 +2,16 @@ import uuid
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import ValidationException
 from app.core.responses import success_response
 from app.domain.enums import PublicBookingStatus
 from app.infrastructure.session import get_db_session
+from app.models.floor import Floor
+from app.models.floor_review import FloorReview
+from app.models.user import User
 from app.repositories.public_booking_repository import PublicBookingRepository
 from app.schemas.admin_workspace import ContactRequestRecord
 from app.schemas.public_booking import (
@@ -19,65 +23,77 @@ from app.services.admin_workspace_state_store import AdminWorkspaceStateStore
 router = APIRouter(prefix="/public", tags=["public"])
 
 
-def _build_public_rooms_catalog() -> list[dict[str, object]]:
-    state = AdminWorkspaceStateStore.get_state()
-    admin_by_organization_id = {}
-    for user in state.users:
-        if user.role == "ADMIN" and user.organization_ids:
-            for org_id in user.organization_ids:
-                admin_by_organization_id[org_id] = user.id
-    rating_by_organization_id: dict[str, tuple[float, int]] = {
-        "org-atlas": (4.9, 128),
-        "org-marina": (4.8, 96),
-        "org-oasis": (4.6, 54),
-    }
+def _room_id_from_floor_id(floor_id: uuid.UUID) -> int:
+    # Deterministic integer mapping for compatibility with public booking schema.
+    return (floor_id.int % 2_000_000_000) + 1
+
+
+def _organization_id_from_building(building: str) -> str:
+    normalized = "-".join(building.lower().split())
+    return normalized or "unknown"
+
+
+async def _build_public_rooms_catalog(session: AsyncSession) -> list[dict[str, object]]:
+    statement = (
+        select(
+            Floor,
+            User.full_name,
+            func.coalesce(func.avg(FloorReview.rating), 0.0).label("avg_rating"),
+            func.count(FloorReview.id).label("rating_count"),
+        )
+        .join(User, Floor.admin_id == User.id, isouter=True)
+        .join(FloorReview, FloorReview.floor_id == Floor.id, isouter=True)
+        .where(Floor.is_deleted.is_(False))
+        .group_by(Floor.id, User.full_name)
+        .order_by(Floor.created_at.desc())
+    )
+    result = await session.execute(statement)
 
     rooms: list[dict[str, object]] = []
-    for index, place in enumerate(state.places, start=1):
-        average_rating, rating_count = rating_by_organization_id.get(
-            place.organization_id, (0.0, 0)
-        )
-        org = next(
-            (o for o in state.organizations if o.id == place.organization_id), None
-        )
-        org_name = org.name if org else "Unknown Organization"
+    for floor, admin_name, avg_rating, rating_count in result.all():
+        organization_name = floor.building
+        organization_id = _organization_id_from_building(organization_name)
+        room_id = _room_id_from_floor_id(floor.id)
+        floor_name = f"{organization_name} - Floor {floor.floor_number}"
 
-        floors = [
-            {
-                "id": f.id,
-                "floor_name": f.floor_name,
-                "floor_number": f.floor_number,
-                "capacity": f.capacity,
-                "description": f.description,
-                "status": f.status,
-                "reservation_areas": f.reservation_areas,
-            }
-            for f in state.floors
-            if f.place_id == place.id
-        ]
+        availability = {
+            "AVAILABLE": "Available",
+            "OCCUPIED": "Occupied",
+            "MAINTENANCE": "Under maintenance",
+        }.get(floor.status.value, floor.status.value)
 
         rooms.append(
             {
-                "id": index,
-                "name": place.name,
-                "description": place.description,
-                "capacity": place.capacity,
-                "price": place.pricing,
-                "address": place.address,
-                "availability": place.availability,
-                "amenities": place.features,
-                "features": place.features,
-                "image": "🏢",
-                "cover_image": str(place.cover_image) if place.cover_image else None,
-                "gallery": [str(url) for url in place.gallery],
-                # Placeholder for future admin-managed media URL.
+                "id": room_id,
+                "primary_floor_id": str(floor.id),
+                "name": floor.name,
+                "description": floor.description,
+                "capacity": floor.capacity,
+                "price": 0,
+                "address": floor.location,
+                "availability": availability,
+                "amenities": [],
+                "features": [],
+                "image": organization_name[:1].upper() if organization_name else "B",
+                "cover_image": None,
+                "gallery": [],
                 "video_url": None,
-                "admin_id": admin_by_organization_id.get(place.organization_id),
-                "average_rating": average_rating,
-                "rating_count": rating_count,
-                "organization_id": place.organization_id,
-                "organization_name": org_name,
-                "floors": floors,
+                "admin_id": str(floor.admin_id) if floor.admin_id else None,
+                "average_rating": float(avg_rating or 0.0),
+                "rating_count": int(rating_count or 0),
+                "organization_id": organization_id,
+                "organization_name": organization_name,
+                "floors": [
+                    {
+                        "id": str(floor.id),
+                        "floor_name": floor_name,
+                        "floor_number": floor.floor_number,
+                        "capacity": floor.capacity,
+                        "description": floor.description,
+                        "status": floor.status.value,
+                        "reservation_areas": [],
+                    }
+                ],
             }
         )
 
@@ -105,12 +121,14 @@ def generate_booking_reference() -> str:
 
 
 @router.get("/rooms")
-async def list_public_rooms() -> dict[str, object]:
+async def list_public_rooms(
+    session: AsyncSession = Depends(get_db_session),
+) -> dict[str, object]:
     """List public room/space catalog used by booking UI."""
 
     return success_response(
         message="Public rooms retrieved",
-        data=_build_public_rooms_catalog(),
+        data=await _build_public_rooms_catalog(session),
     )
 
 
