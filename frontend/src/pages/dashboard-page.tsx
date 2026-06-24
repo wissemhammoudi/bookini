@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Box,
   Button,
@@ -10,16 +10,16 @@ import {
   Typography,
   alpha,
 } from '@mui/material'
-import { useState, useCallback } from 'react'
+import { useMemo, useState } from 'react'
 
 import {
   listCurrentReservations,
   listFloors,
   listReservationHistory,
   cancelReservationRequest,
-  listPublicRooms,
+  getProfileRequest,
+  listPublicBookingsByEmail,
 } from '@/lib/api'
-import type { ReservationItem } from '@/lib/api'
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday'
 import EventAvailableIcon from '@mui/icons-material/EventAvailable'
 import HistoryIcon from '@mui/icons-material/History'
@@ -27,7 +27,6 @@ import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined'
 import LocationOnIcon from '@mui/icons-material/LocationOn'
 import InfoIcon from '@mui/icons-material/Info'
 import EuroIcon from '@mui/icons-material/Euro'
-import { useMemo } from 'react'
 
 export const DashboardPage = () => {
   const queryClient = useQueryClient()
@@ -37,17 +36,26 @@ export const DashboardPage = () => {
     queryKey: ['floors-all'],
     queryFn: () => listFloors(),
   })
+
   const currentQuery = useQuery({
     queryKey: ['reservations-current'],
     queryFn: listCurrentReservations,
   })
+
   const historyQuery = useQuery({
     queryKey: ['reservations-history'],
     queryFn: listReservationHistory,
   })
-  const roomsQuery = useQuery({
-    queryKey: ['public-rooms-catalog'],
-    queryFn: listPublicRooms,
+
+  const profileQuery = useQuery({
+    queryKey: ['my-profile-dashboard'],
+    queryFn: getProfileRequest,
+  })
+
+  const publicBookingsQuery = useQuery({
+    queryKey: ['public-bookings-by-email', profileQuery.data?.email],
+    queryFn: () => listPublicBookingsByEmail(profileQuery.data!.email),
+    enabled: Boolean(profileQuery.data?.email),
   })
 
   const cancelMutation = useMutation({
@@ -60,46 +68,42 @@ export const DashboardPage = () => {
     onError: (err) => {
       console.error(err)
       setCancelingId(null)
-      alert("Failed to cancel reservation. Please try again.")
-    }
+      alert('Failed to cancel reservation. Please try again.')
+    },
   })
 
   const isLoading =
-    floorsQuery.isLoading || currentQuery.isLoading || historyQuery.isLoading || roomsQuery.isLoading
+    floorsQuery.isLoading ||
+    currentQuery.isLoading ||
+    historyQuery.isLoading ||
+    profileQuery.isLoading ||
+    publicBookingsQuery.isLoading
 
-  const totalRooms = floorsQuery.data?.length ?? 0
-  const availableRooms =
+  const totalFloors = floorsQuery.data?.length ?? 0
+  const availableFloors =
     floorsQuery.data?.filter((item) => item.status === 'AVAILABLE').length ?? 0
 
-  const getReservationCost = useCallback((res: ReservationItem) => {
-    const room = roomsQuery.data?.find((r) =>
-      r.floors?.some((f) => f.id === res.floor_id)
-    )
-    if (!room) return 0
-    try {
-      const start = new Date(res.start_time).getTime()
-      const end = new Date(res.end_time).getTime()
-      const durationHours = Math.max(0.5, (end - start) / (1000 * 60 * 60))
-      return Math.round(durationHours * room.price)
-    } catch {
-      return 0
-    }
-  }, [roomsQuery.data])
+  const publicBookings = publicBookingsQuery.data ?? []
+  const activePublicBookings = publicBookings.filter(
+    (item) => item.status === 'PENDING' || item.status === 'CONFIRMED',
+  )
+  const pastPublicBookings = publicBookings.filter(
+    (item) => item.status !== 'PENDING' && item.status !== 'CONFIRMED',
+  )
+
+  const activeReservationsCount =
+    (currentQuery.data?.length ?? 0) + activePublicBookings.length
+  const historyCount = (historyQuery.data?.length ?? 0) + pastPublicBookings.length
 
   const totalSpent = useMemo(() => {
     let sum = 0
-    currentQuery.data?.forEach((res) => {
-      if (res.status === 'CONFIRMED' || res.status === 'COMPLETED') {
-        sum += getReservationCost(res)
-      }
-    })
-    historyQuery.data?.forEach((res) => {
-      if (res.status === 'CONFIRMED' || res.status === 'COMPLETED') {
-        sum += getReservationCost(res)
+    publicBookings.forEach((booking) => {
+      if (booking.status === 'CONFIRMED' || booking.status === 'COMPLETED') {
+        sum += booking.price
       }
     })
     return sum
-  }, [currentQuery.data, historyQuery.data, getReservationCost])
+  }, [publicBookings])
 
   const formatDateTime = (isoString: string) => {
     try {
@@ -116,6 +120,18 @@ export const DashboardPage = () => {
     }
   }
 
+  const formatDateOnly = (dateString: string) => {
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      })
+    } catch {
+      return dateString
+    }
+  }
+
   const getFloorName = (floorId: string) => {
     const floor = floorsQuery.data?.find((f) => f.id === floorId)
     if (!floor) return `Floor #${floorId}`
@@ -123,7 +139,7 @@ export const DashboardPage = () => {
   }
 
   const handleCancelClick = (id: string) => {
-    if (window.confirm("Are you sure you want to cancel this reservation?")) {
+    if (window.confirm('Are you sure you want to cancel this reservation?')) {
       setCancelingId(id)
       cancelMutation.mutate(id)
     }
@@ -136,11 +152,10 @@ export const DashboardPage = () => {
           User Dashboard
         </Typography>
         <Typography color="text.secondary">
-          Manage your room bookings, active floor plans, and reservation logs.
+          Live data from your bookings and reservations stored in database.
         </Typography>
       </Box>
 
-      {/* Stats Cards */}
       <Grid container spacing={3}>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Paper
@@ -154,18 +169,30 @@ export const DashboardPage = () => {
             }}
           >
             <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
-              <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: 'primary.main', color: 'white', display: 'flex' }}>
+              <Box
+                sx={{
+                  p: 1.5,
+                  borderRadius: 2,
+                  bgcolor: 'primary.main',
+                  color: 'white',
+                  display: 'flex',
+                }}
+              >
                 <CalendarTodayIcon />
               </Box>
               <Box>
-                <Typography variant="subtitle2" color="text.secondary" sx={{ fontWeight: 600 }}>
+                <Typography
+                  variant="subtitle2"
+                  color="text.secondary"
+                  sx={{ fontWeight: 600 }}
+                >
                   Available Floors
                 </Typography>
                 {isLoading ? (
                   <Skeleton width={120} height={36} />
                 ) : (
                   <Typography variant="h5" sx={{ fontWeight: 800 }}>
-                    {availableRooms} / {totalRooms}
+                    {availableFloors} / {totalFloors}
                   </Typography>
                 )}
               </Box>
@@ -185,18 +212,30 @@ export const DashboardPage = () => {
             }}
           >
             <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
-              <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: 'success.main', color: 'white', display: 'flex' }}>
+              <Box
+                sx={{
+                  p: 1.5,
+                  borderRadius: 2,
+                  bgcolor: 'success.main',
+                  color: 'white',
+                  display: 'flex',
+                }}
+              >
                 <EventAvailableIcon />
               </Box>
               <Box>
-                <Typography variant="subtitle2" color="text.secondary" sx={{ fontWeight: 600 }}>
+                <Typography
+                  variant="subtitle2"
+                  color="text.secondary"
+                  sx={{ fontWeight: 600 }}
+                >
                   Active Reservations
                 </Typography>
-                {currentQuery.isLoading ? (
+                {isLoading ? (
                   <Skeleton width={100} height={36} />
                 ) : (
                   <Typography variant="h5" sx={{ fontWeight: 800 }}>
-                    {currentQuery.data?.length ?? 0}
+                    {activeReservationsCount}
                   </Typography>
                 )}
               </Box>
@@ -216,18 +255,30 @@ export const DashboardPage = () => {
             }}
           >
             <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
-              <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: 'secondary.main', color: 'white', display: 'flex' }}>
+              <Box
+                sx={{
+                  p: 1.5,
+                  borderRadius: 2,
+                  bgcolor: 'secondary.main',
+                  color: 'white',
+                  display: 'flex',
+                }}
+              >
                 <HistoryIcon />
               </Box>
               <Box>
-                <Typography variant="subtitle2" color="text.secondary" sx={{ fontWeight: 600 }}>
+                <Typography
+                  variant="subtitle2"
+                  color="text.secondary"
+                  sx={{ fontWeight: 600 }}
+                >
                   Past Bookings Log
                 </Typography>
-                {historyQuery.isLoading ? (
+                {isLoading ? (
                   <Skeleton width={100} height={36} />
                 ) : (
                   <Typography variant="h5" sx={{ fontWeight: 800 }}>
-                    {historyQuery.data?.length ?? 0}
+                    {historyCount}
                   </Typography>
                 )}
               </Box>
@@ -247,18 +298,30 @@ export const DashboardPage = () => {
             }}
           >
             <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
-              <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: 'warning.main', color: 'white', display: 'flex' }}>
+              <Box
+                sx={{
+                  p: 1.5,
+                  borderRadius: 2,
+                  bgcolor: 'warning.main',
+                  color: 'white',
+                  display: 'flex',
+                }}
+              >
                 <EuroIcon />
               </Box>
               <Box>
-                <Typography variant="subtitle2" color="text.secondary" sx={{ fontWeight: 600 }}>
+                <Typography
+                  variant="subtitle2"
+                  color="text.secondary"
+                  sx={{ fontWeight: 600 }}
+                >
                   Total Cost Spent
                 </Typography>
                 {isLoading ? (
                   <Skeleton width={100} height={36} />
                 ) : (
                   <Typography variant="h5" sx={{ fontWeight: 800 }}>
-                    €{totalSpent}
+                    €{totalSpent.toFixed(2)}
                   </Typography>
                 )}
               </Box>
@@ -267,20 +330,19 @@ export const DashboardPage = () => {
         </Grid>
       </Grid>
 
-      {/* Main Sections */}
       <Grid container spacing={4}>
-        {/* Column 1: Active Reservations */}
         <Grid size={{ xs: 12, md: 7 }}>
           <Typography variant="h6" sx={{ fontWeight: 800, mb: 2 }}>
             Active Reservations
           </Typography>
 
-          {currentQuery.isLoading ? (
+          {currentQuery.isLoading || publicBookingsQuery.isLoading ? (
             <Stack spacing={2}>
               <Skeleton variant="rounded" height={100} />
               <Skeleton variant="rounded" height={100} />
             </Stack>
-          ) : !currentQuery.data || currentQuery.data.length === 0 ? (
+          ) : (!currentQuery.data || currentQuery.data.length === 0) &&
+            activePublicBookings.length === 0 ? (
             <Paper
               elevation={0}
               sx={{
@@ -296,12 +358,12 @@ export const DashboardPage = () => {
                 No active bookings found
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Explore our spaces to schedule your next reservation.
+                Create a booking to see your live reservation data here.
               </Typography>
             </Paper>
           ) : (
             <Stack spacing={2}>
-              {currentQuery.data.map((res) => (
+              {(currentQuery.data ?? []).map((res) => (
                 <Paper
                   key={res.id}
                   elevation={0}
@@ -317,7 +379,11 @@ export const DashboardPage = () => {
                     },
                   }}
                 >
-                  <Stack direction="row" spacing={2} sx={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <Stack
+                    direction="row"
+                    spacing={2}
+                    sx={{ justifyContent: 'space-between', alignItems: 'flex-start' }}
+                  >
                     <Stack spacing={1} sx={{ flex: 1 }}>
                       <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
                         {getFloorName(res.floor_id)}
@@ -326,25 +392,32 @@ export const DashboardPage = () => {
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                           <LocationOnIcon fontSize="small" sx={{ color: 'primary.main' }} />
                           <Typography variant="caption" sx={{ fontWeight: 500 }}>
-                            {floorsQuery.data?.find((f) => f.id === res.floor_id)?.location || "Virtual Plan"}
+                            {floorsQuery.data?.find((f) => f.id === res.floor_id)?.location ||
+                              'Virtual Plan'}
                           </Typography>
                         </Box>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                           <CalendarTodayIcon fontSize="small" sx={{ fontSize: '0.9rem' }} />
                           <Typography variant="caption">
-                            {formatDateTime(res.start_time)} - {formatDateTime(res.end_time).split(',').pop()?.trim()}
+                            {formatDateTime(res.start_time)} -{' '}
+                            {formatDateTime(res.end_time).split(',').pop()?.trim()}
                           </Typography>
                         </Box>
                       </Stack>
-                      <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', mt: 0.5 }}>
+                      <Box
+                        sx={{ display: 'flex', gap: 1.5, alignItems: 'center', mt: 0.5 }}
+                      >
                         <Chip
                           label={res.status}
                           size="small"
                           color={res.status === 'CONFIRMED' ? 'success' : 'warning'}
                           sx={{ fontWeight: 700, fontSize: '0.65rem', height: 20 }}
                         />
-                        <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary' }}>
-                          Cost: €{getReservationCost(res)}
+                        <Typography
+                          variant="caption"
+                          sx={{ fontWeight: 700, color: 'text.secondary' }}
+                        >
+                          Cost: N/A
                         </Typography>
                       </Box>
                     </Stack>
@@ -363,23 +436,65 @@ export const DashboardPage = () => {
                   </Stack>
                 </Paper>
               ))}
+
+              {activePublicBookings.map((booking) => (
+                <Paper
+                  key={booking.id}
+                  elevation={0}
+                  sx={{
+                    p: 2.5,
+                    borderRadius: 3,
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    background: (theme) => alpha(theme.palette.primary.main, 0.03),
+                  }}
+                >
+                  <Stack spacing={1}>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
+                      {booking.room_name}
+                    </Typography>
+                    <Stack direction="row" spacing={2} color="text.secondary">
+                      <Typography variant="caption">
+                        Ref: {booking.booking_reference}
+                      </Typography>
+                      <Typography variant="caption">
+                        Date: {formatDateOnly(booking.booking_date)}
+                      </Typography>
+                    </Stack>
+                    <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', mt: 0.5 }}>
+                      <Chip
+                        label={booking.status}
+                        size="small"
+                        color={booking.status === 'CONFIRMED' ? 'success' : 'warning'}
+                        sx={{ fontWeight: 700, fontSize: '0.65rem', height: 20 }}
+                      />
+                      <Typography
+                        variant="caption"
+                        sx={{ fontWeight: 700, color: 'text.secondary' }}
+                      >
+                        Cost: €{booking.price.toFixed(2)}
+                      </Typography>
+                    </Box>
+                  </Stack>
+                </Paper>
+              ))}
             </Stack>
           )}
         </Grid>
 
-        {/* Column 2: History Log */}
         <Grid size={{ xs: 12, md: 5 }}>
           <Typography variant="h6" sx={{ fontWeight: 800, mb: 2 }}>
             Past Bookings Log
           </Typography>
 
-          {historyQuery.isLoading ? (
+          {historyQuery.isLoading || publicBookingsQuery.isLoading ? (
             <Stack spacing={1.5}>
               <Skeleton variant="rounded" height={60} />
               <Skeleton variant="rounded" height={60} />
               <Skeleton variant="rounded" height={60} />
             </Stack>
-          ) : !historyQuery.data || historyQuery.data.length === 0 ? (
+          ) : (!historyQuery.data || historyQuery.data.length === 0) &&
+            pastPublicBookings.length === 0 ? (
             <Paper
               elevation={0}
               sx={{
@@ -396,7 +511,7 @@ export const DashboardPage = () => {
             </Paper>
           ) : (
             <Stack spacing={1.5}>
-              {historyQuery.data.map((res) => (
+              {(historyQuery.data ?? []).map((res) => (
                 <Paper
                   key={res.id}
                   elevation={0}
@@ -409,8 +524,21 @@ export const DashboardPage = () => {
                   }}
                 >
                   <Stack spacing={1}>
-                    <Stack direction="row" spacing={1.5} sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Typography variant="subtitle2" sx={{ fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '70%' }}>
+                    <Stack
+                      direction="row"
+                      spacing={1.5}
+                      sx={{ justifyContent: 'space-between', alignItems: 'center' }}
+                    >
+                      <Typography
+                        variant="subtitle2"
+                        sx={{
+                          fontWeight: 700,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          maxWidth: '70%',
+                        }}
+                      >
                         {getFloorName(res.floor_id)}
                       </Typography>
                       <Chip
@@ -421,12 +549,76 @@ export const DashboardPage = () => {
                         sx={{ fontWeight: 700, fontSize: '0.6rem', height: 18 }}
                       />
                     </Stack>
-                    <Stack direction="row" spacing={1} sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Stack
+                      direction="row"
+                      spacing={1}
+                      sx={{ justifyContent: 'space-between', alignItems: 'center' }}
+                    >
                       <Typography variant="caption" color="text.secondary">
                         {formatDateTime(res.start_time)}
                       </Typography>
-                      <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary' }}>
-                        Cost: €{getReservationCost(res)}
+                      <Typography
+                        variant="caption"
+                        sx={{ fontWeight: 700, color: 'text.secondary' }}
+                      >
+                        Cost: N/A
+                      </Typography>
+                    </Stack>
+                  </Stack>
+                </Paper>
+              ))}
+
+              {pastPublicBookings.map((booking) => (
+                <Paper
+                  key={booking.id}
+                  elevation={0}
+                  sx={{
+                    p: 2,
+                    borderRadius: 2.5,
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    bgcolor: (theme) => alpha(theme.palette.action.hover, 0.4),
+                  }}
+                >
+                  <Stack spacing={1}>
+                    <Stack
+                      direction="row"
+                      spacing={1.5}
+                      sx={{ justifyContent: 'space-between', alignItems: 'center' }}
+                    >
+                      <Typography
+                        variant="subtitle2"
+                        sx={{
+                          fontWeight: 700,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          maxWidth: '70%',
+                        }}
+                      >
+                        {booking.room_name}
+                      </Typography>
+                      <Chip
+                        label={booking.status}
+                        size="small"
+                        color={booking.status === 'CANCELLED' ? 'error' : 'default'}
+                        variant="outlined"
+                        sx={{ fontWeight: 700, fontSize: '0.6rem', height: 18 }}
+                      />
+                    </Stack>
+                    <Stack
+                      direction="row"
+                      spacing={1}
+                      sx={{ justifyContent: 'space-between', alignItems: 'center' }}
+                    >
+                      <Typography variant="caption" color="text.secondary">
+                        {formatDateOnly(booking.booking_date)}
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        sx={{ fontWeight: 700, color: 'text.secondary' }}
+                      >
+                        Cost: €{booking.price.toFixed(2)}
                       </Typography>
                     </Stack>
                   </Stack>
