@@ -220,9 +220,9 @@ jobs:
           script: |
             set -euo pipefail
             cd "${{ secrets.SSH_TARGET_DIR }}"
-            git fetch origin master
-            git checkout master
-            git pull --ff-only origin master
+            git fetch origin ${{ github.ref_name }}
+            git checkout ${{ github.ref_name }}
+            git pull --ff-only origin ${{ github.ref_name }}
 
             echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
