@@ -95,7 +95,7 @@ export type PublicBookingDetails = {
   price: number
   status: string
   created_at: string
-  metadata_payload?: Record<string, any>
+  metadata_payload?: Record<string, unknown>
 }
 
 export type PublicBookingListItem = {
