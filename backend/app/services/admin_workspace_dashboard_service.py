@@ -38,7 +38,6 @@ class AdminWorkspaceDashboardService:
                 floors=state.floors,
                 reservations=state.reservations,
                 contact_requests=state.contact_requests,
-                partnership_requests=state.partnership_requests,
                 settings=state.settings,
             )
 
@@ -73,7 +72,6 @@ class AdminWorkspaceDashboardService:
             floors=floors,
             reservations=reservations,
             contact_requests=[],
-            partnership_requests=[],
             settings=state.settings,
         )
 
@@ -106,15 +104,6 @@ class AdminWorkspaceDashboardService:
                 label="Total Reservations",
                 value=len(collections.reservations),
                 trend="12 pending actions",
-            ),
-            DashboardStatCard(
-                key="partnerships",
-                label="Pending Partnership Requests",
-                value=sum(
-                    item.status == "PENDING"
-                    for item in collections.partnership_requests
-                ),
-                trend="Review queue updated",
             ),
             DashboardStatCard(
                 key="contacts",

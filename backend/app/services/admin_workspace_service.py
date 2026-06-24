@@ -5,7 +5,6 @@ from app.schemas.admin_workspace import (
     FloorUpsertRequest,
     OrganizationRecord,
     OrganizationUpsertRequest,
-    PartnershipRequestRecord,
     PlaceRecord,
     PlaceUpsertRequest,
     ReservationRecord,
@@ -122,15 +121,6 @@ class AdminWorkspaceService:
     @staticmethod
     def delete_contact(request_id: str) -> None:
         AdminWorkspaceRequestService.delete_contact(request_id)
-
-    @staticmethod
-    def update_partnership_status(
-        request_id: str,
-        status_value: str,
-    ) -> PartnershipRequestRecord:
-        return AdminWorkspaceRequestService.update_partnership_status(
-            request_id, status_value
-        )
 
     @staticmethod
     def update_settings(payload: SettingsUpdateRequest) -> SettingsRecord:

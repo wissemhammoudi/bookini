@@ -33,7 +33,7 @@ class RecentActivityItem(BaseModel):
     title: str
     description: str
     timestamp: datetime
-    type: Literal["reservation", "organization", "partnership", "contact", "user"]
+    type: Literal["reservation", "organization", "contact", "user"]
 
 
 class DashboardData(BaseModel):
@@ -182,22 +182,6 @@ class ContactRequestStatusUpdateRequest(BaseModel):
     status: Literal["PENDING", "PROCESSED"]
 
 
-class PartnershipRequestRecord(BaseModel):
-    id: str
-    company_name: str
-    contact_person: str
-    email: EmailStr
-    phone: str
-    business_description: str
-    requested_date: datetime
-    status: Literal["PENDING", "APPROVED", "REJECTED"]
-    generated_credentials: dict[str, str] | None = None
-
-
-class PartnershipRequestStatusUpdateRequest(BaseModel):
-    status: Literal["APPROVED", "REJECTED"]
-
-
 class NotificationSettings(BaseModel):
     email_notifications: bool
     sms_notifications: bool
@@ -246,7 +230,6 @@ class WorkspaceCollections(BaseModel):
     floors: list[FloorRecord]
     reservations: list[ReservationRecord]
     contact_requests: list[ContactRequestRecord]
-    partnership_requests: list[PartnershipRequestRecord]
     settings: SettingsRecord
 
 

@@ -7,7 +7,6 @@ from app.schemas.admin_workspace import (
     ContactRequestRecord,
     FloorRecord,
     OrganizationRecord,
-    PartnershipRequestRecord,
     PlaceRecord,
     RecentActivityItem,
     ReservationRecord,
@@ -28,7 +27,6 @@ class WorkspaceState:
     floors: list[FloorRecord] = field(default_factory=list)
     reservations: list[ReservationRecord] = field(default_factory=list)
     contact_requests: list[ContactRequestRecord] = field(default_factory=list)
-    partnership_requests: list[PartnershipRequestRecord] = field(default_factory=list)
     settings: SettingsRecord | None = None
     recent_activity: list[RecentActivityItem] = field(default_factory=list)
 
@@ -306,36 +304,7 @@ def build_workspace_state() -> WorkspaceState:
             status="PROCESSED",
         ),
     ]
-    partnership_requests = [
-        PartnershipRequestRecord(
-            id="partner-1",
-            company_name="North Star Offices",
-            contact_person="Nour Haddad",
-            email="nour@northstar.com",
-            phone="+216 27 111 999",
-            business_description=(
-                "We operate serviced offices and want to list 4 floors in Tunis."
-            ),
-            requested_date=now - timedelta(days=1),
-            status="PENDING",
-        ),
-        PartnershipRequestRecord(
-            id="partner-2",
-            company_name="Cedar Events",
-            contact_person="Adel Mabrouk",
-            email="adel@cedarevents.com",
-            phone="+216 28 202 303",
-            business_description=(
-                "Boutique event spaces across Sfax for workshops and training."
-            ),
-            requested_date=now - timedelta(days=6),
-            status="APPROVED",
-            generated_credentials={
-                "email": "admin@cedarevents.com",
-                "temporary_password": "Cedar2026!",
-            },
-        ),
-    ]
+
     settings = SettingsRecord(
         profile={
             "full_name": "Lina Trabelsi",
@@ -376,13 +345,6 @@ def build_workspace_state() -> WorkspaceState:
             timestamp=now - timedelta(days=1),
             type="organization",
         ),
-        RecentActivityItem(
-            id="activity-3",
-            title="Partnership request submitted",
-            description="North Star Offices requested partner access.",
-            timestamp=now - timedelta(days=1, hours=2),
-            type="partnership",
-        ),
     ]
     return WorkspaceState(
         users=users,
@@ -391,7 +353,6 @@ def build_workspace_state() -> WorkspaceState:
         floors=floors,
         reservations=reservations,
         contact_requests=contact_requests,
-        partnership_requests=partnership_requests,
         settings=settings,
         recent_activity=recent_activity,
     )

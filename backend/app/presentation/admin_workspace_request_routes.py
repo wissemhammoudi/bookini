@@ -4,7 +4,6 @@ from app.core.responses import success_response
 from app.presentation.admin_workspace_common import SuperAdminAccessUser
 from app.schemas.admin_workspace import (
     ContactRequestStatusUpdateRequest,
-    PartnershipRequestStatusUpdateRequest,
 )
 from app.services.admin_workspace_request_service import AdminWorkspaceRequestService
 
@@ -32,18 +31,3 @@ async def delete_contact_request(
 ) -> Response:
     AdminWorkspaceRequestService.delete_contact(request_id)
     return Response(status_code=204)
-
-
-@router.patch("/workspace/partnership-requests/{request_id}")
-async def update_partnership_status(
-    request_id: str,
-    payload: PartnershipRequestStatusUpdateRequest,
-    _: SuperAdminAccessUser,
-) -> dict[str, object]:
-    request = AdminWorkspaceRequestService.update_partnership_status(
-        request_id, payload.status
-    )
-    return success_response(
-        message="Partnership request updated",
-        data=request.model_dump(mode="json"),
-    )

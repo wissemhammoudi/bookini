@@ -42,42 +42,9 @@ class PublicBookingResponse(BaseModel):
         from_attributes = True
 
 
-class PartnershipRequestCreateRequest(BaseModel):
-    company_name: str = Field(min_length=1, max_length=255)
-    contact_person: str = Field(min_length=1, max_length=255)
-    contact_email: EmailStr
-    contact_phone: str = Field(min_length=1, max_length=20)
-    number_of_floors: int = Field(ge=1)
-    expected_users: int = Field(ge=1)
-    description: str = Field(min_length=1, max_length=2000)
-
-
 class ContactRequestCreateRequest(BaseModel):
     full_name: str = Field(min_length=1, max_length=255)
     email: EmailStr
     phone: str = Field(min_length=1, max_length=40)
     subject: str = Field(min_length=1, max_length=255)
     message: str = Field(min_length=1, max_length=2000)
-
-
-class PartnershipRequestResponse(BaseModel):
-    id: UUID
-    company_name: str
-    contact_person: str
-    contact_email: str
-    contact_phone: str
-    number_of_floors: int
-    expected_users: int
-    description: str
-    status: str
-    admin_notes: str | None
-    created_at: datetime
-    updated_at: datetime
-
-    class Config:
-        from_attributes = True
-
-
-class PartnershipRequestUpdateRequest(BaseModel):
-    status: str = Field(pattern="^(APPROVED|REJECTED)$")
-    admin_notes: str | None = Field(default=None, max_length=1000)
