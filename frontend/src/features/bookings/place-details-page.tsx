@@ -74,10 +74,11 @@ type FloorRoomPreview = {
 }
 
 type BookingType = 'WHOLE_FLOOR' | 'SELECTED_AREAS'
+type FloorReservationArea = NonNullable<PublicRoom['floors']>[number]['reservation_areas'][number]
 
 const parseFloorRoomPreviews = (
   blueprintImage: string | null | undefined,
-  reservationAreas: PublicRoom['floors'][number]['reservation_areas'] | undefined,
+  reservationAreas: NonNullable<PublicRoom['floors']>[number]['reservation_areas'] | undefined,
   fallbackPrice: number,
 ) => {
   const previewMap = new Map<string, FloorRoomPreview>()
@@ -112,7 +113,7 @@ const parseFloorRoomPreviews = (
     }
   }
 
-  ;(reservationAreas ?? []).forEach((area) => {
+  ;(reservationAreas ?? []).forEach((area: FloorReservationArea) => {
     if (typeof area === 'string') {
       if (!previewMap.has(area)) {
         previewMap.set(area, {
