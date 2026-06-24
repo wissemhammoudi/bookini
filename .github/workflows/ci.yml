@@ -2,9 +2,9 @@ name: CI/CD
 
 on:
   push:
-    branches: [master]
+    branches: [master, develop]
   pull_request:
-    branches: [master]
+    branches: [master, develop]
   workflow_dispatch:
 
 concurrency:
@@ -120,7 +120,7 @@ jobs:
   package-images:
     name: Build, Scan and Push Images
     needs: [backend-quality, frontend-quality, admin-frontend-quality]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -202,7 +202,7 @@ jobs:
   deploy-staging:
     name: Deploy to Staging VPS
     needs: [package-images]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop')
     runs-on: ubuntu-latest
     environment: staging
     steps:
@@ -249,53 +249,4 @@ jobs:
             "${{ secrets.ADMIN_FRONTEND_URL }}" \
             "${{ secrets.API_HEALTH_URL }}"
 
-  deploy-production:
-    name: Deploy to Production VPS
-    needs: [deploy-staging]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-    runs-on: ubuntu-latest
-    environment: production
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.SSH_PORT || 22 }}
-          script_stop: true
-          script: |
-            set -euo pipefail
-            cd "${{ secrets.SSH_TARGET_DIR }}"
-            git fetch origin master
-            git checkout master
-            git pull --ff-only origin master
-
-            echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
-
-            export DOMAIN_NAME="${{ secrets.DOMAIN_NAME }}"
-            export POSTGRES_DB="${{ secrets.POSTGRES_DB }}"
-            export POSTGRES_USER="${{ secrets.POSTGRES_USER }}"
-            export POSTGRES_PASSWORD="${{ secrets.POSTGRES_PASSWORD }}"
-            export SECRET_KEY="${{ secrets.SECRET_KEY }}"
-            export GRAFANA_ADMIN_USER="${{ secrets.GRAFANA_ADMIN_USER }}"
-            export GRAFANA_ADMIN_PASSWORD="${{ secrets.GRAFANA_ADMIN_PASSWORD }}"
-
-            export BACKEND_IMAGE="${{ secrets.DOCKERHUB_USERNAME }}/bookini-backend:${{ github.sha }}"
-            export FRONTEND_IMAGE="${{ secrets.DOCKERHUB_USERNAME }}/bookini-frontend:${{ github.sha }}"
-            export ADMIN_FRONTEND_IMAGE="${{ secrets.DOCKERHUB_USERNAME }}/bookini-admin-frontend:${{ github.sha }}"
-
-            docker compose -f docker-compose.prod.yml pull backend frontend admin-frontend
-            docker compose -f docker-compose.prod.yml up -d
-            docker image prune -f
-
-      - name: Run production smoke checks
-        run: |
-          bash .github/workflows/scripts/smoke-tests.sh \
-            "${{ secrets.FRONTEND_URL }}" \
-            "${{ secrets.ADMIN_FRONTEND_URL }}" \
-            "${{ secrets.API_HEALTH_URL }}"
 
