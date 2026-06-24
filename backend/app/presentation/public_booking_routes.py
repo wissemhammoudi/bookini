@@ -129,7 +129,9 @@ def _normalize_reservation_area_details(
         normalized.append(
             {
                 "name": area_name,
-                "price": float(area_dict.get("price", fallback_price) or fallback_price),
+                "price": float(
+                    area_dict.get("price", fallback_price) or fallback_price
+                ),
                 "includes": includes,
                 "is_reservable": area_dict.get("is_reservable", True) is not False,
                 "geometry": geometry,

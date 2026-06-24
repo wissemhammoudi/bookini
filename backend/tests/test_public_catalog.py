@@ -1,5 +1,6 @@
 import os
 from unittest.mock import AsyncMock, MagicMock, patch
+
 from fastapi.testclient import TestClient
 
 os.environ.setdefault(
@@ -102,8 +103,13 @@ def test_create_multiday_booking_with_discounts() -> None:
         assert booking_data["metadata_payload"]["discount_applied"] == 0.10
         return dummy_booking
 
-    with patch.object(PublicBookingRepository, "list_by_room_and_date_range", side_effect=dummy_list), \
-         patch.object(PublicBookingRepository, "create", side_effect=dummy_create):
+    with patch.object(
+        PublicBookingRepository,
+        "list_by_room_and_date_range",
+        side_effect=dummy_list,
+    ), patch.object(
+        PublicBookingRepository, "create", side_effect=dummy_create
+    ):
 
          payload = {
              "room_id": room_id,
