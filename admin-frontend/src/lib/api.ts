@@ -410,11 +410,13 @@ export const createWorkspaceFloor = async (payload: {
   place_id: string
   floor_name: string
   floor_number: number
+  floor_size_sqm: number
+  floor_shape: 'SQUARE' | 'RECTANGLE' | 'L_SHAPE' | 'CUSTOM_POLYGON'
   capacity: number
   pricing: number
   description: string
   blueprint_image?: string
-  reservation_areas: string[]
+  reservation_areas: Array<string | { name: string; price: number; includes: string[]; is_reservable: boolean; geometry?: { x?: number; y?: number; w?: number; h?: number; rotation?: number; type?: string } }>
   status: 'ACTIVE' | 'SUSPENDED'
 }) => {
   const response = await apiClient.post<ApiResponse<FloorRecord>>('/admin/workspace/floors', payload)
@@ -427,11 +429,13 @@ export const updateWorkspaceFloor = async (
     place_id: string
     floor_name: string
     floor_number: number
+    floor_size_sqm: number
+    floor_shape: 'SQUARE' | 'RECTANGLE' | 'L_SHAPE' | 'CUSTOM_POLYGON'
     capacity: number
     pricing: number
     description: string
     blueprint_image?: string
-    reservation_areas: string[]
+    reservation_areas: Array<string | { name: string; price: number; includes: string[]; is_reservable: boolean; geometry?: { x?: number; y?: number; w?: number; h?: number; rotation?: number; type?: string } }>
     status: 'ACTIVE' | 'SUSPENDED'
   },
 ) => {

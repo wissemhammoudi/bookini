@@ -17,6 +17,8 @@ export interface BookingPayload extends BookingFormData {
   roomId: number
   floorId?: string
   roomKey?: string
+  bookingType?: 'WHOLE_FLOOR' | 'SELECTED_AREAS'
+  selectedAreaKeys?: string[]
   roomName: string
   planId: string
   price: number

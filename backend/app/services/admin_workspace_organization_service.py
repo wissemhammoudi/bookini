@@ -9,6 +9,7 @@ from app.schemas.admin_workspace import (
     OrganizationUpsertRequest,
     PlaceRecord,
     PlaceUpsertRequest,
+    ReservationAreaRecord,
     SettingsRecord,
     SettingsUpdateRequest,
 )
@@ -17,6 +18,27 @@ from app.services.admin_workspace_state_store import AdminWorkspaceStateStore
 
 
 class AdminWorkspaceOrganizationService:
+    @staticmethod
+    def _normalize_reservation_areas(
+        reservation_areas: list[str | ReservationAreaRecord],
+    ) -> list[ReservationAreaRecord]:
+        normalized: list[ReservationAreaRecord] = []
+        for area in reservation_areas:
+            if isinstance(area, ReservationAreaRecord):
+                normalized.append(area)
+                continue
+
+            if isinstance(area, str) and area.strip():
+                normalized.append(
+                    ReservationAreaRecord(
+                        name=area.strip(),
+                        price=0,
+                        includes=[],
+                        is_reservable=True,
+                    )
+                )
+        return normalized
+
     @staticmethod
     def create_organization(payload: OrganizationUpsertRequest) -> OrganizationRecord:
         state = AdminWorkspaceStateStore.get_state()
@@ -193,10 +215,17 @@ class AdminWorkspaceOrganizationService:
                 detail="Selected place does not exist",
             )
 
+        payload_data = payload.model_dump()
+        payload_data["reservation_areas"] = (
+            AdminWorkspaceOrganizationService._normalize_reservation_areas(
+                payload.reservation_areas
+            )
+        )
+
         floor = FloorRecord(
             id=f"floor-{utc_now().strftime('%H%M%S%f')[-8:]}",
             created_date=utc_now(),
-            **payload.model_dump(),
+            **payload_data,
         )
         state.floors.insert(0, floor)
         AdminWorkspaceStateStore.record_activity(
@@ -214,9 +243,16 @@ class AdminWorkspaceOrganizationService:
                 detail="Selected place does not exist",
             )
 
+        payload_data = payload.model_dump()
+        payload_data["reservation_areas"] = (
+            AdminWorkspaceOrganizationService._normalize_reservation_areas(
+                payload.reservation_areas
+            )
+        )
+
         for index, floor in enumerate(state.floors):
             if floor.id == floor_id:
-                updated = floor.model_copy(update=payload.model_dump())
+                updated = floor.model_copy(update=payload_data)
                 state.floors[index] = updated
                 AdminWorkspaceStateStore.record_activity(
                     updated.floor_name, "Floor updated.", "organization"

@@ -30,6 +30,7 @@ import type {
   FloorRecord,
   OrganizationRecord,
   PlaceRecord,
+  ReservationAreaRecord,
   UserRecord,
 } from '@/lib/api-types'
 
@@ -112,6 +113,8 @@ const floorSchema = z.object({
   place_id: z.string().min(1, 'Place is required'),
   floor_name: z.string().min(2, 'Floor name is required'),
   floor_number: z.number().int().min(0, 'Floor number must be 0 or more'),
+  floor_size_sqm: z.number().min(1, 'Floor size must be at least 1 sqm'),
+  floor_shape: z.enum(['SQUARE', 'RECTANGLE', 'L_SHAPE', 'CUSTOM_POLYGON']),
   capacity: z.number().int().min(1, 'Capacity must be at least 1'),
   pricing: z.number().min(0, 'Pricing must be positive'),
   description: z.string().min(5, 'Description is required'),
@@ -938,11 +941,13 @@ type FloorDialogProps = BaseDialogProps & {
     place_id: string
     floor_name: string
     floor_number: number
+    floor_size_sqm: number
+    floor_shape: 'SQUARE' | 'RECTANGLE' | 'L_SHAPE' | 'CUSTOM_POLYGON'
     capacity: number
     pricing: number
     description: string
     blueprint_image?: string
-    reservation_areas: string[]
+    reservation_areas: Array<string | ReservationAreaRecord>
     status: 'ACTIVE' | 'SUSPENDED'
   }) => Promise<void> | void
 }
@@ -959,6 +964,23 @@ export const FloorDialog = ({
 }: FloorDialogProps) => {
   const [isUploadingBlueprint, setIsUploadingBlueprint] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
+  const [extractedReservationAreas, setExtractedReservationAreas] = useState<ReservationAreaRecord[]>(() =>
+    (value?.reservation_areas ?? []).map((area) =>
+      typeof area === 'string'
+        ? {
+          name: area,
+          price: value?.pricing ?? 0,
+          includes: [],
+          is_reservable: true,
+        }
+        : {
+          ...area,
+          price: area.price ?? value?.pricing ?? 0,
+          includes: area.includes ?? [],
+          is_reservable: area.is_reservable !== false,
+        },
+    ),
+  )
 
   const { handleSubmit, register, reset, setValue, getValues, formState: { errors } } = useForm<FloorFormValues>({
     resolver: zodResolver(floorSchema),
@@ -966,11 +988,15 @@ export const FloorDialog = ({
       place_id: value?.place_id ?? places[0]?.id ?? '',
       floor_name: value?.floor_name ?? '',
       floor_number: value?.floor_number ?? 0,
+      floor_size_sqm: value?.floor_size_sqm ?? 100,
+      floor_shape: value?.floor_shape ?? 'RECTANGLE',
       capacity: value?.capacity ?? 1,
       pricing: value?.pricing ?? 0,
       description: value?.description ?? '',
       blueprint_image: value?.blueprint_image ?? '',
-      reservation_areas: value?.reservation_areas.join(', ') ?? '',
+      reservation_areas: value?.reservation_areas
+        .map((area) => (typeof area === 'string' ? area : area.name))
+        .join(', ') ?? '',
       status: value?.status ?? 'ACTIVE',
     },
   })
@@ -994,13 +1020,14 @@ export const FloorDialog = ({
 
   const handleClose = () => {
     reset()
+    setExtractedReservationAreas([])
     onClose()
   }
 
   const extractReservationAreasFromBlueprint = () => {
     const rawBlueprint = getValues('blueprint_image')?.trim()
     if (!rawBlueprint) {
-      setUploadError('Paste blueprint JSON first, then extract reservation areas.')
+      setUploadError('Paste floor layout JSON first, then extract reservation areas.')
       return
     }
 
@@ -1011,19 +1038,40 @@ export const FloorDialog = ({
         return
       }
 
-      const areas = parsed
-        .filter((item): item is { name?: unknown; isReservable?: unknown } => Boolean(item) && typeof item === 'object')
+      const extractedAreas = parsed
+        .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === 'object')
         .filter((item) => item.isReservable !== false)
-        .map((item) => (typeof item.name === 'string' ? item.name.trim() : ''))
-        .filter(Boolean)
+        .filter((item) => typeof item.name === 'string' && item.name.trim().length > 0)
+        .map((item) => ({
+          name: String(item.name).trim(),
+          price: Number(item.price ?? getValues('pricing') ?? 0),
+          includes: Array.isArray(item.includes)
+            ? item.includes.filter((entry): entry is string => typeof entry === 'string' && entry.trim().length > 0)
+            : [],
+          is_reservable: item.isReservable === false ? false : true,
+          geometry: {
+            x: typeof item.x === 'number' ? item.x : undefined,
+            y: typeof item.y === 'number' ? item.y : undefined,
+            w: typeof item.w === 'number' ? item.w : undefined,
+            h: typeof item.h === 'number' ? item.h : undefined,
+            rotation: typeof item.rotation === 'number' ? item.rotation : undefined,
+            type: typeof item.type === 'string' ? item.type : undefined,
+          },
+        }))
 
-      const uniqueAreas = Array.from(new Set(areas))
+      const uniqueAreaMap = new Map<string, ReservationAreaRecord>()
+      extractedAreas.forEach((area) => {
+        uniqueAreaMap.set(area.name, area)
+      })
+      const uniqueAreas = Array.from(uniqueAreaMap.values())
+
       if (!uniqueAreas.length) {
         setUploadError('No reservable areas found in blueprint JSON.')
         return
       }
 
-      setValue('reservation_areas', uniqueAreas.join(', '), {
+      setExtractedReservationAreas(uniqueAreas)
+      setValue('reservation_areas', uniqueAreas.map((area) => area.name).join(', '), {
         shouldDirty: true,
         shouldValidate: true,
       })
@@ -1044,10 +1092,22 @@ export const FloorDialog = ({
       </DialogTitle>
       <DialogContent dividers sx={dialogContentSx}>
         <Stack spacing={2} component="form" id="floor-form" onSubmit={handleSubmit(async (formValues) => {
+          const areaMap = new Map(extractedReservationAreas.map((area) => [area.name, area]))
+          const reservationAreas = formValues.reservation_areas
+            .split(',')
+            .map((item: string) => item.trim())
+            .filter(Boolean)
+            .map((name) => areaMap.get(name) ?? {
+              name,
+              price: formValues.pricing,
+              includes: [],
+              is_reservable: true,
+            })
+
           await onSubmit({
             ...formValues,
             blueprint_image: formValues.blueprint_image || undefined,
-            reservation_areas: formValues.reservation_areas.split(',').map((item: string) => item.trim()).filter(Boolean),
+            reservation_areas: reservationAreas,
           })
         })}>
           {(error || uploadError) ? <Alert severity="error" sx={{ borderRadius: 2 }}>{error || uploadError}</Alert> : null}
@@ -1058,24 +1118,33 @@ export const FloorDialog = ({
           </TextField>
           <TextField label="Floor Name" {...register('floor_name')} error={Boolean(errors.floor_name)} helperText={errors.floor_name?.message} />
           <Grid container spacing={2}>
-            <Grid size={{ xs: 12, md: 4 }}>
+            <Grid size={{ xs: 12, md: 3 }}>
               <TextField fullWidth type="number" label="Floor Number" {...register('floor_number', { valueAsNumber: true })} error={Boolean(errors.floor_number)} helperText={errors.floor_number?.message} />
             </Grid>
-            <Grid size={{ xs: 12, md: 4 }}>
+            <Grid size={{ xs: 12, md: 3 }}>
+              <TextField fullWidth type="number" label="Floor Size (sqm)" {...register('floor_size_sqm', { valueAsNumber: true })} error={Boolean(errors.floor_size_sqm)} helperText={errors.floor_size_sqm?.message} />
+            </Grid>
+            <Grid size={{ xs: 12, md: 3 }}>
               <TextField fullWidth type="number" label="Capacity" {...register('capacity', { valueAsNumber: true })} error={Boolean(errors.capacity)} helperText={errors.capacity?.message} />
             </Grid>
-            <Grid size={{ xs: 12, md: 4 }}>
+            <Grid size={{ xs: 12, md: 3 }}>
               <TextField fullWidth type="number" label="Pricing" {...register('pricing', { valueAsNumber: true })} error={Boolean(errors.pricing)} helperText={errors.pricing?.message} />
             </Grid>
           </Grid>
+          <TextField select label="Floor Shape" defaultValue={value?.floor_shape ?? 'RECTANGLE'} {...register('floor_shape')} error={Boolean(errors.floor_shape)} helperText={errors.floor_shape?.message ?? 'Used by Build Floor tooling'}>
+            <MenuItem value="SQUARE">Square</MenuItem>
+            <MenuItem value="RECTANGLE">Rectangle</MenuItem>
+            <MenuItem value="L_SHAPE">L-Shape</MenuItem>
+            <MenuItem value="CUSTOM_POLYGON">Custom Polygon</MenuItem>
+          </TextField>
           <TextField label="Description" multiline minRows={3} {...register('description')} error={Boolean(errors.description)} helperText={errors.description?.message} />
           
           <Stack direction="row" spacing={1.5} sx={{ alignItems: 'flex-start' }}>
             <TextField
-              label="Building Blueprint"
+              label="Build Floor"
               {...register('blueprint_image')}
               error={Boolean(errors.blueprint_image)}
-              helperText={errors.blueprint_image?.message ?? 'Optional image URL, upload, or paste blueprint JSON array'}
+              helperText={errors.blueprint_image?.message ?? 'Optional floor image URL, upload, or paste floor layout JSON array'}
               fullWidth
             />
             <Button
@@ -1084,7 +1153,7 @@ export const FloorDialog = ({
               disabled={isUploadingBlueprint}
               sx={{ height: 40, mt: 0.5, whiteSpace: 'nowrap' }}
             >
-              {isUploadingBlueprint ? 'Uploading...' : 'Building Blueprint'}
+              {isUploadingBlueprint ? 'Uploading...' : 'Build Floor'}
               <input
                 type="file"
                 accept="image/*"
@@ -1107,7 +1176,7 @@ export const FloorDialog = ({
               onClick={extractReservationAreasFromBlueprint}
               sx={{ height: 40, mt: { sm: 0.5 }, whiteSpace: 'nowrap' }}
             >
-              Extract Areas
+              Extract Reservation Areas
             </Button>
           </Stack>
           <TextField select label="Status" defaultValue={value?.status ?? 'ACTIVE'} {...register('status')} error={Boolean(errors.status)} helperText={errors.status?.message}>

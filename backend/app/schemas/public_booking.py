@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, EmailStr, Field
@@ -8,6 +9,8 @@ class PublicBookingCreateRequest(BaseModel):
     room_id: int
     floor_id: str | None = None
     room_key: str | None = None
+    booking_type: Literal["WHOLE_FLOOR", "SELECTED_AREAS"] | None = None
+    selected_area_keys: list[str] | None = None
     room_name: str
     plan_id: str
     guest_name: str = Field(min_length=1, max_length=255)

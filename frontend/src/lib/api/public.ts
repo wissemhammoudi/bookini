@@ -5,6 +5,8 @@ export type PublicBookingCreatePayload = {
   room_id: number
   floor_id?: string
   room_key?: string
+  booking_type?: 'WHOLE_FLOOR' | 'SELECTED_AREAS'
+  selected_area_keys?: string[]
   room_name: string
   plan_id: string
   guest_name: string
@@ -27,7 +29,23 @@ export type PublicFloor = {
   blueprint_image?: string | null
   description: string
   status: string
-  reservation_areas: string[]
+  reservation_areas: Array<
+    | string
+    | {
+      name: string
+      price?: number
+      includes?: string[]
+      is_reservable?: boolean
+      geometry?: {
+        x?: number
+        y?: number
+        w?: number
+        h?: number
+        rotation?: number
+        type?: string
+      }
+    }
+  >
 }
 
 export type PublicRoom = {

@@ -30,6 +30,23 @@ class AvailabilitySlot(BaseModel):
     end_time: str = Field(pattern=r"^([01]\d|2[0-3]):[0-5]\d$")
 
 
+class ReservationAreaGeometry(BaseModel):
+    x: float | None = None
+    y: float | None = None
+    w: float | None = None
+    h: float | None = None
+    rotation: float | None = None
+    type: str | None = None
+
+
+class ReservationAreaRecord(BaseModel):
+    name: str = Field(min_length=1, max_length=120)
+    price: float = Field(ge=0, default=0)
+    includes: list[str] = Field(default_factory=list)
+    is_reservable: bool = True
+    geometry: ReservationAreaGeometry | None = None
+
+
 class DashboardStatCard(BaseModel):
     key: str
     label: str
@@ -144,11 +161,15 @@ class FloorRecord(BaseModel):
     place_id: str
     floor_name: str
     floor_number: int
+    floor_size_sqm: float = Field(ge=1, default=100)
+    floor_shape: Literal["SQUARE", "RECTANGLE", "L_SHAPE", "CUSTOM_POLYGON"] = (
+        "RECTANGLE"
+    )
     capacity: int
     pricing: float = Field(ge=0)
     description: str
     blueprint_image: str | None = None
-    reservation_areas: list[str] = Field(default_factory=list)
+    reservation_areas: list[str | ReservationAreaRecord] = Field(default_factory=list)
     status: StatusValue
     created_date: datetime
 
@@ -157,11 +178,15 @@ class FloorUpsertRequest(BaseModel):
     place_id: str
     floor_name: str = Field(min_length=2, max_length=120)
     floor_number: int = Field(ge=0, le=200)
+    floor_size_sqm: float = Field(ge=1, le=100000, default=100)
+    floor_shape: Literal["SQUARE", "RECTANGLE", "L_SHAPE", "CUSTOM_POLYGON"] = (
+        "RECTANGLE"
+    )
     capacity: int = Field(ge=1, le=5000)
     pricing: float = Field(ge=0)
     description: str = Field(min_length=5, max_length=400)
     blueprint_image: str | None = None
-    reservation_areas: list[str] = Field(default_factory=list)
+    reservation_areas: list[str | ReservationAreaRecord] = Field(default_factory=list)
     status: StatusValue = "ACTIVE"
 
 

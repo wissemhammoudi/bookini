@@ -58,6 +58,63 @@ def _format_availability(value: object) -> str:
     return ""
 
 
+def _normalize_reservation_area_details(
+    reservation_areas: object,
+    fallback_price: float,
+) -> list[dict[str, object]]:
+    if not isinstance(reservation_areas, list):
+        return []
+
+    normalized: list[dict[str, object]] = []
+    for area in reservation_areas:
+        if isinstance(area, str):
+            area_name = area.strip()
+            if not area_name:
+                continue
+            normalized.append(
+                {
+                    "name": area_name,
+                    "price": fallback_price,
+                    "includes": [],
+                    "is_reservable": True,
+                }
+            )
+            continue
+
+        if not isinstance(area, dict):
+            continue
+
+        area_name = str(area.get("name", "")).strip()
+        if not area_name:
+            continue
+
+        includes_raw = area.get("includes", [])
+        includes = (
+            [
+                str(item).strip()
+                for item in includes_raw
+                if isinstance(item, str) and str(item).strip()
+            ]
+            if isinstance(includes_raw, list)
+            else []
+        )
+
+        geometry_raw = area.get("geometry")
+        geometry = geometry_raw if isinstance(geometry_raw, dict) else None
+
+        normalized.append(
+            {
+                "name": area_name,
+                "price": float(area.get("price", fallback_price) or fallback_price),
+                "includes": includes,
+                "is_reservable": area.get("is_reservable", True) is not False,
+                "geometry": geometry,
+            }
+        )
+
+    return normalized
+
+
 async def _build_public_rooms_catalog(session: AsyncSession) -> list[dict[str, object]]:
     statement = (
         select(
@@ -176,7 +233,10 @@ async def _build_public_rooms_catalog(session: AsyncSession) -> list[dict[str, o
                     "blueprint_image": floor.blueprint_image,
                     "description": floor.description,
                     "status": floor.status,
-                    "reservation_areas": floor.reservation_areas,
+                    "reservation_areas": _normalize_reservation_area_details(
+                        floor.reservation_areas,
+                        float(floor.pricing),
+                    ),
                 }
                 for floor in related_floors
             ],
@@ -240,6 +300,8 @@ def _resolve_hourly_rate(
 
     matched_room = _resolve_blueprint_room(matched_floor, selected_room_key)
     if not matched_room:
+        matched_room = _resolve_reservation_area(matched_floor, selected_room_key)
+    if not matched_room:
         return floor_rate
 
     return float(matched_room.get("price", floor_rate) or floor_rate)
@@ -274,6 +336,38 @@ def _resolve_blueprint_room(
         return matched_room
     except (TypeError, ValueError, json.JSONDecodeError):
         return None
+
+
+def _resolve_reservation_area(
+    floor_entry: dict[str, object],
+    selected_room_key: str,
+) -> dict[str, object] | None:
+    reservation_areas = floor_entry.get("reservation_areas")
+    if not isinstance(reservation_areas, list):
+        return None
+
+    for area in reservation_areas:
+        if isinstance(area, str):
+            if area == selected_room_key:
+                return {
+                    "name": area,
+                    "price": floor_entry.get("price", 0),
+                    "is_reservable": True,
+                }
+            continue
+
+        if not isinstance(area, dict):
+            continue
+
+        if str(area.get("name", "")) != selected_room_key:
+            continue
+
+        if area.get("is_reservable", True) is False:
+            return None
+
+        return area
+
+    return None
 
 
 def generate_booking_reference() -> str:
@@ -343,20 +437,75 @@ async def create_booking(
     if request.room_key and selected_floor:
         matched_floor_room = _resolve_blueprint_room(selected_floor, request.room_key)
         if matched_floor_room is None:
+            matched_floor_room = _resolve_reservation_area(
+                selected_floor, request.room_key
+            )
+        if matched_floor_room is None:
             raise ValidationException("Selected room does not belong to the floor")
 
-    canonical_hourly_rate = _resolve_hourly_rate(
-        selected_room,
-        request.floor_id,
-        request.room_key,
-    )
+    selected_area_keys = [
+        area.strip()
+        for area in (request.selected_area_keys or [])
+        if isinstance(area, str) and area.strip()
+    ]
+
+    effective_booking_type = request.booking_type
+    if effective_booking_type is None:
+        if selected_area_keys or request.room_key:
+            effective_booking_type = "SELECTED_AREAS"
+        else:
+            effective_booking_type = "WHOLE_FLOOR"
+
+    if effective_booking_type == "SELECTED_AREAS" and request.room_key:
+        if request.room_key not in selected_area_keys:
+            selected_area_keys.append(request.room_key)
+
+    if effective_booking_type == "SELECTED_AREAS" and not selected_floor:
+        raise ValidationException("Selected areas booking requires a valid floor")
+
+    if effective_booking_type == "SELECTED_AREAS" and not selected_area_keys:
+        raise ValidationException("Selected areas booking requires at least one area")
+
+    canonical_hourly_rate = 0.0
+    resolved_area_keys: list[str] = []
+    if effective_booking_type == "SELECTED_AREAS":
+        assert selected_floor is not None  # guarded above
+        unique_area_keys = list(dict.fromkeys(selected_area_keys))
+        matched_areas: list[dict[str, object]] = []
+        for area_key in unique_area_keys:
+            matched_area = _resolve_blueprint_room(selected_floor, area_key)
+            if matched_area is None:
+                matched_area = _resolve_reservation_area(selected_floor, area_key)
+            if matched_area is None:
+                raise ValidationException(
+                    f"Selected area '{area_key}' does not belong to the floor"
+                )
+            matched_areas.append(matched_area)
+
+        floor_rate = float(
+            selected_floor.get("price", selected_room.get("price", 0))
+            or selected_room.get("price", 0)
+            or 0
+        )
+        canonical_hourly_rate = sum(
+            float(area.get("price", floor_rate) or floor_rate)
+            for area in matched_areas
+        )
+        resolved_area_keys = unique_area_keys
+    else:
+        canonical_hourly_rate = _resolve_hourly_rate(
+            selected_room,
+            request.floor_id,
+            request.room_key,
+        )
+
     billable_hours = _calculate_billable_hours(request.start_time, request.end_time)
     expected_price = round(canonical_hourly_rate * billable_hours, 2)
     submitted_price = round(float(request.price), 2)
     if abs(submitted_price - expected_price) > 0.01:
         mismatch_message = (
             "Price mismatch. "
-            f"Expected {expected_price:.2f} based on selected room/floor pricing"
+            f"Expected {expected_price:.2f} based on selected booking scope"
         )
         raise ValidationException(
             mismatch_message
@@ -365,7 +514,12 @@ async def create_booking(
     canonical_room_name = str(selected_room.get("name", request.room_name))
     if selected_floor and selected_floor.get("floor_name"):
         canonical_room_name = f"{canonical_room_name} - {selected_floor['floor_name']}"
-    if request.room_key:
+    if effective_booking_type == "SELECTED_AREAS" and resolved_area_keys:
+        canonical_room_name = (
+            f"{canonical_room_name} - {len(resolved_area_keys)} area"
+            f"{'s' if len(resolved_area_keys) > 1 else ''}"
+        )
+    elif request.room_key:
         canonical_room_name = f"{canonical_room_name} - {request.room_key}"
 
     repository = PublicBookingRepository(session)
@@ -415,7 +569,9 @@ async def create_booking(
             "user_agent": "web",
             "source": "public_booking",
             "floor_id": request.floor_id,
+            "booking_type": effective_booking_type,
             "room_key": request.room_key,
+            "selected_area_keys": resolved_area_keys,
             "submitted_price": submitted_price,
             "canonical_hourly_rate": canonical_hourly_rate,
             "billable_hours": billable_hours,

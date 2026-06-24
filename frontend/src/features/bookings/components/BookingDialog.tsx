@@ -28,18 +28,20 @@ import type { PublicRoom } from '@/lib/api'
 import type { BookingFormData } from '../types'
 import { useBookingForm, usePriceCalculation } from '../hooks'
 
+type BookingType = 'WHOLE_FLOOR' | 'SELECTED_AREAS'
+
 interface BookingDialogProps {
   open: boolean
   room: PublicRoom | null
   selectedFloorId?: string
   onFloorChange?: (floorId: string) => void
-  selectedRoomKey?: string
-  onRoomChange?: (roomKey: string) => void
-  roomOptions?: Array<{ key: string; label: string; price: number; capacity?: number }>
+  bookingType?: BookingType
+  selectedAreaKeys?: string[]
+  areaOptions?: Array<{ key: string; label: string; price: number; includes?: string[]; capacity?: number }>
   selectedPlan: string
   isLight: boolean
   onClose: () => void
-  onSubmit: (data: BookingFormData & { roomId: number; floorId?: string; roomKey?: string; roomName: string; planId: string; price: number }) => Promise<boolean> | boolean
+  onSubmit: (data: BookingFormData & { roomId: number; floorId?: string; roomKey?: string; bookingType?: BookingType; selectedAreaKeys?: string[]; roomName: string; planId: string; price: number }) => Promise<boolean> | boolean
   isLoading?: boolean
   error?: string | null
   initialBookingDate?: string | null
@@ -50,9 +52,9 @@ export const BookingDialog = ({
   room,
   selectedFloorId,
   onFloorChange,
-  selectedRoomKey,
-  onRoomChange,
-  roomOptions = [],
+  bookingType = 'WHOLE_FLOOR',
+  selectedAreaKeys = [],
+  areaOptions = [],
   selectedPlan,
   isLight,
   onClose,
@@ -65,9 +67,12 @@ export const BookingDialog = ({
   const { calculatePrice } = usePriceCalculation()
 
   const resolvedFloor = room?.floors?.find((floor) => floor.id === selectedFloorId) ?? room?.floors?.[0]
-  const selectedRoomOption = roomOptions.find((option) => option.key === selectedRoomKey)
-  const hourlyRate = selectedRoomOption?.price ?? resolvedFloor?.price ?? room?.price ?? 0
-  const roomCapacity = selectedRoomOption?.capacity ?? resolvedFloor?.capacity ?? room?.capacity ?? 0
+  const selectedAreaOptions = areaOptions.filter((option) => selectedAreaKeys.includes(option.key))
+  const selectedAreasHourlyRate = selectedAreaOptions.reduce((sum, option) => sum + option.price, 0)
+  const hourlyRate = bookingType === 'SELECTED_AREAS' && selectedAreaOptions.length > 0
+    ? selectedAreasHourlyRate
+    : resolvedFloor?.price ?? room?.price ?? 0
+  const roomCapacity = resolvedFloor?.capacity ?? room?.capacity ?? 0
 
   useEffect(() => {
     if (open && initialBookingDate) {
@@ -86,12 +91,15 @@ export const BookingDialog = ({
       ...formData,
       roomId: room.id,
       floorId: resolvedFloor?.id,
-      roomKey: selectedRoomOption?.key,
-      roomName: selectedRoomOption
-        ? `${room.name} - ${selectedRoomOption.label}`
-        : resolvedFloor
-          ? `${room.name} - ${resolvedFloor.floor_name}`
-          : room.name,
+      roomKey: selectedAreaOptions.length === 1 ? selectedAreaOptions[0].key : undefined,
+      bookingType,
+      selectedAreaKeys: bookingType === 'SELECTED_AREAS' ? selectedAreaKeys : undefined,
+      roomName:
+        bookingType === 'SELECTED_AREAS' && selectedAreaOptions.length > 0
+          ? `${room.name} - ${resolvedFloor?.floor_name ?? 'Floor'} (${selectedAreaOptions.length} areas)`
+          : resolvedFloor
+            ? `${room.name} - ${resolvedFloor.floor_name}`
+            : room.name,
       planId: selectedPlan,
       price,
     }
@@ -193,6 +201,14 @@ export const BookingDialog = ({
                 </Stack>
               </Stack>
 
+              <Chip
+                size="small"
+                color={bookingType === 'SELECTED_AREAS' ? 'secondary' : 'primary'}
+                variant="outlined"
+                label={bookingType === 'SELECTED_AREAS' ? 'Booking Scope: Selected Areas' : 'Booking Scope: Whole Floor'}
+                sx={{ mt: 1.5 }}
+              />
+
               {room?.floors && room.floors.length > 0 ? (
                 <TextField
                   select
@@ -211,22 +227,28 @@ export const BookingDialog = ({
                 </TextField>
               ) : null}
 
-              {roomOptions.length > 0 ? (
-                <TextField
-                  select
-                  fullWidth
-                  size="small"
-                  label="Room"
-                  value={selectedRoomKey ?? ''}
-                  onChange={(event) => onRoomChange?.(event.target.value)}
-                  sx={{ mt: 1.5 }}
-                >
-                  {roomOptions.map((roomOption) => (
-                    <MenuItem key={roomOption.key} value={roomOption.key}>
-                      {roomOption.label} • €{roomOption.price}/hr{roomOption.capacity ? ` • ${roomOption.capacity} seats` : ''}
-                    </MenuItem>
-                  ))}
-                </TextField>
+              {bookingType === 'SELECTED_AREAS' ? (
+                <Stack spacing={1} sx={{ mt: 1.5 }}>
+                  <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
+                    Selected Areas
+                  </Typography>
+                  {selectedAreaOptions.length ? (
+                    <Stack direction="row" spacing={0.75} sx={{ flexWrap: 'wrap', gap: 0.75 }}>
+                      {selectedAreaOptions.map((area) => (
+                        <Chip
+                          key={area.key}
+                          size="small"
+                          label={`${area.label} • €${area.price}/hr${area.includes?.length ? ` • ${area.includes.join(' / ')}` : ''}`}
+                          variant="outlined"
+                        />
+                      ))}
+                    </Stack>
+                  ) : (
+                    <Alert severity="warning" sx={{ borderRadius: 2 }}>
+                      No area selected yet. Go back and pick one or more areas from the floor.
+                    </Alert>
+                  )}
+                </Stack>
               ) : null}
             </Paper>
 

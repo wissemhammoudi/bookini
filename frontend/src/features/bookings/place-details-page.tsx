@@ -68,37 +68,92 @@ const UUID_PATTERN =
 type FloorRoomPreview = {
   name: string
   price: number
+  includes: string[]
   image_urls: string[]
   isReservable: boolean
 }
 
+type BookingType = 'WHOLE_FLOOR' | 'SELECTED_AREAS'
+
 const parseFloorRoomPreviews = (
   blueprintImage: string | null | undefined,
+  reservationAreas: PublicRoom['floors'][number]['reservation_areas'] | undefined,
   fallbackPrice: number,
 ) => {
-  if (!blueprintImage) return [] as FloorRoomPreview[]
-  const source = blueprintImage.trim()
-  if (!source.startsWith('[')) return [] as FloorRoomPreview[]
+  const previewMap = new Map<string, FloorRoomPreview>()
 
-  try {
-    const parsed = JSON.parse(source)
-    if (!Array.isArray(parsed)) return [] as FloorRoomPreview[]
-
-    return parsed
-      .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === 'object')
-      .filter((item) => typeof item.name === 'string')
-      .map((item) => ({
-        name: String(item.name),
-        price: Number(item.price ?? fallbackPrice),
-        image_urls: Array.isArray(item.image_urls)
-          ? item.image_urls.filter((url): url is string => typeof url === 'string' && url.trim().length > 0)
-          : [],
-        isReservable: item.isReservable === false ? false : true,
-      }))
-      .filter((item) => item.isReservable)
-  } catch {
-    return [] as FloorRoomPreview[]
+  if (blueprintImage) {
+    const source = blueprintImage.trim()
+    if (source.startsWith('[')) {
+      try {
+        const parsed = JSON.parse(source)
+        if (Array.isArray(parsed)) {
+          parsed
+            .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === 'object')
+            .filter((item) => typeof item.name === 'string')
+            .forEach((item) => {
+              const preview: FloorRoomPreview = {
+                name: String(item.name),
+                price: Number(item.price ?? fallbackPrice),
+                includes: Array.isArray(item.includes)
+                  ? item.includes.filter((entry): entry is string => typeof entry === 'string' && entry.trim().length > 0)
+                  : [],
+                image_urls: Array.isArray(item.image_urls)
+                  ? item.image_urls.filter((url): url is string => typeof url === 'string' && url.trim().length > 0)
+                  : [],
+                isReservable: item.isReservable === false ? false : true,
+              }
+              previewMap.set(preview.name, preview)
+            })
+        }
+      } catch {
+        // Ignore malformed blueprint JSON and fall back to reservation_areas metadata.
+      }
+    }
   }
+
+  ;(reservationAreas ?? []).forEach((area) => {
+    if (typeof area === 'string') {
+      if (!previewMap.has(area)) {
+        previewMap.set(area, {
+          name: area,
+          price: fallbackPrice,
+          includes: [],
+          image_urls: [],
+          isReservable: true,
+        })
+      }
+      return
+    }
+
+    if (!area || typeof area !== 'object' || typeof area.name !== 'string') {
+      return
+    }
+
+    const existing = previewMap.get(area.name)
+    const includes = Array.isArray(area.includes)
+      ? area.includes.filter((entry): entry is string => typeof entry === 'string' && entry.trim().length > 0)
+      : []
+
+    if (existing) {
+      previewMap.set(area.name, {
+        ...existing,
+        price: Number(area.price ?? existing.price ?? fallbackPrice),
+        includes: existing.includes.length ? existing.includes : includes,
+        isReservable: area.is_reservable === false ? false : existing.isReservable,
+      })
+    } else {
+      previewMap.set(area.name, {
+        name: area.name,
+        price: Number(area.price ?? fallbackPrice),
+        includes,
+        image_urls: [],
+        isReservable: area.is_reservable === false ? false : true,
+      })
+    }
+  })
+
+  return Array.from(previewMap.values()).filter((item) => item.isReservable)
 }
 
 const buildMedia = (room: PublicRoom) => {
@@ -132,7 +187,8 @@ export const PlaceDetailsPage = () => {
   const [bookingDialogOpen, setBookingDialogOpen] = useState(false)
   const [bookingError, setBookingError] = useState<string | null>(null)
   const [selectedFloorId, setSelectedFloorId] = useState<string | undefined>(undefined)
-  const [selectedRoomKey, setSelectedRoomKey] = useState<string | undefined>(undefined)
+  const [bookingType, setBookingType] = useState<BookingType>('WHOLE_FLOOR')
+  const [selectedAreaKeys, setSelectedAreaKeys] = useState<string[]>([])
   const [floorRating, setFloorRating] = useState(5)
   const [floorComment, setFloorComment] = useState('')
   const [floorReviewsPage, setFloorReviewsPage] = useState(0)
@@ -169,30 +225,31 @@ export const PlaceDetailsPage = () => {
 
   const selectedFloorPrice = selectedFloor?.price ?? room?.price ?? 0
   const floorRoomPreviews = useMemo(
-    () => parseFloorRoomPreviews(selectedFloor?.blueprint_image, selectedFloorPrice),
-    [selectedFloor?.blueprint_image, selectedFloorPrice],
+    () => parseFloorRoomPreviews(selectedFloor?.blueprint_image, selectedFloor?.reservation_areas, selectedFloorPrice),
+    [selectedFloor?.blueprint_image, selectedFloor?.reservation_areas, selectedFloorPrice],
   )
-  const roomOptions = useMemo(
+  const areaOptions = useMemo(
     () => floorRoomPreviews.map((item) => ({
       key: item.name,
       label: item.name,
       price: item.price,
+      includes: item.includes,
       capacity: selectedFloor?.capacity,
     })),
     [floorRoomPreviews, selectedFloor?.capacity],
   )
-  const resolvedSelectedRoomKey = useMemo(() => {
-    if (!roomOptions.length) return undefined
-    if (selectedRoomKey && roomOptions.some((option) => option.key === selectedRoomKey)) {
-      return selectedRoomKey
-    }
-    return roomOptions[0].key
-  }, [roomOptions, selectedRoomKey])
-  const selectedRoomOption = useMemo(
-    () => roomOptions.find((option) => option.key === resolvedSelectedRoomKey),
-    [roomOptions, resolvedSelectedRoomKey],
+  const resolvedSelectedAreaKeys = useMemo(
+    () => selectedAreaKeys.filter((key) => areaOptions.some((option) => option.key === key)),
+    [selectedAreaKeys, areaOptions],
   )
-  const effectiveDisplayPrice = selectedRoomOption?.price ?? selectedFloorPrice
+  const selectedAreaOptions = useMemo(
+    () => areaOptions.filter((option) => resolvedSelectedAreaKeys.includes(option.key)),
+    [areaOptions, resolvedSelectedAreaKeys],
+  )
+  const selectedAreasHourlyRate = selectedAreaOptions.reduce((sum, option) => sum + option.price, 0)
+  const effectiveDisplayPrice = bookingType === 'SELECTED_AREAS' && selectedAreaOptions.length > 0
+    ? selectedAreasHourlyRate
+    : selectedFloorPrice
 
   const media = useMemo(() => (room ? buildMedia(room) : { images: [], videos: [] }), [room])
 
@@ -278,13 +335,18 @@ export const PlaceDetailsPage = () => {
       return
     }
 
+    if (bookingType === 'SELECTED_AREAS' && resolvedSelectedAreaKeys.length === 0) {
+      setBookingError('Select one or more areas from this floor before opening the booking form.')
+      return
+    }
+
     const iso = toIsoDate(date)
     setSelectedCalendarDate(iso)
     setBookingError(null)
     setBookingDialogOpen(true)
   }
 
-  const handleBookingSubmit = async (data: BookingFormData & { roomId: number; floorId?: string; roomKey?: string; roomName: string; planId: string; price: number }) => {
+  const handleBookingSubmit = async (data: BookingFormData & { roomId: number; floorId?: string; roomKey?: string; bookingType?: BookingType; selectedAreaKeys?: string[]; roomName: string; planId: string; price: number }) => {
     setBookingError(null)
 
     try {
@@ -308,6 +370,8 @@ export const PlaceDetailsPage = () => {
         room_id: data.roomId,
         floor_id: data.floorId,
         room_key: data.roomKey,
+        booking_type: data.bookingType,
+        selected_area_keys: data.selectedAreaKeys,
         room_name: data.roomName,
         plan_id: data.planId,
         guest_name: data.guestName,
@@ -434,12 +498,33 @@ export const PlaceDetailsPage = () => {
                       variant={floor.id === selectedFloor?.id ? 'filled' : 'outlined'}
                       onClick={() => {
                         setSelectedFloorId(floor.id)
-                        setSelectedRoomKey(undefined)
+                        setSelectedAreaKeys([])
                       }}
                     />
                   ))}
                 </Stack>
               ) : null}
+
+              <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
+                <Chip
+                  label="Book Whole Floor"
+                  color={bookingType === 'WHOLE_FLOOR' ? 'primary' : 'default'}
+                  variant={bookingType === 'WHOLE_FLOOR' ? 'filled' : 'outlined'}
+                  onClick={() => setBookingType('WHOLE_FLOOR')}
+                />
+                <Chip
+                  label="Book Selected Areas"
+                  color={bookingType === 'SELECTED_AREAS' ? 'secondary' : 'default'}
+                  variant={bookingType === 'SELECTED_AREAS' ? 'filled' : 'outlined'}
+                  onClick={() => setBookingType('SELECTED_AREAS')}
+                />
+                {bookingType === 'SELECTED_AREAS' ? (
+                  <Chip
+                    label={`${selectedAreaOptions.length} area${selectedAreaOptions.length === 1 ? '' : 's'} selected`}
+                    variant="outlined"
+                  />
+                ) : null}
+              </Stack>
             </Stack>
           </Paper>
 
@@ -461,14 +546,51 @@ export const PlaceDetailsPage = () => {
                   }}
                 >
                   {floorRoomPreviews.map((roomPreview, index) => (
-                    <Paper key={`${roomPreview.name}-${index}`} variant="outlined" sx={{ p: 1.25, borderRadius: 2 }}>
+                    <Paper
+                      key={`${roomPreview.name}-${index}`}
+                      variant="outlined"
+                      onClick={() => {
+                        if (bookingType !== 'SELECTED_AREAS') return
+                        setSelectedAreaKeys((current) =>
+                          current.includes(roomPreview.name)
+                            ? current.filter((name) => name !== roomPreview.name)
+                            : [...current, roomPreview.name],
+                        )
+                      }}
+                      sx={{
+                        p: 1.25,
+                        borderRadius: 2,
+                        cursor: bookingType === 'SELECTED_AREAS' ? 'pointer' : 'default',
+                        borderColor: resolvedSelectedAreaKeys.includes(roomPreview.name) ? 'primary.main' : 'divider',
+                        backgroundColor: resolvedSelectedAreaKeys.includes(roomPreview.name)
+                          ? (isLight ? 'rgba(0, 89, 179, 0.06)' : 'rgba(0, 89, 179, 0.18)')
+                          : undefined,
+                      }}
+                    >
                       <Stack spacing={1}>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
-                          {roomPreview.name}
-                        </Typography>
+                        <Stack direction="row" spacing={1} sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
+                          <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
+                            {roomPreview.name}
+                          </Typography>
+                          {bookingType === 'SELECTED_AREAS' ? (
+                            <Chip
+                              size="small"
+                              label={resolvedSelectedAreaKeys.includes(roomPreview.name) ? 'Selected' : 'Select'}
+                              color={resolvedSelectedAreaKeys.includes(roomPreview.name) ? 'primary' : 'default'}
+                              variant={resolvedSelectedAreaKeys.includes(roomPreview.name) ? 'filled' : 'outlined'}
+                            />
+                          ) : null}
+                        </Stack>
                         <Typography variant="caption" color="text.secondary">
                           €{roomPreview.price}/hour
                         </Typography>
+                        {roomPreview.includes.length > 0 ? (
+                          <Stack direction="row" spacing={0.5} sx={{ flexWrap: 'wrap', gap: 0.5 }}>
+                            {roomPreview.includes.map((feature) => (
+                              <Chip key={`${roomPreview.name}-${feature}`} size="small" label={feature} variant="outlined" />
+                            ))}
+                          </Stack>
+                        ) : null}
                         <Box
                           sx={{
                             display: 'grid',
@@ -925,11 +1047,11 @@ export const PlaceDetailsPage = () => {
         selectedFloorId={resolvedSelectedFloorId}
         onFloorChange={(floorId) => {
           setSelectedFloorId(floorId)
-          setSelectedRoomKey(undefined)
+          setSelectedAreaKeys([])
         }}
-        selectedRoomKey={resolvedSelectedRoomKey}
-        onRoomChange={setSelectedRoomKey}
-        roomOptions={roomOptions}
+        bookingType={bookingType}
+        selectedAreaKeys={resolvedSelectedAreaKeys}
+        areaOptions={areaOptions}
         selectedPlan={selectedPlan}
         isLight={isLight}
         onClose={() => {

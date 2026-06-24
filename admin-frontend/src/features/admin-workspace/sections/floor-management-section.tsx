@@ -38,7 +38,7 @@ import Grid from '@mui/material/Grid'
 
 import type { FloorActionHandler } from '@/features/admin-workspace/admin-workspace-types'
 import { EmptyState, SectionHeader, StatusChip } from '@/features/admin-workspace/admin-workspace-utils'
-import type { FloorRecord, PlaceRecord } from '@/lib/api-types'
+import type { FloorRecord, PlaceRecord, ReservationAreaRecord } from '@/lib/api-types'
 import { updateWorkspaceFloor, uploadImageRequest } from '@/lib/api'
 import { workspaceQueryKey } from '@/features/admin-workspace/admin-workspace-config'
 
@@ -50,10 +50,31 @@ type DeskZone = {
   y: number
   w: number
   h: number
+  price: number
+  includes: string[]
   type?: ElementType
   rotation?: number
   isReservable?: boolean
   image_urls?: string[]
+}
+
+const asAreaRecord = (area: string | ReservationAreaRecord): ReservationAreaRecord => {
+  if (typeof area === 'string') {
+    return {
+      name: area,
+      price: 0,
+      includes: [],
+      is_reservable: true,
+    }
+  }
+
+  return {
+    name: area.name,
+    price: area.price ?? 0,
+    includes: area.includes ?? [],
+    is_reservable: area.is_reservable !== false,
+    geometry: area.geometry,
+  }
 }
 
 const parseBlueprintLayout = (blueprintImage?: string | null): DeskZone[] | null => {
@@ -74,6 +95,10 @@ const parseBlueprintLayout = (blueprintImage?: string | null): DeskZone[] | null
         y: Number(item.y ?? 0),
         w: Number(item.w ?? 90),
         h: Number(item.h ?? 60),
+        price: Number(item.price ?? 0),
+        includes: Array.isArray(item.includes)
+          ? item.includes.filter((entry): entry is string => typeof entry === 'string' && entry.trim().length > 0)
+          : [],
         type: (item.type as ElementType | undefined) ?? 'desk',
         rotation: Number(item.rotation ?? 0),
         isReservable: item.isReservable === false ? false : true,
@@ -220,11 +245,28 @@ export function FloorsSection({
           place_id: builderFloor.place_id,
           floor_name: builderFloor.floor_name,
           floor_number: builderFloor.floor_number,
+          floor_size_sqm: builderFloor.floor_size_sqm ?? 100,
+          floor_shape: builderFloor.floor_shape ?? 'RECTANGLE',
           capacity: builderFloor.capacity,
           pricing: builderFloor.pricing,
           description: builderFloor.description,
           blueprint_image: JSON.stringify(desks),
-          reservation_areas: desks.filter((d) => d.isReservable !== false).map((d) => d.name),
+          reservation_areas: desks
+            .filter((d) => d.isReservable !== false)
+            .map((d) => ({
+              name: d.name,
+              price: d.price,
+              includes: d.includes,
+              is_reservable: d.isReservable !== false,
+              geometry: {
+                x: d.x,
+                y: d.y,
+                w: d.w,
+                h: d.h,
+                rotation: d.rotation,
+                type: d.type,
+              },
+            })),
           status: builderFloor.status,
         },
       })
@@ -352,20 +394,25 @@ export function FloorsSection({
                         <Typography sx={{ mt: 1 }}>{floor.description}</Typography>
                       </Box>
                     </Stack>
-                    <Typography variant="body2">Capacity: {floor.capacity} · Price: ${floor.pricing.toFixed(2)}</Typography>
+                    <Typography variant="body2">Capacity: {floor.capacity} · Price: ${floor.pricing.toFixed(2)} · Size: {floor.floor_size_sqm ?? 100} sqm · Shape: {(floor.floor_shape ?? 'RECTANGLE').replace('_', ' ')}</Typography>
                     <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
                       {floor.reservation_areas.map((area) => (
+                        (() => {
+                          const areaRecord = asAreaRecord(area)
+                          return (
                         <Chip
-                          key={area}
-                          label={`${area} • $${floor.pricing.toFixed(2)}`}
+                          key={areaRecord.name}
+                          label={`${areaRecord.name} • $${areaRecord.price.toFixed(2)}${areaRecord.includes.length ? ` • ${areaRecord.includes.join(' / ')}` : ''}`}
                           variant="outlined"
                           sx={{ backgroundColor: alpha('#0059B3', 0.04) }}
                         />
+                          )
+                        })()
                       ))}
                     </Stack>
                     <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end', flexWrap: 'wrap' }}>
                       <Button startIcon={<GridOnOutlinedIcon />} onClick={() => setBuilderFloor(floor)}>
-                        Floor Builder
+                        Build Floor
                       </Button>
                       <Button startIcon={<EditOutlinedIcon />} onClick={() => onEditFloor(floor)}>
                         Edit
@@ -415,14 +462,16 @@ function FloorBuilderDialog({ open, floor, onClose, onSave, isSaving }: FloorBui
     if (parsedLayout) return parsedLayout
 
     return (floor.reservation_areas ?? []).map((area, idx) => ({
-      name: area,
-      x: 20 + (idx % 4) * 110,
-      y: 20 + Math.floor(idx / 4) * 80,
-      w: 90,
-      h: 60,
+      name: asAreaRecord(area).name,
+      x: asAreaRecord(area).geometry?.x ?? 20 + (idx % 4) * 110,
+      y: asAreaRecord(area).geometry?.y ?? 20 + Math.floor(idx / 4) * 80,
+      w: asAreaRecord(area).geometry?.w ?? 90,
+      h: asAreaRecord(area).geometry?.h ?? 60,
+      price: asAreaRecord(area).price,
+      includes: asAreaRecord(area).includes,
       type: 'desk' as ElementType,
-      rotation: 0,
-      isReservable: true,
+      rotation: asAreaRecord(area).geometry?.rotation ?? 0,
+      isReservable: asAreaRecord(area).is_reservable,
       image_urls: [],
     }))
   })
@@ -475,6 +524,8 @@ function FloorBuilderDialog({ open, floor, onClose, onSave, isSaving }: FloorBui
       y: 180,
       w: template.w,
       h: template.h,
+      price: floor.pricing,
+      includes: [],
       type: template.type,
       rotation: 0,
       isReservable: template.isReservable,
@@ -575,7 +626,7 @@ function FloorBuilderDialog({ open, floor, onClose, onSave, isSaving }: FloorBui
     <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
       <DialogTitle sx={{ m: 0, p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography variant="h6" sx={{ fontWeight: 800 }}>
-          2D Floor Layout Builder — {floor.floor_name}
+          Build Floor Layout — {floor.floor_name}
         </Typography>
         <IconButton onClick={onClose} size="small">
           <CloseOutlinedIcon />
@@ -847,6 +898,28 @@ function FloorBuilderDialog({ open, floor, onClose, onSave, isSaving }: FloorBui
                       label="Reservable Area"
                     />
 
+                    <TextField
+                      label="Area Hourly Price"
+                      type="number"
+                      size="small"
+                      value={selectedDesk.price}
+                      onChange={(e) => handleUpdateSelected('price', Number(e.target.value) || 0)}
+                    />
+
+                    <TextField
+                      label="Includes"
+                      size="small"
+                      value={selectedDesk.includes.join(', ')}
+                      onChange={(e) => {
+                        const values = e.target.value
+                          .split(',')
+                          .map((item) => item.trim())
+                          .filter(Boolean)
+                        handleUpdateSelected('includes', values)
+                      }}
+                      helperText="Comma separated features included with this area"
+                    />
+
                     <Stack direction="row" spacing={1.25} sx={{ alignItems: 'flex-start' }}>
                       <TextField
                         label="Room Image URLs"
@@ -969,7 +1042,7 @@ function FloorBuilderDialog({ open, floor, onClose, onSave, isSaving }: FloorBui
           Cancel
         </Button>
         <Button variant="contained" onClick={() => onSave(desks)} disabled={isSaving}>
-          {isSaving ? 'Saving Blueprint...' : 'Save Blueprint'}
+          {isSaving ? 'Saving floor layout...' : 'Save Floor Layout'}
         </Button>
       </DialogActions>
     </Dialog>
