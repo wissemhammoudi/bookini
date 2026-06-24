@@ -81,14 +81,23 @@ def _normalize_reservation_area_details(
             )
             continue
 
-        if not isinstance(area, dict):
+        # If it's a Pydantic model (ReservationAreaRecord), convert to a dict
+        area_dict = None
+        if hasattr(area, "model_dump"):
+            area_dict = area.model_dump()
+        elif hasattr(area, "dict"):
+            area_dict = area.dict()
+        elif isinstance(area, dict):
+            area_dict = area
+
+        if area_dict is None:
             continue
 
-        area_name = str(area.get("name", "")).strip()
+        area_name = str(area_dict.get("name", "")).strip()
         if not area_name:
             continue
 
-        includes_raw = area.get("includes", [])
+        includes_raw = area_dict.get("includes", [])
         includes = (
             [
                 str(item).strip()
@@ -99,20 +108,25 @@ def _normalize_reservation_area_details(
             else []
         )
 
-        geometry_raw = area.get("geometry")
+        geometry_raw = area_dict.get("geometry")
         geometry = geometry_raw if isinstance(geometry_raw, dict) else None
+        if geometry is None and hasattr(geometry_raw, "model_dump"):
+            geometry = geometry_raw.model_dump()
+        elif geometry is None and hasattr(geometry_raw, "dict"):
+            geometry = geometry_raw.dict()
 
         normalized.append(
             {
                 "name": area_name,
-                "price": float(area.get("price", fallback_price) or fallback_price),
+                "price": float(area_dict.get("price", fallback_price) or fallback_price),
                 "includes": includes,
-                "is_reservable": area.get("is_reservable", True) is not False,
+                "is_reservable": area_dict.get("is_reservable", True) is not False,
                 "geometry": geometry,
             }
         )
 
     return normalized
+
 
 
 async def _build_public_rooms_catalog(session: AsyncSession) -> list[dict[str, object]]:

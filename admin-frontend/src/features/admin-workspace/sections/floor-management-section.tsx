@@ -6,13 +6,8 @@ import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import GridOnOutlinedIcon from '@mui/icons-material/GridOnOutlined'
 import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined'
 import RotateRightOutlinedIcon from '@mui/icons-material/RotateRightOutlined'
-import DeskOutlinedIcon from '@mui/icons-material/DeskOutlined'
-import TableBarOutlinedIcon from '@mui/icons-material/TableBarOutlined'
-import ChairOutlinedIcon from '@mui/icons-material/ChairOutlined'
-import CastConnectedOutlinedIcon from '@mui/icons-material/CastConnectedOutlined'
-import LocalFloristOutlinedIcon from '@mui/icons-material/LocalFloristOutlined'
-import DoorBackOutlinedIcon from '@mui/icons-material/DoorBackOutlined'
-import BorderAllOutlinedIcon from '@mui/icons-material/BorderAllOutlined'
+
+import MeetingRoomOutlinedIcon from '@mui/icons-material/MeetingRoomOutlined'
 import {
   Avatar,
   Box,
@@ -116,32 +111,16 @@ const parseBlueprintLayout = (blueprintImage?: string | null): DeskZone[] | null
 const TOOLBOX_TEMPLATES = [
   { type: 'table', label: 'Meeting Room', w: 140, h: 80, isReservable: true, category: 'Standard Rooms' },
   { type: 'table', label: 'Conference Room', w: 180, h: 100, isReservable: true, category: 'Standard Rooms' },
-  { type: 'desk', label: 'Focus Cabin', w: 60, h: 60, isReservable: true, category: 'Standard Rooms' },
-  { type: 'desk', label: 'Hot Desk', w: 90, h: 60, isReservable: true, category: 'Standard Rooms' },
-  { type: 'table', label: 'Collaboration Zone', w: 120, h: 90, isReservable: true, category: 'Standard Rooms' },
-  { type: 'chair', label: 'Rest Area', w: 80, h: 80, isReservable: false, category: 'Standard Rooms' },
-  { type: 'desk', label: 'Custom Space', w: 90, h: 60, isReservable: true, category: 'Custom Space' },
+  { type: 'desk', label: 'Private Office', w: 100, h: 80, isReservable: true, category: 'Standard Rooms' },
+  { type: 'desk', label: 'Focus Room', w: 80, h: 70, isReservable: true, category: 'Standard Rooms' },
+  { type: 'table', label: 'Creative Studio', w: 150, h: 90, isReservable: true, category: 'Standard Rooms' },
+  { type: 'table', label: 'Training Room', w: 160, h: 100, isReservable: true, category: 'Standard Rooms' },
+  { type: 'desk', label: 'Custom Room', w: 100, h: 80, isReservable: true, category: 'Custom Space' },
 ] as const
 
 const getElementIcon = (type: string, size: 'small' | 'medium' = 'medium') => {
   const sx = { fontSize: size === 'small' ? '12px' : '20px' }
-  switch (type) {
-    case 'table':
-      return <TableBarOutlinedIcon sx={sx} />
-    case 'chair':
-      return <ChairOutlinedIcon sx={sx} />
-    case 'projector':
-      return <CastConnectedOutlinedIcon sx={sx} />
-    case 'plant':
-      return <LocalFloristOutlinedIcon sx={sx} />
-    case 'door':
-      return <DoorBackOutlinedIcon sx={sx} />
-    case 'wall':
-      return <BorderAllOutlinedIcon sx={sx} />
-    case 'desk':
-    default:
-      return <DeskOutlinedIcon sx={sx} />
-  }
+  return <MeetingRoomOutlinedIcon sx={sx} />
 }
 
 const getElementColors = (type: string, isSelected: boolean) => {
@@ -154,41 +133,6 @@ const getElementColors = (type: string, isSelected: boolean) => {
     }
   }
   switch (type) {
-    case 'plant':
-      return {
-        border: 'success.main',
-        bg: (theme: Theme) => alpha(theme.palette.success.main, 0.08),
-        shadow: 'none',
-        accent: 'success.main',
-      }
-    case 'wall':
-      return {
-        border: '#475569',
-        bg: (theme: Theme) => theme.palette.mode === 'light' ? '#cbd5e1' : '#334155',
-        shadow: 'none',
-        accent: '#475569',
-      }
-    case 'door':
-      return {
-        border: '#b45309',
-        bg: (theme: Theme) => theme.palette.mode === 'light' ? '#fef3c7' : '#78350f',
-        shadow: 'none',
-        accent: '#b45309',
-      }
-    case 'projector':
-      return {
-        border: 'secondary.main',
-        bg: (theme: Theme) => alpha(theme.palette.secondary.main, 0.08),
-        shadow: 'none',
-        accent: 'secondary.main',
-      }
-    case 'chair':
-      return {
-        border: '#6b7280',
-        bg: (theme: Theme) => theme.palette.mode === 'light' ? '#f3f4f6' : '#1f2937',
-        shadow: 'none',
-        accent: '#6b7280',
-      }
     case 'table':
       return {
         border: 'info.main',
@@ -662,7 +606,7 @@ export function FloorBuilderDialog({
           <Grid size={{ xs: 12, md: 3 }}>
             <Stack spacing={2.5}>
               <Paper variant="outlined" sx={{ p: 2.25, borderRadius: 2, backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.01) }}>
-                <Typography sx={{ fontWeight: 800, mb: 2 }}>Toolbox Elements</Typography>
+                <Typography sx={{ fontWeight: 800, mb: 2 }}>Toolbox Rooms</Typography>
 
                 {/* Standard Rooms */}
                 <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontWeight: 700, mb: 1, textTransform: 'uppercase' }}>
@@ -842,12 +786,12 @@ export function FloorBuilderDialog({
                   sx={{ p: 2.25, borderRadius: 2, borderColor: 'primary.main', border: '1.5px solid' }}
                 >
                   <Typography sx={{ fontWeight: 800, mb: 2 }} color="primary">
-                    Element Properties
+                    Room / Area Properties
                   </Typography>
                   <Stack spacing={2}>
                     {roomImageError ? <Alert severity="error">{roomImageError}</Alert> : null}
                     <TextField
-                      label="Element Label"
+                      label="Room / Area Name"
                       size="small"
                       value={selectedDesk.name}
                       onChange={(e) => handleUpdateSelected('name', e.target.value)}
@@ -855,18 +799,18 @@ export function FloorBuilderDialog({
 
                     <TextField
                       select
-                      label="Type"
+                      label="Room Type"
                       size="small"
                       value={selectedDesk.type || 'desk'}
                       onChange={(e) => handleUpdateSelected('type', e.target.value as ElementType)}
                     >
-                      <MenuItem value="desk">Work Desk</MenuItem>
-                      <MenuItem value="table">Meeting Table</MenuItem>
-                      <MenuItem value="chair">Office Chair</MenuItem>
-                      <MenuItem value="projector">Projector / Screen</MenuItem>
-                      <MenuItem value="plant">Office Plant</MenuItem>
-                      <MenuItem value="door">Office Door</MenuItem>
-                      <MenuItem value="wall">Partition Wall</MenuItem>
+                      <MenuItem value="desk">Private Office / Focus Room</MenuItem>
+                      <MenuItem value="table">Meeting / Conference Room</MenuItem>
+                      <MenuItem value="chair">Lounge Area</MenuItem>
+                      <MenuItem value="projector">Presentation / Media Room</MenuItem>
+                      <MenuItem value="plant">Open Workspace</MenuItem>
+                      <MenuItem value="door">Office Area</MenuItem>
+                      <MenuItem value="wall">Collaboration Space</MenuItem>
                     </TextField>
 
                     <TextField
@@ -1019,13 +963,13 @@ export function FloorBuilderDialog({
                       onClick={() => handleDeleteDesk(selectedIndex)}
                       startIcon={<DeleteOutlineOutlinedIcon />}
                     >
-                      Delete Element
+                      Delete Room / Area
                     </Button>
                   </Stack>
                 </Paper>
               ) : (
                 <Alert severity="info" sx={{ borderRadius: 2 }}>
-                  Click any element on the canvas to inspect, rotate, or modify its properties. Or choose an element from the Toolbox to add it.
+                  Click any room or area on the canvas to inspect, rotate, or modify its properties. Or choose a room from the Toolbox to add it.
                 </Alert>
               )}
             </Stack>
