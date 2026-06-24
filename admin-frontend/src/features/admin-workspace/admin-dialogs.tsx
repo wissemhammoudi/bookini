@@ -960,7 +960,7 @@ export const FloorDialog = ({
   const [isUploadingBlueprint, setIsUploadingBlueprint] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
 
-  const { handleSubmit, register, reset, setValue, formState: { errors } } = useForm<FloorFormValues>({
+  const { handleSubmit, register, reset, setValue, getValues, formState: { errors } } = useForm<FloorFormValues>({
     resolver: zodResolver(floorSchema),
     values: {
       place_id: value?.place_id ?? places[0]?.id ?? '',
@@ -995,6 +995,42 @@ export const FloorDialog = ({
   const handleClose = () => {
     reset()
     onClose()
+  }
+
+  const extractReservationAreasFromBlueprint = () => {
+    const rawBlueprint = getValues('blueprint_image')?.trim()
+    if (!rawBlueprint) {
+      setUploadError('Paste blueprint JSON first, then extract reservation areas.')
+      return
+    }
+
+    try {
+      const parsed = JSON.parse(rawBlueprint)
+      if (!Array.isArray(parsed)) {
+        setUploadError('Blueprint must be a JSON array of layout elements.')
+        return
+      }
+
+      const areas = parsed
+        .filter((item): item is { name?: unknown; isReservable?: unknown } => Boolean(item) && typeof item === 'object')
+        .filter((item) => item.isReservable !== false)
+        .map((item) => (typeof item.name === 'string' ? item.name.trim() : ''))
+        .filter(Boolean)
+
+      const uniqueAreas = Array.from(new Set(areas))
+      if (!uniqueAreas.length) {
+        setUploadError('No reservable areas found in blueprint JSON.')
+        return
+      }
+
+      setValue('reservation_areas', uniqueAreas.join(', '), {
+        shouldDirty: true,
+        shouldValidate: true,
+      })
+      setUploadError(null)
+    } catch {
+      setUploadError('Invalid blueprint JSON. Paste a valid JSON layout array.')
+    }
   }
 
   return (
@@ -1039,7 +1075,7 @@ export const FloorDialog = ({
               label="Building Blueprint"
               {...register('blueprint_image')}
               error={Boolean(errors.blueprint_image)}
-              helperText={errors.blueprint_image?.message ?? 'Optional URL or choose building blueprint image'}
+              helperText={errors.blueprint_image?.message ?? 'Optional image URL, upload, or paste blueprint JSON array'}
               fullWidth
             />
             <Button
@@ -1058,7 +1094,22 @@ export const FloorDialog = ({
             </Button>
           </Stack>
 
-          <TextField label="Reservation Areas" {...register('reservation_areas')} error={Boolean(errors.reservation_areas)} helperText={errors.reservation_areas?.message ?? 'Comma separated values'} />
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ alignItems: { sm: 'flex-start' } }}>
+            <TextField
+              label="Reservation Areas"
+              {...register('reservation_areas')}
+              error={Boolean(errors.reservation_areas)}
+              helperText={errors.reservation_areas?.message ?? 'Comma separated values'}
+              fullWidth
+            />
+            <Button
+              variant="outlined"
+              onClick={extractReservationAreasFromBlueprint}
+              sx={{ height: 40, mt: { sm: 0.5 }, whiteSpace: 'nowrap' }}
+            >
+              Extract Areas
+            </Button>
+          </Stack>
           <TextField select label="Status" defaultValue={value?.status ?? 'ACTIVE'} {...register('status')} error={Boolean(errors.status)} helperText={errors.status?.message}>
             <MenuItem value="ACTIVE">Active</MenuItem>
             <MenuItem value="SUSPENDED">Suspended</MenuItem>

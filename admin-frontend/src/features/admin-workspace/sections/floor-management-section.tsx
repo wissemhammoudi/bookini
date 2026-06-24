@@ -55,6 +55,35 @@ type DeskZone = {
   isReservable?: boolean
 }
 
+const parseBlueprintLayout = (blueprintImage?: string | null): DeskZone[] | null => {
+  if (!blueprintImage) return null
+
+  const source = blueprintImage.trim()
+  if (!source.startsWith('[')) return null
+
+  try {
+    const parsed = JSON.parse(source)
+    if (!Array.isArray(parsed)) return null
+
+    const layout = parsed
+      .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === 'object' && typeof item.name === 'string')
+      .map((item) => ({
+        name: String(item.name),
+        x: Number(item.x ?? 0),
+        y: Number(item.y ?? 0),
+        w: Number(item.w ?? 90),
+        h: Number(item.h ?? 60),
+        type: (item.type as ElementType | undefined) ?? 'desk',
+        rotation: Number(item.rotation ?? 0),
+        isReservable: item.isReservable === false ? false : true,
+      }))
+
+    return layout.length ? layout : null
+  } catch {
+    return null
+  }
+}
+
 const TOOLBOX_TEMPLATES = [
   { type: 'desk', label: 'Work Desk', w: 90, h: 60, isReservable: true, category: 'Furniture' },
   { type: 'table', label: 'Meeting Table', w: 140, h: 80, isReservable: true, category: 'Furniture' },
@@ -202,66 +231,56 @@ export function FloorsSection({
     }
   }
 
-  const renderBlueprintPreview = (blueprintImage: string) => {
-    try {
-      if (blueprintImage.startsWith('[{"name":')) {
-        const layoutDesks = JSON.parse(blueprintImage) as DeskZone[]
+  const renderBlueprintPreview = (layoutDesks: DeskZone[]) => (
+    <Box
+      sx={{
+        width: 96,
+        height: 96,
+        position: 'relative',
+        border: '1.5px solid',
+        borderColor: 'divider',
+        borderRadius: 1.5,
+        backgroundColor: (theme) => (theme.palette.mode === 'light' ? '#fafbfc' : '#0e1525'),
+        backgroundImage: (theme) =>
+          theme.palette.mode === 'light'
+            ? 'radial-gradient(circle, #cbd5e1 0.75px, transparent 0.75px)'
+            : 'radial-gradient(circle, #334155 0.75px, transparent 0.75px)',
+        backgroundSize: '8px 8px',
+        overflow: 'hidden',
+      }}
+    >
+      {layoutDesks.map((d, index) => {
+        const scale = 0.192
+        const type = d.type || 'desk'
+        const rotation = d.rotation || 0
+        const colors = getElementColors(type, false)
+
         return (
           <Box
+            key={index}
             sx={{
-              width: 96,
-              height: 96,
               position: 'relative',
-              border: '1.5px solid',
-              borderColor: 'divider',
-              borderRadius: 1.5,
-              backgroundColor: (theme) => (theme.palette.mode === 'light' ? '#fafbfc' : '#0e1525'),
-              backgroundImage: (theme) =>
-                theme.palette.mode === 'light'
-                  ? 'radial-gradient(circle, #cbd5e1 0.75px, transparent 0.75px)'
-                  : 'radial-gradient(circle, #334155 0.75px, transparent 0.75px)',
-              backgroundSize: '8px 8px',
+              left: d.x * scale,
+              top: d.y * scale,
+              width: d.w * scale,
+              height: d.h * scale,
+              backgroundColor: colors.bg,
+              border: '1px solid',
+              borderColor: colors.border,
+              borderRadius: 0.5,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transform: `rotate(${rotation}deg)`,
               overflow: 'hidden',
             }}
           >
-            {layoutDesks.map((d, index) => {
-              const scale = 0.192
-              const type = d.type || 'desk'
-              const rotation = d.rotation || 0
-              const colors = getElementColors(type, false)
-
-              return (
-                <Box
-                  key={index}
-                  sx={{
-                    position: 'absolute',
-                    left: d.x * scale,
-                    top: d.y * scale,
-                    width: d.w * scale,
-                    height: d.h * scale,
-                    backgroundColor: colors.bg,
-                    border: '1px solid',
-                    borderColor: colors.border,
-                    borderRadius: 0.5,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    transform: `rotate(${rotation}deg)`,
-                    overflow: 'hidden',
-                  }}
-                >
-                  {getElementIcon(type, 'small')}
-                </Box>
-              )
-            })}
+            {getElementIcon(type, 'small')}
           </Box>
         )
-      }
-    } catch {
-      // ignore
-    }
-    return null
-  }
+      })}
+    </Box>
+  )
 
   return (
     <Stack spacing={3}>
@@ -289,16 +308,7 @@ export function FloorsSection({
         <Grid container spacing={2.5}>
           {floors.map((floor) => {
             const place = places.find((item) => item.id === floor.place_id)
-            let parsedLayout: DeskZone[] | null = null
-            if (floor.blueprint_image) {
-              try {
-                if (floor.blueprint_image.startsWith('[{"name":')) {
-                  parsedLayout = JSON.parse(floor.blueprint_image)
-                }
-              } catch {
-                // ignore
-              }
-            }
+            const parsedLayout = parseBlueprintLayout(floor.blueprint_image)
 
             return (
               <Grid key={floor.id} size={{ xs: 12, lg: 6 }}>
@@ -317,7 +327,7 @@ export function FloorsSection({
                   <Stack spacing={2}>
                     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
                       {parsedLayout ? (
-                        renderBlueprintPreview(floor.blueprint_image!)
+                        renderBlueprintPreview(parsedLayout)
                       ) : (
                         <Avatar
                           src={floor.blueprint_image || undefined}
@@ -343,7 +353,7 @@ export function FloorsSection({
                       {floor.reservation_areas.map((area) => (
                         <Chip
                           key={area}
-                          label={area}
+                          label={`${area} • $${floor.pricing.toFixed(2)}`}
                           variant="outlined"
                           sx={{ backgroundColor: alpha('#0059B3', 0.04) }}
                         />
@@ -395,15 +405,9 @@ type FloorBuilderDialogProps = {
 
 function FloorBuilderDialog({ open, floor, onClose, onSave, isSaving }: FloorBuilderDialogProps) {
   const [desks, setDesks] = useState<DeskZone[]>(() => {
-    if (floor.blueprint_image) {
-      try {
-        if (floor.blueprint_image.startsWith('[{"name":')) {
-          return JSON.parse(floor.blueprint_image)
-        }
-      } catch {
-        // ignore
-      }
-    }
+    const parsedLayout = parseBlueprintLayout(floor.blueprint_image)
+    if (parsedLayout) return parsedLayout
+
     return (floor.reservation_areas ?? []).map((area, idx) => ({
       name: area,
       x: 20 + (idx % 4) * 110,

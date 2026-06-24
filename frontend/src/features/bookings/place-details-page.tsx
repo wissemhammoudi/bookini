@@ -62,6 +62,9 @@ const overlaps = (startA: string, endA: string, startB: string, endB: string) =>
   return aStart < bEnd && aEnd > bStart
 }
 
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
 const buildMedia = (room: PublicRoom) => {
   const imageSeed = encodeURIComponent(room.name.toLowerCase().replace(/\s+/g, '-'))
 
@@ -126,7 +129,8 @@ export const PlaceDetailsPage = () => {
 
   const createBookingMutation = useMutation({ mutationFn: createPublicBookingRequest })
   const floorReviewsLimit = 5
-  const reviewFloorId = room?.primary_floor_id ?? room?.floors?.[0]?.id
+  const reviewFloorId = resolvedSelectedFloorId
+  const hasReviewableFloor = Boolean(reviewFloorId && UUID_PATTERN.test(reviewFloorId))
 
   const floorReviewsQuery = useQuery({
     queryKey: ['floor-reviews', reviewFloorId, floorReviewsPage, floorReviewsMinFilter],
@@ -136,7 +140,7 @@ export const PlaceDetailsPage = () => {
         offset: floorReviewsPage * floorReviewsLimit,
         min_rating: floorReviewsMinFilter > 0 ? floorReviewsMinFilter : undefined,
       }),
-    enabled: Boolean(reviewFloorId),
+    enabled: hasReviewableFloor,
   })
 
   const upsertFloorReviewMutation = useMutation({
@@ -486,7 +490,7 @@ export const PlaceDetailsPage = () => {
                     </Stack>
                   </Stack>
 
-                  {floorReviewsQuery.isError ? <Alert severity="error">Could not load ratings and comments right now.</Alert> : null}
+                  {hasReviewableFloor && floorReviewsQuery.isError ? <Alert severity="error">Could not load ratings and comments right now.</Alert> : null}
 
                   <Grid container spacing={2.5}>
                     <Grid size={{ xs: 12, md: 5 }}>
@@ -507,12 +511,14 @@ export const PlaceDetailsPage = () => {
                             <Stack direction="row" spacing={1}>
                               <Button
                                 variant="contained"
-                                disabled={upsertFloorReviewMutation.isPending}
+                                disabled={upsertFloorReviewMutation.isPending || !hasReviewableFloor}
                                 onClick={() =>
-                                  upsertFloorReviewMutation.mutate({
-                                    rating: floorRating,
-                                    comment: floorComment.trim() || undefined,
-                                  })
+                                  hasReviewableFloor
+                                    ? upsertFloorReviewMutation.mutate({
+                                      rating: floorRating,
+                                      comment: floorComment.trim() || undefined,
+                                    })
+                                    : null
                                 }
                               >
                                 Save rating
@@ -520,12 +526,18 @@ export const PlaceDetailsPage = () => {
                               <Button
                                 variant="outlined"
                                 color="error"
-                                disabled={deleteFloorReviewMutation.isPending}
-                                onClick={() => deleteFloorReviewMutation.mutate()}
+                                disabled={deleteFloorReviewMutation.isPending || !hasReviewableFloor}
+                                onClick={() => {
+                                  if (!hasReviewableFloor) return
+                                  deleteFloorReviewMutation.mutate()
+                                }}
                               >
                                 Delete my rating
                               </Button>
                             </Stack>
+                            {!hasReviewableFloor ? (
+                              <Alert severity="info">Ratings are not available for this place yet.</Alert>
+                            ) : null}
                             {upsertFloorReviewMutation.isError || deleteFloorReviewMutation.isError ? (
                               <Alert severity="error">You need to be logged in and have a completed booking to rate this place.</Alert>
                             ) : null}
