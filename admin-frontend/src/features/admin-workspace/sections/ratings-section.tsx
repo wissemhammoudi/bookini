@@ -138,7 +138,7 @@ export const RatingsSection = () => {
       <Card sx={{ border: '1px solid', borderColor: 'divider' }}>
         <CardContent>
           <Typography variant="h6" sx={{ fontWeight: 800, mb: 1.5 }}>
-            Latest Admin Ratings
+            Latest Admin Rating
           </Typography>
 
           <TextField
