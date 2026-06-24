@@ -176,7 +176,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Scan backend image (high/critical)
-        uses: aquasecurity/trivy-action@v0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ${{ env.BACKEND_IMAGE }}:${{ github.sha }}
           severity: HIGH,CRITICAL
@@ -184,7 +184,7 @@ jobs:
           exit-code: 1
 
       - name: Scan frontend image (high/critical)
-        uses: aquasecurity/trivy-action@v0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
           severity: HIGH,CRITICAL
@@ -192,7 +192,7 @@ jobs:
           exit-code: 1
 
       - name: Scan admin frontend image (high/critical)
-        uses: aquasecurity/trivy-action@v0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ${{ env.ADMIN_FRONTEND_IMAGE }}:${{ github.sha }}
           severity: HIGH,CRITICAL
