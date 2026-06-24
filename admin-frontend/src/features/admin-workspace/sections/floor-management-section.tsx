@@ -118,7 +118,7 @@ const TOOLBOX_TEMPLATES = [
   { type: 'desk', label: 'Custom Room', w: 100, h: 80, isReservable: true, category: 'Custom Space' },
 ] as const
 
-const getElementIcon = (type: string, size: 'small' | 'medium' = 'medium') => {
+const getElementIcon = (_type: string, size: 'small' | 'medium' = 'medium') => {
   const sx = { fontSize: size === 'small' ? '12px' : '20px' }
   return <MeetingRoomOutlinedIcon sx={sx} />
 }
