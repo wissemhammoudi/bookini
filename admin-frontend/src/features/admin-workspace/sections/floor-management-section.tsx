@@ -114,13 +114,13 @@ const parseBlueprintLayout = (blueprintImage?: string | null): DeskZone[] | null
 }
 
 const TOOLBOX_TEMPLATES = [
-  { type: 'desk', label: 'Work Desk', w: 90, h: 60, isReservable: true, category: 'Furniture' },
-  { type: 'table', label: 'Meeting Table', w: 140, h: 80, isReservable: true, category: 'Furniture' },
-  { type: 'chair', label: 'Office Chair', w: 45, h: 45, isReservable: false, category: 'Furniture' },
-  { type: 'projector', label: 'Projector/Screen', w: 100, h: 40, isReservable: false, category: 'Equipment' },
-  { type: 'plant', label: 'Office Plant', w: 40, h: 40, isReservable: false, category: 'Decor' },
-  { type: 'wall', label: 'Partition Wall', w: 120, h: 20, isReservable: false, category: 'Structure' },
-  { type: 'door', label: 'Office Door', w: 60, h: 20, isReservable: false, category: 'Structure' },
+  { type: 'table', label: 'Meeting Room', w: 140, h: 80, isReservable: true, category: 'Standard Rooms' },
+  { type: 'table', label: 'Conference Room', w: 180, h: 100, isReservable: true, category: 'Standard Rooms' },
+  { type: 'desk', label: 'Focus Cabin', w: 60, h: 60, isReservable: true, category: 'Standard Rooms' },
+  { type: 'desk', label: 'Hot Desk', w: 90, h: 60, isReservable: true, category: 'Standard Rooms' },
+  { type: 'table', label: 'Collaboration Zone', w: 120, h: 90, isReservable: true, category: 'Standard Rooms' },
+  { type: 'chair', label: 'Rest Area', w: 80, h: 80, isReservable: false, category: 'Standard Rooms' },
+  { type: 'desk', label: 'Custom Space', w: 90, h: 60, isReservable: true, category: 'Custom Space' },
 ] as const
 
 const getElementIcon = (type: string, size: 'small' | 'medium' = 'medium') => {
@@ -539,9 +539,8 @@ export function FloorBuilderDialog({
   }
 
   const handleAddTemplate = (template: typeof TOOLBOX_TEMPLATES[number]) => {
-    const typeCount = desks.filter((d) => (d.type || 'desk') === template.type).length + 1
-    const roomCount = desks.filter((d) => d.isReservable !== false).length + 1
-    const defaultName = template.isReservable ? `Room ${roomCount}` : `${template.label} ${typeCount}`
+    const count = desks.filter((d) => d.name.startsWith(template.label)).length + 1
+    const defaultName = `${template.label} ${count}`
 
     const newElement: DeskZone = {
       name: defaultName,
@@ -665,13 +664,13 @@ export function FloorBuilderDialog({
               <Paper variant="outlined" sx={{ p: 2.25, borderRadius: 2, backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.01) }}>
                 <Typography sx={{ fontWeight: 800, mb: 2 }}>Toolbox Elements</Typography>
 
-                {/* Furniture Category */}
+                {/* Standard Rooms */}
                 <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontWeight: 700, mb: 1, textTransform: 'uppercase' }}>
-                  Furniture
+                  Standard Rooms
                 </Typography>
                 <Grid container spacing={1} sx={{ mb: 2.5 }}>
-                  {TOOLBOX_TEMPLATES.filter(t => t.category === 'Furniture').map((t) => (
-                    <Grid key={t.type} size={{ xs: 6 }}>
+                  {TOOLBOX_TEMPLATES.filter(t => t.category === 'Standard Rooms').map((t) => (
+                    <Grid key={t.label} size={{ xs: 6 }}>
                       <Button
                         fullWidth
                         variant="outlined"
@@ -694,42 +693,13 @@ export function FloorBuilderDialog({
                   ))}
                 </Grid>
 
-                {/* Equipment & Decor Category */}
+                {/* Custom Space */}
                 <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontWeight: 700, mb: 1, textTransform: 'uppercase' }}>
-                  Equipment & Decor
-                </Typography>
-                <Grid container spacing={1} sx={{ mb: 2.5 }}>
-                  {TOOLBOX_TEMPLATES.filter(t => t.category === 'Equipment' || t.category === 'Decor').map((t) => (
-                    <Grid key={t.type} size={{ xs: 6 }}>
-                      <Button
-                        fullWidth
-                        variant="outlined"
-                        onClick={() => handleAddTemplate(t)}
-                        sx={{
-                          height: 72,
-                          flexDirection: 'column',
-                          borderRadius: 2,
-                          textTransform: 'none',
-                          p: 1,
-                          fontSize: '11px',
-                          fontWeight: 700,
-                          lineHeight: 1.2,
-                        }}
-                      >
-                        {getElementIcon(t.type)}
-                        <Box sx={{ mt: 0.75 }}>{t.label}</Box>
-                      </Button>
-                    </Grid>
-                  ))}
-                </Grid>
-
-                {/* Structure Category */}
-                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontWeight: 700, mb: 1, textTransform: 'uppercase' }}>
-                  Structure
+                  Custom Space
                 </Typography>
                 <Grid container spacing={1}>
-                  {TOOLBOX_TEMPLATES.filter(t => t.category === 'Structure').map((t) => (
-                    <Grid key={t.type} size={{ xs: 6 }}>
+                  {TOOLBOX_TEMPLATES.filter(t => t.category === 'Custom Space').map((t) => (
+                    <Grid key={t.label} size={{ xs: 6 }}>
                       <Button
                         fullWidth
                         variant="outlined"
