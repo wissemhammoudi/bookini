@@ -5,6 +5,7 @@ import type {
   AdminDashboard,
   AdminUser,
   ActivityItem,
+  AvailabilitySlot,
   AdminPublicProfile,
   AdminRatingsPayload,
   AdminRatingRecord,
@@ -370,7 +371,7 @@ export const createWorkspacePlace = async (payload: {
   capacity: number
   address: string
   pricing: number
-  availability: string
+  availability: AvailabilitySlot[]
   cover_image?: string
   gallery: string[]
   features: string[]
@@ -390,7 +391,7 @@ export const updateWorkspacePlace = async (
     capacity: number
     address: string
     pricing: number
-    availability: string
+    availability: AvailabilitySlot[]
     cover_image?: string
     gallery: string[]
     features: string[]
@@ -410,6 +411,7 @@ export const createWorkspaceFloor = async (payload: {
   floor_name: string
   floor_number: number
   capacity: number
+  pricing: number
   description: string
   blueprint_image?: string
   reservation_areas: string[]
@@ -426,6 +428,7 @@ export const updateWorkspaceFloor = async (
     floor_name: string
     floor_number: number
     capacity: number
+    pricing: number
     description: string
     blueprint_image?: string
     reservation_areas: string[]

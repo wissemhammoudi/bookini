@@ -186,6 +186,13 @@ class AdminWorkspaceOrganizationService:
     @staticmethod
     def create_floor(payload: FloorUpsertRequest) -> FloorRecord:
         state = AdminWorkspaceStateStore.get_state()
+        place_exists = any(place.id == payload.place_id for place in state.places)
+        if not place_exists:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Selected place does not exist",
+            )
+
         floor = FloorRecord(
             id=f"floor-{utc_now().strftime('%H%M%S%f')[-8:]}",
             created_date=utc_now(),
@@ -200,6 +207,13 @@ class AdminWorkspaceOrganizationService:
     @staticmethod
     def update_floor(floor_id: str, payload: FloorUpsertRequest) -> FloorRecord:
         state = AdminWorkspaceStateStore.get_state()
+        place_exists = any(place.id == payload.place_id for place in state.places)
+        if not place_exists:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Selected place does not exist",
+            )
+
         for index, floor in enumerate(state.floors):
             if floor.id == floor_id:
                 updated = floor.model_copy(update=payload.model_dump())

@@ -33,6 +33,30 @@ def _organization_id_from_building(building: str) -> str:
     return normalized or "unknown"
 
 
+def _format_availability(value: object) -> str:
+    if isinstance(value, str):
+        return value
+
+    if isinstance(value, list):
+        parts: list[str] = []
+        for item in value:
+            if isinstance(item, dict):
+                day = str(item.get("day", "")).title()
+                start_time = str(item.get("start_time", ""))
+                end_time = str(item.get("end_time", ""))
+            else:
+                day = str(getattr(item, "day", "")).title()
+                start_time = str(getattr(item, "start_time", ""))
+                end_time = str(getattr(item, "end_time", ""))
+
+            if day and start_time and end_time:
+                parts.append(f"{day}: {start_time}-{end_time}")
+
+        return ", ".join(parts)
+
+    return ""
+
+
 async def _build_public_rooms_catalog(session: AsyncSession) -> list[dict[str, object]]:
     statement = (
         select(
@@ -109,6 +133,7 @@ async def _build_public_rooms_catalog(session: AsyncSession) -> list[dict[str, o
     for place in managed_places:
         related_floors = [floor for floor in state.floors if floor.place_id == place.id]
         room_id = _room_id_from_floor_id(uuid.uuid4())
+        primary_floor = related_floors[0] if related_floors else None
         organization_name = next(
             (
                 org.name
@@ -124,9 +149,9 @@ async def _build_public_rooms_catalog(session: AsyncSession) -> list[dict[str, o
             "name": place.name,
             "description": place.description,
             "capacity": place.capacity,
-            "price": place.pricing,
+            "price": primary_floor.pricing if primary_floor else place.pricing,
             "address": place.address,
-            "availability": place.availability,
+            "availability": _format_availability(place.availability),
             "amenities": place.features,
             "features": place.features,
             "image": organization_name[:1].upper() if organization_name else "B",
@@ -144,6 +169,7 @@ async def _build_public_rooms_catalog(session: AsyncSession) -> list[dict[str, o
                     "floor_name": floor.floor_name,
                     "floor_number": floor.floor_number,
                     "capacity": floor.capacity,
+                    "price": floor.pricing,
                     "description": floor.description,
                     "status": floor.status,
                     "reservation_areas": floor.reservation_areas,
@@ -173,6 +199,37 @@ def _has_time_overlap(start_a: str, end_a: str, start_b: str, end_b: str) -> boo
     start_b_minutes = _time_to_minutes(start_b)
     end_b_minutes = _time_to_minutes(end_b)
     return start_a_minutes < end_b_minutes and end_a_minutes > start_b_minutes
+
+
+def _calculate_billable_hours(start_time: str, end_time: str) -> int:
+    # Keep pricing logic aligned with current frontend calculation (hour granularity).
+    start_hour = int(start_time.split(":")[0])
+    end_hour = int(end_time.split(":")[0])
+    return max(0, end_hour - start_hour)
+
+
+def _resolve_hourly_rate(
+    room_entry: dict[str, object],
+    selected_floor_id: str | None,
+) -> float:
+    room_rate = float(room_entry.get("price", 0) or 0)
+    floors = room_entry.get("floors", [])
+    if not isinstance(floors, list) or not selected_floor_id:
+        return room_rate
+
+    matched_floor = next(
+        (
+            floor
+            for floor in floors
+            if isinstance(floor, dict)
+            and str(floor.get("id", "")) == selected_floor_id
+        ),
+        None,
+    )
+    if not matched_floor:
+        return room_rate
+
+    return float(matched_floor.get("price", room_rate) or room_rate)
 
 
 def generate_booking_reference() -> str:
@@ -208,6 +265,47 @@ async def create_booking(
     if end_hour <= start_hour:
         raise ValidationException("End time must be after start time")
 
+    public_rooms = await _build_public_rooms_catalog(session)
+    selected_room = next(
+        (
+            room
+            for room in public_rooms
+            if int(room.get("id", -1)) == request.room_id
+        ),
+        None,
+    )
+    if selected_room is None:
+        raise ValidationException("Selected room does not exist")
+
+    selected_floor: dict[str, object] | None = None
+    if request.floor_id:
+        floors = selected_room.get("floors", [])
+        if isinstance(floors, list):
+            selected_floor = next(
+                (
+                    floor
+                    for floor in floors
+                    if isinstance(floor, dict)
+                    and str(floor.get("id", "")) == request.floor_id
+                ),
+                None,
+            )
+        if selected_floor is None:
+            raise ValidationException("Selected floor does not belong to the room")
+
+    canonical_hourly_rate = _resolve_hourly_rate(selected_room, request.floor_id)
+    billable_hours = _calculate_billable_hours(request.start_time, request.end_time)
+    expected_price = round(canonical_hourly_rate * billable_hours, 2)
+    submitted_price = round(float(request.price), 2)
+    if abs(submitted_price - expected_price) > 0.01:
+        raise ValidationException(
+            f"Price mismatch. Expected {expected_price:.2f} based on selected room/floor pricing"
+        )
+
+    canonical_room_name = str(selected_room.get("name", request.room_name))
+    if selected_floor and selected_floor.get("floor_name"):
+        canonical_room_name = f"{canonical_room_name} - {selected_floor['floor_name']}"
+
     repository = PublicBookingRepository(session)
 
     existing_same_day = await repository.list_by_room_and_date_range(
@@ -239,7 +337,7 @@ async def create_booking(
     booking_data = {
         "booking_reference": generate_booking_reference(),
         "room_id": request.room_id,
-        "room_name": request.room_name,
+        "room_name": canonical_room_name,
         "plan_id": request.plan_id,
         "guest_name": request.guest_name,
         "guest_email": request.guest_email,
@@ -249,9 +347,16 @@ async def create_booking(
         "end_time": request.end_time,
         "participants": request.participants,
         "notes": request.notes,
-        "price": request.price,
+        "price": expected_price,
         "status": PublicBookingStatus.PENDING,
-        "metadata_payload": {"user_agent": "web", "source": "public_booking"},
+        "metadata_payload": {
+            "user_agent": "web",
+            "source": "public_booking",
+            "floor_id": request.floor_id,
+            "submitted_price": submitted_price,
+            "canonical_hourly_rate": canonical_hourly_rate,
+            "billable_hours": billable_hours,
+        },
     }
 
     booking = await repository.create(booking_data)

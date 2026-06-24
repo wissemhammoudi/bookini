@@ -59,6 +59,7 @@ export const PublicBookingPage = () => {
   const [organizationFilter, setOrganizationFilter] = useState('ALL')
   const [spaceFilter, setSpaceFilter] = useState('ALL')
   const [floorFilter, setFloorFilter] = useState('ALL')
+  const [roomFilter, setRoomFilter] = useState('ALL')
   const [viewMode, setViewMode] = useState<'grid' | 'hierarchy'>('grid')
 
   const allOrganizations = useMemo(() => {
@@ -106,12 +107,42 @@ export const PublicBookingPage = () => {
     setOrganizationFilter(val)
     setSpaceFilter('ALL')
     setFloorFilter('ALL')
+    setRoomFilter('ALL')
   }
 
   const handleSpaceChange = (val: string) => {
     setSpaceFilter(val)
     setFloorFilter('ALL')
+    setRoomFilter('ALL')
   }
+
+  const handleFloorChange = (val: string) => {
+    setFloorFilter(val)
+    setRoomFilter('ALL')
+  }
+
+  const selectedPlace = useMemo(() => rooms.find((item) => item.id.toString() === spaceFilter), [rooms, spaceFilter])
+  const selectedFloor = useMemo(() => selectedPlace?.floors?.find((item) => item.id === floorFilter), [selectedPlace, floorFilter])
+  const selectedFloorRooms = useMemo(() => {
+    if (!selectedFloor) return []
+
+    const floorPrice = selectedFloor.price ?? selectedPlace?.price ?? 0
+    const zones = (selectedFloor.reservation_areas ?? []).map((area) => ({
+      id: area,
+      name: area,
+      capacity: selectedFloor.capacity,
+      price: floorPrice,
+    }))
+
+    if (zones.length > 0) return zones
+
+    return [{
+      id: `${selectedFloor.id}-default-room`,
+      name: `${selectedPlace?.name ?? 'Place'} Room`,
+      capacity: selectedFloor.capacity,
+      price: floorPrice,
+    }]
+  }, [selectedFloor, selectedPlace])
 
   const filteredRooms = useMemo(() => {
     return rooms.filter((room) => {
@@ -175,7 +206,7 @@ export const PublicBookingPage = () => {
         }
         description="Explore our curated spaces, review real-time calendar availability, and submit your booking request in a few clicks."
       >
-        <Chip label={`${rooms.length} spaces available`} color="primary" variant="filled" sx={{ fontWeight: 700 }} />
+        <Chip label={`${rooms.length} places available`} color="primary" variant="filled" sx={{ fontWeight: 700 }} />
       </PublicPageHeader>
 
       {/* Main Content */}
@@ -186,7 +217,7 @@ export const PublicBookingPage = () => {
           {/* Rooms Section */}
           <Box>
             <Typography variant="h4" sx={{ fontWeight: 800, mb: 1 }}>
-              Available Spaces
+              Available Places
             </Typography>
             <Typography color="text.secondary" sx={{ mb: 3 }}>
               Use filters to find your ideal place, then open the place page for full details, media, and calendar booking.
@@ -206,7 +237,7 @@ export const PublicBookingPage = () => {
                   },
                 }}
               >
-                <Tab icon={<ViewModuleIcon sx={{ mr: 1 }} fontSize="small" />} iconPosition="start" label="All Spaces Grid" value="grid" />
+                <Tab icon={<ViewModuleIcon sx={{ mr: 1 }} fontSize="small" />} iconPosition="start" label="All Places Grid" value="grid" />
                 <Tab icon={<AccountTreeIcon sx={{ mr: 1 }} fontSize="small" />} iconPosition="start" label="Interactive Hierarchy Explorer" value="hierarchy" />
               </Tabs>
             </Box>
@@ -228,7 +259,7 @@ export const PublicBookingPage = () => {
                     <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
                       <FilterListOutlinedIcon color="primary" fontSize="small" />
                       <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
-                        Filter Spaces
+                        Filter Places
                       </Typography>
                       <Chip label={`${filteredRooms.length} result${filteredRooms.length === 1 ? '' : 's'}`} size="small" variant="outlined" />
                     </Stack>
@@ -280,13 +311,13 @@ export const PublicBookingPage = () => {
                         </FormControl>
 
                         <FormControl size="small" sx={{ minWidth: { xs: '100%', md: 200 }, flex: 1 }}>
-                          <InputLabel>Space</InputLabel>
+                          <InputLabel>Place</InputLabel>
                           <Select
                             value={spaceFilter}
-                            label="Space"
+                            label="Place"
                             onChange={(e) => handleSpaceChange(e.target.value as string)}
                           >
-                            <MenuItem value="ALL">All spaces</MenuItem>
+                            <MenuItem value="ALL">All places</MenuItem>
                             {allSpaces.map((space) => (
                               <MenuItem key={space.id} value={space.id.toString()}>{space.name}</MenuItem>
                             ))}
@@ -298,7 +329,7 @@ export const PublicBookingPage = () => {
                           <Select
                             value={floorFilter}
                             label="Floor"
-                            onChange={(e) => setFloorFilter(e.target.value as string)}
+                            onChange={(e) => handleFloorChange(e.target.value as string)}
                           >
                             <MenuItem value="ALL">All floors</MenuItem>
                             {allFloors.map((floor) => (
@@ -342,7 +373,7 @@ export const PublicBookingPage = () => {
                       borderColor: isLight ? 'rgba(0, 89, 179, 0.2)' : 'rgba(255, 255, 255, 0.2)',
                     }}
                   >
-                    <Typography sx={{ fontWeight: 700 }}>No matching spaces found</Typography>
+                    <Typography sx={{ fontWeight: 700 }}>No matching places found</Typography>
                     <Typography color="text.secondary">
                       Try changing your filters or search term to see more places.
                     </Typography>
@@ -353,7 +384,7 @@ export const PublicBookingPage = () => {
               <Box
                 sx={{
                   display: 'grid',
-                  gridTemplateColumns: { xs: '1fr', md: '1fr 1fr 1fr' },
+                  gridTemplateColumns: { xs: '1fr', md: '1fr 1fr', xl: '1fr 1fr 1fr 1fr' },
                   gap: 3,
                   alignItems: 'stretch',
                 }}
@@ -380,7 +411,7 @@ export const PublicBookingPage = () => {
                         </Typography>
                       </Stack>
                       <Typography variant="body2" color="text.secondary">
-                        Select an organization to view all its spaces.
+                        Select an organization to view all its places.
                       </Typography>
 
                       <Stack spacing={1.5}>
@@ -438,7 +469,7 @@ export const PublicBookingPage = () => {
                                   </Typography>
                                   <Stack direction="row" spacing={1} sx={{ mt: 0.5, alignItems: 'center' }}>
                                     <Chip
-                                      label={`${spaceCount} space${spaceCount === 1 ? '' : 's'}`}
+                                      label={`${spaceCount} place${spaceCount === 1 ? '' : 's'}`}
                                       size="small"
                                       color={isSelected ? "primary" : "default"}
                                       variant={isSelected ? "filled" : "outlined"}
@@ -467,7 +498,7 @@ export const PublicBookingPage = () => {
                   </Paper>
                 </Box>
 
-                {/* Column 2: Spaces */}
+                {/* Column 2: Places */}
                 <Box>
                   <Paper
                     elevation={0}
@@ -485,7 +516,7 @@ export const PublicBookingPage = () => {
                       <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
                         <MeetingRoomIcon color="primary" />
                         <Typography variant="h6" sx={{ fontWeight: 800 }}>
-                          Spaces
+                          Places
                         </Typography>
                         {organizationFilter !== 'ALL' && (
                           <Chip
@@ -516,7 +547,7 @@ export const PublicBookingPage = () => {
                             Select an Organization
                           </Typography>
                           <Typography variant="caption" color="text.secondary" sx={{ maxWidth: 200 }}>
-                            Choose an organization on the left to see all operated spaces.
+                            Choose an organization on the left to see all operated places.
                           </Typography>
                         </Box>
                       ) : (
@@ -662,23 +693,21 @@ export const PublicBookingPage = () => {
                         >
                           <MeetingRoomIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 1.5 }} />
                           <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 0.5 }}>
-                            Select a Space
+                            Select a Place
                           </Typography>
                           <Typography variant="caption" color="text.secondary" sx={{ maxWidth: 200 }}>
-                            Choose a physical workspace in the middle column to see all its floors.
+                            Choose a place in the middle column to see all its floors.
                           </Typography>
                         </Box>
                       ) : (
                         <Stack spacing={2}>
-                          {rooms
-                            .find((r) => r.id.toString() === spaceFilter)
-                            ?.floors?.map((floor) => {
+                          {selectedPlace?.floors?.map((floor) => {
                               const isSelected = floorFilter === floor.id
                               return (
                                 <Paper
                                   key={floor.id}
                                   elevation={0}
-                                  onClick={() => setFloorFilter(isSelected ? 'ALL' : floor.id)}
+                                  onClick={() => handleFloorChange(isSelected ? 'ALL' : floor.id)}
                                   sx={{
                                     p: 2,
                                     borderRadius: 2.5,
@@ -750,12 +779,124 @@ export const PublicBookingPage = () => {
                                       }}
                                       sx={{ fontWeight: 700, textTransform: 'none', mt: 0.5 }}
                                     >
-                                      View Space Details
+                                      View Place Details
                                     </Button>
                                   </Stack>
                                 </Paper>
                               )
                             })}
+                        </Stack>
+                      )}
+                    </Stack>
+                  </Paper>
+                </Box>
+
+                {/* Column 4: Rooms */}
+                <Box>
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      p: 3,
+                      borderRadius: 3,
+                      border: '1px solid',
+                      borderColor: isLight ? 'rgba(0, 89, 179, 0.08)' : 'rgba(255, 255, 255, 0.06)',
+                      background: isLight ? '#ffffff' : 'rgba(10, 14, 26, 0.45)',
+                      height: '100%',
+                      minHeight: 500,
+                    }}
+                  >
+                    <Stack spacing={2.5}>
+                      <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
+                        <MeetingRoomIcon color="primary" />
+                        <Typography variant="h6" sx={{ fontWeight: 800 }}>
+                          Rooms
+                        </Typography>
+                        {floorFilter !== 'ALL' ? (
+                          <Chip
+                            label="Filtered"
+                            size="small"
+                            color="info"
+                            variant="outlined"
+                            onDelete={() => handleFloorChange('ALL')}
+                            sx={{ height: 20, fontSize: '0.7rem' }}
+                          />
+                        ) : null}
+                      </Stack>
+
+                      {floorFilter === 'ALL' ? (
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            py: 6,
+                            textAlign: 'center',
+                            opacity: 0.85,
+                          }}
+                        >
+                          <LayersIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 1.5 }} />
+                          <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 0.5 }}>
+                            Select a Floor
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary" sx={{ maxWidth: 220 }}>
+                            Choose a floor in the third column to show reservable rooms.
+                          </Typography>
+                        </Box>
+                      ) : (
+                        <Stack spacing={1.5}>
+                          {selectedFloorRooms.map((roomItem) => {
+                            const isSelected = roomFilter === roomItem.id
+                            return (
+                              <Paper
+                                key={roomItem.id}
+                                elevation={0}
+                                onClick={() => setRoomFilter(isSelected ? 'ALL' : roomItem.id)}
+                                sx={{
+                                  p: 2,
+                                  borderRadius: 2.5,
+                                  border: '1.5px solid',
+                                  borderColor: isSelected
+                                    ? 'primary.main'
+                                    : isLight
+                                      ? 'rgba(0, 89, 179, 0.06)'
+                                      : 'rgba(255, 255, 255, 0.05)',
+                                  background: isSelected
+                                    ? isLight
+                                      ? 'rgba(25, 118, 210, 0.04)'
+                                      : 'rgba(25, 118, 210, 0.12)'
+                                    : isLight
+                                      ? 'rgba(0, 0, 0, 0.01)'
+                                      : 'rgba(255, 255, 255, 0.02)',
+                                  cursor: 'pointer',
+                                  transition: 'all 0.25s',
+                                  '&:hover': {
+                                    borderColor: isSelected ? 'primary.main' : 'primary.light',
+                                  },
+                                }}
+                              >
+                                <Stack spacing={1}>
+                                  <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                                    {roomItem.name}
+                                  </Typography>
+                                  <Typography variant="caption" color="text.secondary">
+                                    Capacity: {roomItem.capacity} people · €{roomItem.price}/hr
+                                  </Typography>
+                                  <Button
+                                    variant="contained"
+                                    size="small"
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      openPlacePage(Number(spaceFilter))
+                                    }}
+                                    sx={{ alignSelf: 'flex-start', textTransform: 'none', fontWeight: 700 }}
+                                  >
+                                    Book This Room
+                                  </Button>
+                                </Stack>
+                              </Paper>
+                            )
+                          })}
                         </Stack>
                       )}
                     </Stack>

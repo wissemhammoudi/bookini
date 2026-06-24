@@ -188,6 +188,7 @@ export function FloorsSection({
           floor_name: builderFloor.floor_name,
           floor_number: builderFloor.floor_number,
           capacity: builderFloor.capacity,
+          pricing: builderFloor.pricing,
           description: builderFloor.description,
           blueprint_image: JSON.stringify(desks),
           reservation_areas: desks.filter((d) => d.isReservable !== false).map((d) => d.name),
@@ -337,7 +338,7 @@ export function FloorsSection({
                         <Typography sx={{ mt: 1 }}>{floor.description}</Typography>
                       </Box>
                     </Stack>
-                    <Typography variant="body2">Capacity: {floor.capacity}</Typography>
+                    <Typography variant="body2">Capacity: {floor.capacity} · Price: ${floor.pricing.toFixed(2)}</Typography>
                     <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
                       {floor.reservation_areas.map((area) => (
                         <Chip

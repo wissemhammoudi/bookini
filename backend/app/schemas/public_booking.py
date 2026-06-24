@@ -6,6 +6,7 @@ from pydantic import BaseModel, EmailStr, Field
 
 class PublicBookingCreateRequest(BaseModel):
     room_id: int
+    floor_id: str | None = None
     room_name: str
     plan_id: str
     guest_name: str = Field(min_length=1, max_length=255)

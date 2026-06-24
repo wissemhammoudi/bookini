@@ -14,6 +14,20 @@ ReservationStatusValue = Literal[
     "CANCELLED",
 ]
 RequestStatusValue = Literal["PENDING", "APPROVED", "REJECTED", "PROCESSED"]
+AvailabilityDayValue = Literal[
+    "MONDAY",
+    "TUESDAY",
+    "WEDNESDAY",
+    "THURSDAY",
+    "FRIDAY",
+    "SATURDAY",
+]
+
+
+class AvailabilitySlot(BaseModel):
+    day: AvailabilityDayValue
+    start_time: str = Field(pattern=r"^([01]\d|2[0-3]):[0-5]\d$")
+    end_time: str = Field(pattern=r"^([01]\d|2[0-3]):[0-5]\d$")
 
 
 class DashboardStatCard(BaseModel):
@@ -102,7 +116,7 @@ class PlaceRecord(BaseModel):
     capacity: int
     address: str
     pricing: float
-    availability: str
+    availability: list[AvailabilitySlot] = Field(default_factory=list)
     cover_image: str | None = None
     gallery: list[str] = Field(default_factory=list)
     features: list[str] = Field(default_factory=list)
@@ -118,7 +132,7 @@ class PlaceUpsertRequest(BaseModel):
     capacity: int = Field(ge=1, le=5000)
     address: str = Field(min_length=5, max_length=255)
     pricing: float = Field(ge=0)
-    availability: str = Field(min_length=2, max_length=120)
+    availability: list[AvailabilitySlot] = Field(min_length=1)
     cover_image: str | None = None
     gallery: list[str] = Field(default_factory=list)
     features: list[str] = Field(default_factory=list)
@@ -131,6 +145,7 @@ class FloorRecord(BaseModel):
     floor_name: str
     floor_number: int
     capacity: int
+    pricing: float = Field(ge=0)
     description: str
     blueprint_image: str | None = None
     reservation_areas: list[str] = Field(default_factory=list)
@@ -143,6 +158,7 @@ class FloorUpsertRequest(BaseModel):
     floor_name: str = Field(min_length=2, max_length=120)
     floor_number: int = Field(ge=0, le=200)
     capacity: int = Field(ge=1, le=5000)
+    pricing: float = Field(ge=0)
     description: str = Field(min_length=5, max_length=400)
     blueprint_image: str | None = None
     reservation_areas: list[str] = Field(default_factory=list)

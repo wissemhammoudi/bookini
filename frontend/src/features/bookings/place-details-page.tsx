@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import {
   Alert,
@@ -92,6 +92,7 @@ export const PlaceDetailsPage = () => {
   const [selectedPlan] = useState('pay-as-you-go')
   const [bookingDialogOpen, setBookingDialogOpen] = useState(false)
   const [bookingError, setBookingError] = useState<string | null>(null)
+  const [selectedFloorId, setSelectedFloorId] = useState<string | undefined>(undefined)
   const [floorRating, setFloorRating] = useState(5)
   const [floorComment, setFloorComment] = useState('')
   const [floorReviewsPage, setFloorReviewsPage] = useState(0)
@@ -107,6 +108,15 @@ export const PlaceDetailsPage = () => {
   const room = useMemo(() => {
     return (roomsQuery.data ?? []).find((item) => item.id === Number.parseInt(roomId, 10)) ?? null
   }, [roomsQuery.data, roomId])
+
+  useEffect(() => {
+    if (!room) {
+      setSelectedFloorId(undefined)
+      return
+    }
+
+    setSelectedFloorId(room.primary_floor_id ?? room.floors?.[0]?.id)
+  }, [room])
 
   const media = useMemo(() => (room ? buildMedia(room) : { images: [], videos: [] }), [room])
 
@@ -197,7 +207,7 @@ export const PlaceDetailsPage = () => {
     setBookingDialogOpen(true)
   }
 
-  const handleBookingSubmit = async (data: BookingFormData & { roomId: number; roomName: string; planId: string; price: number }) => {
+  const handleBookingSubmit = async (data: BookingFormData & { roomId: number; floorId?: string; roomName: string; planId: string; price: number }) => {
     setBookingError(null)
 
     try {
@@ -219,6 +229,7 @@ export const PlaceDetailsPage = () => {
 
       const created = await createBookingMutation.mutateAsync({
         room_id: data.roomId,
+        floor_id: data.floorId,
         room_name: data.roomName,
         plan_id: data.planId,
         guest_name: data.guestName,
@@ -758,6 +769,8 @@ export const PlaceDetailsPage = () => {
       <BookingDialog
         open={bookingDialogOpen}
         room={room}
+        selectedFloorId={selectedFloorId}
+        onFloorChange={setSelectedFloorId}
         selectedPlan={selectedPlan}
         isLight={isLight}
         onClose={() => {

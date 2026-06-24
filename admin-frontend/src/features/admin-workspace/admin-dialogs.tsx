@@ -44,6 +44,20 @@ const isAbsoluteUrl = (value: string) => {
 
 const isUploadPath = (value: string) => value.startsWith('/api/v1/auth/uploads/')
 
+const resolveImageUrl = (value: string) => {
+  if (!value) return ''
+  if (value.startsWith('http://') || value.startsWith('https://') || value.startsWith('data:')) {
+    return value
+  }
+
+  const apiBase = import.meta.env.VITE_API_BASE_URL ?? (import.meta.env.DEV ? 'http://localhost:8000/api/v1' : '/api/v1')
+  if (value.startsWith('/api/v1')) {
+    return import.meta.env.DEV ? `http://localhost:8000${value}` : value
+  }
+
+  return `${apiBase}${value.startsWith('/') ? '' : '/'}${value}`
+}
+
 const optionalImageLocation = (label: string) => z
   .string()
   .refine(
@@ -80,7 +94,14 @@ const placeSchema = z.object({
   capacity: z.number().int().min(1, 'Capacity must be at least 1'),
   address: z.string().min(5, 'Address is required'),
   pricing: z.number().min(0, 'Pricing must be positive'),
-  availability: z.string().min(2, 'Availability is required'),
+  availability: z.array(z.object({
+    day: z.enum(['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY']),
+    start_time: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Invalid start time'),
+    end_time: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Invalid end time'),
+  }).refine((slot) => slot.start_time < slot.end_time, {
+    message: 'End time must be after start time',
+    path: ['end_time'],
+  })).min(1, 'At least one availability slot is required'),
   cover_image: optionalImageLocation('cover image'),
   gallery: z.string(),
   features: z.string(),
@@ -92,6 +113,7 @@ const floorSchema = z.object({
   floor_name: z.string().min(2, 'Floor name is required'),
   floor_number: z.number().int().min(0, 'Floor number must be 0 or more'),
   capacity: z.number().int().min(1, 'Capacity must be at least 1'),
+  pricing: z.number().min(0, 'Pricing must be positive'),
   description: z.string().min(5, 'Description is required'),
   blueprint_image: z.string().optional(),
   reservation_areas: z.string(),
@@ -121,6 +143,22 @@ type OrganizationFormValues = z.infer<typeof organizationSchema>
 type PlaceFormValues = z.infer<typeof placeSchema>
 type FloorFormValues = z.infer<typeof floorSchema>
 type SettingsFormValues = z.infer<typeof settingsSchema>
+
+type AvailabilityDay = 'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY'
+type AvailabilitySlot = {
+  day: AvailabilityDay
+  start_time: string
+  end_time: string
+}
+
+const availabilityDayOptions: Array<{ value: AvailabilityDay; label: string }> = [
+  { value: 'MONDAY', label: 'Monday' },
+  { value: 'TUESDAY', label: 'Tuesday' },
+  { value: 'WEDNESDAY', label: 'Wednesday' },
+  { value: 'THURSDAY', label: 'Thursday' },
+  { value: 'FRIDAY', label: 'Friday' },
+  { value: 'SATURDAY', label: 'Saturday' },
+]
 
 const dialogPaperSx = {
   '& .MuiDialog-paper': {
@@ -325,7 +363,7 @@ export const OrganizationDialog = ({
   const [isUploadingCover, setIsUploadingCover] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
 
-  const { handleSubmit, register, reset, setValue, formState: { errors } } = useForm<OrganizationFormValues>({
+  const { handleSubmit, register, reset, setValue, watch, formState: { errors } } = useForm<OrganizationFormValues>({
     resolver: zodResolver(organizationSchema),
     values: {
       name: value?.name ?? '',
@@ -380,6 +418,9 @@ export const OrganizationDialog = ({
     setUploadError(null)
     onClose()
   }
+
+  const logoValue = watch('logo')
+  const coverValue = watch('cover_image')
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth sx={dialogPaperSx}>
@@ -439,7 +480,7 @@ export const OrganizationDialog = ({
               disabled={isUploadingLogo}
               sx={{ height: 40, mt: 0.5, whiteSpace: 'nowrap' }}
             >
-              {isUploadingLogo ? 'Uploading...' : 'Upload File'}
+              {isUploadingLogo ? 'Uploading...' : logoValue ? 'Replace' : 'Upload File'}
               <input
                 type="file"
                 accept="image/*"
@@ -448,6 +489,31 @@ export const OrganizationDialog = ({
               />
             </Button>
           </Stack>
+
+          {logoValue ? (
+            <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 2.5 }}>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ alignItems: { xs: 'flex-start', sm: 'center' }, justifyContent: 'space-between' }}>
+                <Box
+                  component="img"
+                  src={resolveImageUrl(logoValue)}
+                  alt="Organization logo"
+                  sx={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 2, border: '1px solid', borderColor: 'divider', backgroundColor: 'background.default' }}
+                />
+                <Stack direction="row" spacing={1}>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    component="label"
+                    disabled={isUploadingLogo}
+                  >
+                    {isUploadingLogo ? 'Uploading...' : 'Change'}
+                    <input type="file" accept="image/*" hidden onChange={handleLogoUpload} />
+                  </Button>
+                  <Button size="small" color="error" onClick={() => setValue('logo', '')}>Delete</Button>
+                </Stack>
+              </Stack>
+            </Paper>
+          ) : null}
 
           <Stack direction="row" spacing={1.5} sx={{ alignItems: 'flex-start' }}>
             <TextField
@@ -463,7 +529,7 @@ export const OrganizationDialog = ({
               disabled={isUploadingCover}
               sx={{ height: 40, mt: 0.5, whiteSpace: 'nowrap' }}
             >
-              {isUploadingCover ? 'Uploading...' : 'Upload File'}
+              {isUploadingCover ? 'Uploading...' : coverValue ? 'Replace' : 'Upload File'}
               <input
                 type="file"
                 accept="image/*"
@@ -472,6 +538,26 @@ export const OrganizationDialog = ({
               />
             </Button>
           </Stack>
+
+          {coverValue ? (
+            <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 2.5 }}>
+              <Stack spacing={1.25}>
+                <Box
+                  component="img"
+                  src={resolveImageUrl(coverValue)}
+                  alt="Organization cover"
+                  sx={{ width: '100%', maxHeight: 180, objectFit: 'cover', borderRadius: 2, border: '1px solid', borderColor: 'divider', backgroundColor: 'background.default' }}
+                />
+                <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
+                  <Button size="small" variant="outlined" component="label" disabled={isUploadingCover}>
+                    {isUploadingCover ? 'Uploading...' : 'Change'}
+                    <input type="file" accept="image/*" hidden onChange={handleCoverUpload} />
+                  </Button>
+                  <Button size="small" color="error" onClick={() => setValue('cover_image', '')}>Delete</Button>
+                </Stack>
+              </Stack>
+            </Paper>
+          ) : null}
 
           <TextField label="Social Links" {...register('social_links')} error={Boolean(errors.social_links)} helperText={errors.social_links?.message ?? 'Comma separated URLs'} />
         </Stack>
@@ -498,7 +584,7 @@ type PlaceDialogProps = BaseDialogProps & {
     capacity: number
     address: string
     pricing: number
-    availability: string
+    availability: AvailabilitySlot[]
     cover_image?: string
     gallery: string[]
     features: string[]
@@ -519,8 +605,13 @@ export const PlaceDialog = ({
   const [isUploadingCover, setIsUploadingCover] = useState(false)
   const [isUploadingGallery, setIsUploadingGallery] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
+  const defaultAvailabilitySlot: AvailabilitySlot = {
+    day: 'MONDAY',
+    start_time: '09:00',
+    end_time: '17:00',
+  }
 
-  const { handleSubmit, register, reset, setValue, getValues, formState: { errors } } = useForm<PlaceFormValues>({
+  const { handleSubmit, register, reset, setValue, getValues, watch, formState: { errors } } = useForm<PlaceFormValues>({
     resolver: zodResolver(placeSchema),
     values: {
       organization_id: value?.organization_id ?? organizations[0]?.id ?? '',
@@ -530,7 +621,7 @@ export const PlaceDialog = ({
       capacity: value?.capacity ?? 1,
       address: value?.address ?? '',
       pricing: value?.pricing ?? 0,
-      availability: value?.availability ?? '',
+      availability: value?.availability?.length ? value.availability : [{ ...defaultAvailabilitySlot }],
       cover_image: value?.cover_image ?? '',
       gallery: value?.gallery.join(', ') ?? '',
       features: value?.features.join(', ') ?? '',
@@ -589,6 +680,27 @@ export const PlaceDialog = ({
     onClose()
   }
 
+  const coverValue = watch('cover_image')
+  const galleryValue = watch('gallery')
+  const availabilityValue = watch('availability')
+  const galleryItems = galleryValue.split(',').map((item: string) => item.trim()).filter(Boolean)
+
+  const removeGalleryItem = (targetIndex: number) => {
+    const nextGallery = galleryItems.filter((_, index) => index !== targetIndex)
+    setValue('gallery', nextGallery.join(', '))
+  }
+
+  const addAvailabilitySlot = () => {
+    const nextAvailability = [...availabilityValue, { ...defaultAvailabilitySlot }]
+    setValue('availability', nextAvailability, { shouldDirty: true, shouldValidate: true })
+  }
+
+  const removeAvailabilitySlot = (targetIndex: number) => {
+    if (availabilityValue.length <= 1) return
+    const nextAvailability = availabilityValue.filter((_, index) => index !== targetIndex)
+    setValue('availability', nextAvailability, { shouldDirty: true, shouldValidate: true })
+  }
+
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth sx={dialogPaperSx}>
       <DialogTitle sx={{ px: 3, pt: 3, pb: 0 }}>
@@ -630,7 +742,74 @@ export const PlaceDialog = ({
             </Grid>
           </Grid>
           <TextField label="Address" {...register('address')} error={Boolean(errors.address)} helperText={errors.address?.message} />
-          <TextField label="Availability" {...register('availability')} error={Boolean(errors.availability)} helperText={errors.availability?.message} />
+          <Paper variant="outlined" sx={{ p: 2, borderRadius: 2.5 }}>
+            <Stack spacing={1.5}>
+              <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="subtitle2">Availability (Monday-Saturday)</Typography>
+                <Button size="small" onClick={addAvailabilitySlot}>Add slot</Button>
+              </Stack>
+              {availabilityValue.map((_, index) => {
+                const slotError = errors.availability?.[index]
+
+                return (
+                  <Grid key={`availability-${index}`} container spacing={1.25} sx={{ alignItems: 'flex-start' }}>
+                    <Grid size={{ xs: 12, md: 4 }}>
+                      <TextField
+                        select
+                        fullWidth
+                        label="Day"
+                        defaultValue={availabilityValue[index]?.day ?? 'MONDAY'}
+                        {...register(`availability.${index}.day` as const)}
+                        error={Boolean(slotError?.day)}
+                        helperText={slotError?.day?.message}
+                      >
+                        {availabilityDayOptions.map((dayOption) => (
+                          <MenuItem key={dayOption.value} value={dayOption.value}>{dayOption.label}</MenuItem>
+                        ))}
+                      </TextField>
+                    </Grid>
+                    <Grid size={{ xs: 12, md: 3 }}>
+                      <TextField
+                        fullWidth
+                        type="time"
+                        label="Start"
+                        defaultValue={availabilityValue[index]?.start_time ?? '09:00'}
+                        {...register(`availability.${index}.start_time` as const)}
+                        error={Boolean(slotError?.start_time)}
+                        helperText={slotError?.start_time?.message}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, md: 3 }}>
+                      <TextField
+                        fullWidth
+                        type="time"
+                        label="End"
+                        defaultValue={availabilityValue[index]?.end_time ?? '17:00'}
+                        {...register(`availability.${index}.end_time` as const)}
+                        error={Boolean(slotError?.end_time)}
+                        helperText={slotError?.end_time?.message}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, md: 2 }}>
+                      <Button
+                        fullWidth
+                        color="error"
+                        variant="outlined"
+                        disabled={availabilityValue.length <= 1}
+                        onClick={() => removeAvailabilitySlot(index)}
+                        sx={{ height: 56 }}
+                      >
+                        Remove
+                      </Button>
+                    </Grid>
+                  </Grid>
+                )
+              })}
+              {typeof errors.availability?.message === 'string' ? (
+                <Typography variant="caption" color="error">{errors.availability.message}</Typography>
+              ) : null}
+            </Stack>
+          </Paper>
           <TextField label="Description" multiline minRows={3} {...register('description')} error={Boolean(errors.description)} helperText={errors.description?.message} />
           
           <Stack direction="row" spacing={1.5} sx={{ alignItems: 'flex-start' }}>
@@ -647,7 +826,7 @@ export const PlaceDialog = ({
               disabled={isUploadingCover}
               sx={{ height: 40, mt: 0.5, whiteSpace: 'nowrap' }}
             >
-              {isUploadingCover ? 'Uploading...' : 'Upload File'}
+              {isUploadingCover ? 'Uploading...' : coverValue ? 'Replace' : 'Upload File'}
               <input
                 type="file"
                 accept="image/*"
@@ -656,6 +835,26 @@ export const PlaceDialog = ({
               />
             </Button>
           </Stack>
+
+          {coverValue ? (
+            <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 2.5 }}>
+              <Stack spacing={1.25}>
+                <Box
+                  component="img"
+                  src={resolveImageUrl(coverValue)}
+                  alt="Place cover"
+                  sx={{ width: '100%', maxHeight: 190, objectFit: 'cover', borderRadius: 2, border: '1px solid', borderColor: 'divider', backgroundColor: 'background.default' }}
+                />
+                <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
+                  <Button size="small" variant="outlined" component="label" disabled={isUploadingCover}>
+                    {isUploadingCover ? 'Uploading...' : 'Change'}
+                    <input type="file" accept="image/*" hidden onChange={handleCoverImageUpload} />
+                  </Button>
+                  <Button size="small" color="error" onClick={() => setValue('cover_image', '')}>Delete</Button>
+                </Stack>
+              </Stack>
+            </Paper>
+          ) : null}
 
           <Stack direction="row" spacing={1.5} sx={{ alignItems: 'flex-start' }}>
             <TextField
@@ -681,6 +880,39 @@ export const PlaceDialog = ({
               />
             </Button>
           </Stack>
+
+          {galleryItems.length > 0 ? (
+            <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 2.5 }}>
+              <Stack spacing={1.25}>
+                <Typography variant="caption" sx={{ fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'text.secondary' }}>
+                  Gallery Preview
+                </Typography>
+                <Box
+                  sx={{
+                    display: 'grid',
+                    gridTemplateColumns: { xs: 'repeat(2, minmax(0, 1fr))', md: 'repeat(3, minmax(0, 1fr))' },
+                    gap: 1,
+                  }}
+                >
+                  {galleryItems.map((imageUrl, index) => (
+                    <Paper key={`${imageUrl}-${index}`} variant="outlined" sx={{ p: 0.75, borderRadius: 2 }}>
+                      <Stack spacing={0.75}>
+                        <Box
+                          component="img"
+                          src={resolveImageUrl(imageUrl)}
+                          alt={`Gallery image ${index + 1}`}
+                          sx={{ width: '100%', height: 90, objectFit: 'cover', borderRadius: 1.5, backgroundColor: 'background.default' }}
+                        />
+                        <Button size="small" color="error" onClick={() => removeGalleryItem(index)}>
+                          Remove
+                        </Button>
+                      </Stack>
+                    </Paper>
+                  ))}
+                </Box>
+              </Stack>
+            </Paper>
+          ) : null}
           <TextField label="Feature Tags" {...register('features')} error={Boolean(errors.features)} helperText={errors.features?.message ?? 'Comma separated values'} />
           <TextField select label="Status" defaultValue={value?.status ?? 'ACTIVE'} {...register('status')} error={Boolean(errors.status)} helperText={errors.status?.message}>
             <MenuItem value="ACTIVE">Active</MenuItem>
@@ -707,6 +939,7 @@ type FloorDialogProps = BaseDialogProps & {
     floor_name: string
     floor_number: number
     capacity: number
+    pricing: number
     description: string
     blueprint_image?: string
     reservation_areas: string[]
@@ -734,6 +967,7 @@ export const FloorDialog = ({
       floor_name: value?.floor_name ?? '',
       floor_number: value?.floor_number ?? 0,
       capacity: value?.capacity ?? 1,
+      pricing: value?.pricing ?? 0,
       description: value?.description ?? '',
       blueprint_image: value?.blueprint_image ?? '',
       reservation_areas: value?.reservation_areas.join(', ') ?? '',
@@ -788,11 +1022,14 @@ export const FloorDialog = ({
           </TextField>
           <TextField label="Floor Name" {...register('floor_name')} error={Boolean(errors.floor_name)} helperText={errors.floor_name?.message} />
           <Grid container spacing={2}>
-            <Grid size={{ xs: 12, md: 6 }}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <TextField fullWidth type="number" label="Floor Number" {...register('floor_number', { valueAsNumber: true })} error={Boolean(errors.floor_number)} helperText={errors.floor_number?.message} />
             </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <TextField fullWidth type="number" label="Capacity" {...register('capacity', { valueAsNumber: true })} error={Boolean(errors.capacity)} helperText={errors.capacity?.message} />
+            </Grid>
+            <Grid size={{ xs: 12, md: 4 }}>
+              <TextField fullWidth type="number" label="Pricing" {...register('pricing', { valueAsNumber: true })} error={Boolean(errors.pricing)} helperText={errors.pricing?.message} />
             </Grid>
           </Grid>
           <TextField label="Description" multiline minRows={3} {...register('description')} error={Boolean(errors.description)} helperText={errors.description?.message} />

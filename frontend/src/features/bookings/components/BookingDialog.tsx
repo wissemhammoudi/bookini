@@ -10,6 +10,7 @@ import {
   DialogTitle,
   Divider,
   InputAdornment,
+  MenuItem,
   Paper,
   Stack,
   TextField,
@@ -23,17 +24,19 @@ import EmailIcon from '@mui/icons-material/Email'
 import PhoneIcon from '@mui/icons-material/Phone'
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney'
 
-import type { Room } from '../constants'
+import type { PublicRoom } from '@/lib/api'
 import type { BookingFormData } from '../types'
 import { useBookingForm, usePriceCalculation } from '../hooks'
 
 interface BookingDialogProps {
   open: boolean
-  room: Room | null
+  room: PublicRoom | null
+  selectedFloorId?: string
+  onFloorChange?: (floorId: string) => void
   selectedPlan: string
   isLight: boolean
   onClose: () => void
-  onSubmit: (data: BookingFormData & { roomId: number; roomName: string; planId: string; price: number }) => Promise<boolean> | boolean
+  onSubmit: (data: BookingFormData & { roomId: number; floorId?: string; roomName: string; planId: string; price: number }) => Promise<boolean> | boolean
   isLoading?: boolean
   error?: string | null
   initialBookingDate?: string | null
@@ -42,6 +45,8 @@ interface BookingDialogProps {
 export const BookingDialog = ({
   open,
   room,
+  selectedFloorId,
+  onFloorChange,
   selectedPlan,
   isLight,
   onClose,
@@ -53,13 +58,17 @@ export const BookingDialog = ({
   const { formData, handleInputChange, resetForm } = useBookingForm()
   const { calculatePrice } = usePriceCalculation()
 
+  const resolvedFloor = room?.floors?.find((floor) => floor.id === selectedFloorId) ?? room?.floors?.[0]
+  const hourlyRate = resolvedFloor?.price ?? room?.price ?? 0
+  const roomCapacity = resolvedFloor?.capacity ?? room?.capacity ?? 0
+
   useEffect(() => {
     if (open && initialBookingDate) {
       handleInputChange('bookingDate', initialBookingDate)
     }
   }, [open, initialBookingDate, handleInputChange])
 
-  const price = room ? calculatePrice(room.price, formData.startTime, formData.endTime, selectedPlan) : 0
+  const price = room ? calculatePrice(hourlyRate, formData.startTime, formData.endTime, selectedPlan) : 0
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -69,7 +78,8 @@ export const BookingDialog = ({
     const payload = {
       ...formData,
       roomId: room.id,
-      roomName: room.name,
+      floorId: resolvedFloor?.id,
+      roomName: resolvedFloor ? `${room.name} - ${resolvedFloor.floor_name}` : room.name,
       planId: selectedPlan,
       price,
     }
@@ -134,8 +144,8 @@ export const BookingDialog = ({
 
           <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1, mt: 1 }}>
             <Chip icon={<EventIcon />} label="Choose your date & time" size="small" variant="outlined" />
-            <Chip icon={<GroupIcon />} label={`Capacity ${room?.capacity ?? 0}`} size="small" variant="outlined" />
-            <Chip label={`€${room?.price ?? 0}/hour`} size="small" color="primary" variant="filled" />
+            <Chip icon={<GroupIcon />} label={`Capacity ${roomCapacity}`} size="small" variant="outlined" />
+            <Chip label={`€${hourlyRate}/hour`} size="small" color="primary" variant="filled" />
           </Stack>
         </Box>
       </DialogTitle>
@@ -166,10 +176,28 @@ export const BookingDialog = ({
                   <Typography sx={{ fontWeight: 800 }}>{room?.name}</Typography>
                 </Box>
                 <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                  <Chip size="small" label={`${room?.capacity ?? 0} seats`} variant="outlined" />
-                  <Chip size="small" label={`€${room?.price ?? 0}/hr`} color="primary" variant="outlined" />
+                  <Chip size="small" label={`${roomCapacity} seats`} variant="outlined" />
+                  <Chip size="small" label={`€${hourlyRate}/hr`} color="primary" variant="outlined" />
                 </Stack>
               </Stack>
+
+              {room?.floors && room.floors.length > 0 ? (
+                <TextField
+                  select
+                  fullWidth
+                  size="small"
+                  label="Floor"
+                  value={resolvedFloor?.id ?? ''}
+                  onChange={(event) => onFloorChange?.(event.target.value)}
+                  sx={{ mt: 1.5 }}
+                >
+                  {room.floors.map((floor) => (
+                    <MenuItem key={floor.id} value={floor.id}>
+                      {floor.floor_name} • €{floor.price ?? room.price}/hr • {floor.capacity} seats
+                    </MenuItem>
+                  ))}
+                </TextField>
+              ) : null}
             </Paper>
 
             <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
@@ -281,7 +309,7 @@ export const BookingDialog = ({
                   onChange={(e) => handleInputChange('participants', e.target.value)}
                   fullWidth
                   size="small"
-                  slotProps={{ htmlInput: { min: 1, max: room?.capacity } }}
+                  slotProps={{ htmlInput: { min: 1, max: roomCapacity } }}
                 />
               </Box>
 
@@ -325,7 +353,7 @@ export const BookingDialog = ({
                 </Box>
 
                 <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                  <Chip icon={<AttachMoneyIcon />} label={`€${room?.price}/hour`} variant="outlined" />
+                  <Chip icon={<AttachMoneyIcon />} label={`€${hourlyRate}/hour`} variant="outlined" />
                   <Chip label={formData.startTime && formData.endTime ? `${Math.max(0, parseInt(formData.endTime.split(':')[0]) - parseInt(formData.startTime.split(':')[0]))}h selected` : 'Pick time range'} variant="outlined" />
                 </Stack>
               </Stack>

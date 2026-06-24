@@ -15,6 +15,7 @@ export interface BookingFormData {
 
 export interface BookingPayload extends BookingFormData {
   roomId: number
+  floorId?: string
   roomName: string
   planId: string
   price: number

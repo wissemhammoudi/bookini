@@ -9,6 +9,14 @@ import type { PlaceActionHandler } from '@/features/admin-workspace/admin-worksp
 import { EmptyState, SectionHeader, StatusChip } from '@/features/admin-workspace/admin-workspace-utils'
 import type { PlaceRecord } from '@/lib/api-types'
 
+const formatAvailability = (availability: PlaceRecord['availability']) => {
+  if (!availability.length) return 'Not configured'
+
+  return availability
+    .map((slot) => `${slot.day.charAt(0)}${slot.day.slice(1).toLowerCase()}: ${slot.start_time}-${slot.end_time}`)
+    .join(', ')
+}
+
 type PlacesSectionProps = {
   places: PlaceRecord[]
   search: string
@@ -57,7 +65,7 @@ export const PlacesSection = ({
                 <Grid container spacing={1.5}>
                   <Grid size={{ xs: 6 }}><Typography variant="body2" color="text.secondary">Capacity</Typography><Typography>{place.capacity}</Typography></Grid>
                   <Grid size={{ xs: 6 }}><Typography variant="body2" color="text.secondary">Pricing</Typography><Typography>${place.pricing.toFixed(2)}</Typography></Grid>
-                  <Grid size={{ xs: 12 }}><Typography variant="body2" color="text.secondary">Availability</Typography><Typography>{place.availability}</Typography></Grid>
+                  <Grid size={{ xs: 12 }}><Typography variant="body2" color="text.secondary">Availability</Typography><Typography>{formatAvailability(place.availability)}</Typography></Grid>
                   <Grid size={{ xs: 12 }}><Typography variant="body2" color="text.secondary">Address</Typography><Typography>{place.address}</Typography></Grid>
                 </Grid>
                 <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>

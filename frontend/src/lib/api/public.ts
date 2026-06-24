@@ -3,6 +3,7 @@ import type { ApiResponse } from './common-types'
 
 export type PublicBookingCreatePayload = {
   room_id: number
+  floor_id?: string
   room_name: string
   plan_id: string
   guest_name: string
@@ -21,6 +22,7 @@ export type PublicFloor = {
   floor_name: string
   floor_number: number
   capacity: number
+  price?: number
   description: string
   status: string
   reservation_areas: string[]

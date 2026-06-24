@@ -174,6 +174,12 @@ export type OrganizationRecord = {
   created_date: string
 }
 
+export type AvailabilitySlot = {
+  day: 'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY'
+  start_time: string
+  end_time: string
+}
+
 export type PlaceRecord = {
   id: string
   organization_id: string
@@ -183,7 +189,7 @@ export type PlaceRecord = {
   capacity: number
   address: string
   pricing: number
-  availability: string
+  availability: AvailabilitySlot[]
   cover_image: string | null
   gallery: string[]
   features: string[]
@@ -197,6 +203,7 @@ export type FloorRecord = {
   floor_name: string
   floor_number: number
   capacity: number
+  pricing: number
   description: string
   blueprint_image: string | null
   reservation_areas: string[]
