@@ -338,7 +338,7 @@ END:VCALENDAR`
                           borderRadius: 2,
                           border: '1px solid',
                           borderColor: 'primary.main',
-                          background: alpha('primary.main', 0.05),
+                          background: (theme) => alpha(theme.palette.primary.main, 0.05),
                         }}
                       >
                         <Stack direction="row" spacing={2} sx={{ justifyContent: 'space-between', alignItems: 'center' }}>

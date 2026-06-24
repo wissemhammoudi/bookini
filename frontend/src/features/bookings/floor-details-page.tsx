@@ -321,12 +321,18 @@ export const FloorDetailsPage = () => {
   const handleCalendarDateClick = (date: Date) => {
     if (!room) return
 
+    const iso = toIsoDate(date)
+    const hasReservations = (reservedByDate[iso] ?? []).length > 0
+    if (hasReservations) {
+      setBookingError('This date is already reserved and cannot be booked. Please choose another date.')
+      return
+    }
+
     if (bookingType === 'SELECTED_AREAS' && resolvedSelectedAreaKeys.length === 0) {
       setBookingError('Select one or more areas from this floor before opening the booking form.')
       return
     }
 
-    const iso = toIsoDate(date)
     setSelectedCalendarDate(iso)
     setBookingError(null)
     setBookingDialogOpen(true)
@@ -649,7 +655,7 @@ export const FloorDetailsPage = () => {
                     Reservation Calendar
                   </Typography>
                   <Typography color="text.secondary" variant="body2">
-                    Choose a date to open the booking form. Reserved slots are displayed below.
+                    Choose an available date to open the booking form. Reserved dates are disabled.
                   </Typography>
                 </Box>
 
@@ -711,12 +717,14 @@ export const FloorDetailsPage = () => {
 
                   const iso = toIsoDate(day)
                   const reservedSlots = reservedByDate[iso] ?? []
+                  const isDisabled = reservedSlots.length > 0
                   const isSelected = selectedCalendarDate === iso
 
                   return (
                     <Button
                       key={iso}
                       variant={isSelected ? 'contained' : 'outlined'}
+                      disabled={isDisabled}
                       onClick={() => handleCalendarDateClick(day)}
                       sx={{
                         height: { xs: 52, sm: 86 },
@@ -746,7 +754,7 @@ export const FloorDetailsPage = () => {
                             width: 6,
                             height: 6,
                             borderRadius: '50%',
-                            bgcolor: isSelected ? 'common.white' : 'primary.main',
+                            bgcolor: isSelected ? 'common.white' : 'text.disabled',
                             mt: 0.5,
                           }}
                         />
