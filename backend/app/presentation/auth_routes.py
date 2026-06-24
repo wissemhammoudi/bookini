@@ -274,6 +274,10 @@ async def get_upload(filename: str):
 
     from app.infrastructure.minio_client import MinioClient
 
+    # Strip duplicate uploads/ prefix if present
+    if filename.startswith("uploads/"):
+        filename = filename[len("uploads/") :]
+
     minio_client = MinioClient()
     try:
         file_bytes = minio_client.get_file(filename)

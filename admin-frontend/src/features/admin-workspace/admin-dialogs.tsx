@@ -24,6 +24,8 @@ import { z } from 'zod'
 import type { Theme } from '@mui/material'
 
 import { uploadImageRequest } from '@/lib/api'
+import { FloorBuilderDialog } from '@/features/admin-workspace/sections/floor-management-section'
+import type { DeskZone } from '@/features/admin-workspace/sections/floor-management-section'
 
 import type {
   AdminWorkspaceSettings,
@@ -152,6 +154,132 @@ type AvailabilitySlot = {
   day: AvailabilityDay
   start_time: string
   end_time: string
+}
+
+const toUniqueAreaNames = (value: string) => {
+  const seen = new Set<string>()
+  const ordered: string[] = []
+  value
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .forEach((name) => {
+      if (!seen.has(name)) {
+        seen.add(name)
+        ordered.push(name)
+      }
+    })
+  return ordered
+}
+
+const normalizeRoomName = (base: string, used: Set<string>) => {
+  const trimmed = base.trim()
+  const root = trimmed || 'Room'
+  if (!used.has(root)) {
+    used.add(root)
+    return root
+  }
+
+  let idx = 2
+  while (used.has(`${root} ${idx}`)) {
+    idx += 1
+  }
+  const next = `${root} ${idx}`
+  used.add(next)
+  return next
+}
+
+const buildDesksFromFloor = (targetFloor?: FloorRecord, fallbackPrice = 0): DeskZone[] => {
+  const blueprintImage = targetFloor?.blueprint_image
+  if (blueprintImage) {
+    const source = blueprintImage.trim()
+    if (source.startsWith('[')) {
+      try {
+        const parsed = JSON.parse(source)
+        if (Array.isArray(parsed)) {
+          return parsed
+            .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === 'object')
+            .filter((item) => typeof item.name === 'string' && item.name.trim().length > 0)
+            .map((item) => ({
+              name: String(item.name),
+              x: Number(item.x ?? 0),
+              y: Number(item.y ?? 0),
+              w: Number(item.w ?? 90),
+              h: Number(item.h ?? 60),
+              price: Number(item.price ?? fallbackPrice),
+              includes: Array.isArray(item.includes)
+                ? item.includes.filter((entry): entry is string => typeof entry === 'string' && entry.trim().length > 0)
+                : [],
+              type: typeof item.type === 'string' ? item.type as DeskZone['type'] : 'desk',
+              rotation: Number(item.rotation ?? 0),
+              isReservable: item.isReservable === false ? false : true,
+              image_urls: Array.isArray(item.image_urls)
+                ? item.image_urls.filter((url): url is string => typeof url === 'string' && url.trim().length > 0)
+                : [],
+            }))
+        }
+      } catch {
+        // Ignore malformed blueprint JSON and rely on reservation areas.
+      }
+    }
+  }
+
+  return (targetFloor?.reservation_areas ?? []).map((area, idx) => {
+    const areaRecord = typeof area === 'string'
+      ? {
+        name: area,
+        price: fallbackPrice,
+        includes: [] as string[],
+        is_reservable: true,
+        geometry: undefined,
+      }
+      : {
+        ...area,
+        price: area.price ?? fallbackPrice,
+        includes: area.includes ?? [],
+        is_reservable: area.is_reservable !== false,
+      }
+
+    return {
+      name: areaRecord.name,
+      x: areaRecord.geometry?.x ?? 20 + (idx % 4) * 110,
+      y: areaRecord.geometry?.y ?? 20 + Math.floor(idx / 4) * 80,
+      w: areaRecord.geometry?.w ?? 90,
+      h: areaRecord.geometry?.h ?? 60,
+      price: areaRecord.price ?? fallbackPrice,
+      includes: areaRecord.includes ?? [],
+      type: (areaRecord.geometry?.type as DeskZone['type'] | undefined) ?? 'desk',
+      rotation: areaRecord.geometry?.rotation ?? 0,
+      isReservable: areaRecord.is_reservable !== false,
+      image_urls: [],
+    }
+  })
+}
+
+const deriveReservationAreasFromDesks = (desks: DeskZone[], fallbackPrice: number) => {
+  const reservableDesks = desks
+    .filter((desk) => desk.isReservable !== false)
+    .slice()
+    .sort((a, b) => {
+      if (a.y !== b.y) return a.y - b.y
+      return a.x - b.x
+    })
+
+  const used = new Set<string>()
+  return reservableDesks.map((desk, index) => ({
+    name: normalizeRoomName(desk.name || `Room ${index + 1}`, used),
+    price: Number(desk.price ?? fallbackPrice),
+    includes: Array.isArray(desk.includes) ? desk.includes.filter(Boolean) : [],
+    is_reservable: desk.isReservable !== false,
+    geometry: {
+      x: desk.x,
+      y: desk.y,
+      w: desk.w,
+      h: desk.h,
+      rotation: desk.rotation,
+      type: desk.type,
+    },
+  }))
 }
 
 const availabilityDayOptions: Array<{ value: AvailabilityDay; label: string }> = [
@@ -964,6 +1092,10 @@ export const FloorDialog = ({
 }: FloorDialogProps) => {
   const [isUploadingBlueprint, setIsUploadingBlueprint] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
+  const [buildFloorOpen, setBuildFloorOpen] = useState(true)
+  const [builderDesks, setBuilderDesks] = useState<DeskZone[]>(() =>
+    buildDesksFromFloor(value, value?.pricing ?? 0),
+  )
   const [extractedReservationAreas, setExtractedReservationAreas] = useState<ReservationAreaRecord[]>(() =>
     (value?.reservation_areas ?? []).map((area) =>
       typeof area === 'string'
@@ -981,6 +1113,13 @@ export const FloorDialog = ({
         },
     ),
   )
+
+  const syncReservationAreasText = (
+    areas: ReservationAreaRecord[],
+    updater: (next: string) => void,
+  ) => {
+    updater(areas.map((area) => area.name).join(', '))
+  }
 
   const { handleSubmit, register, reset, setValue, getValues, formState: { errors } } = useForm<FloorFormValues>({
     resolver: zodResolver(floorSchema),
@@ -1021,7 +1160,153 @@ export const FloorDialog = ({
   const handleClose = () => {
     reset()
     setExtractedReservationAreas([])
+    setBuildFloorOpen(false)
     onClose()
+  }
+
+  const handleReservationAreasInputChange = (value: string) => {
+    setValue('reservation_areas', value, { shouldDirty: true, shouldValidate: true })
+    const names = toUniqueAreaNames(value)
+    const currentByName = new Map(extractedReservationAreas.map((area) => [area.name, area]))
+    const fallbackPrice = getValues('pricing') ?? 0
+    const nextAreas = names.map((name) => {
+      const existing = currentByName.get(name)
+      if (existing) {
+        return {
+          ...existing,
+          name,
+        }
+      }
+      return {
+        name,
+        price: fallbackPrice,
+        includes: [],
+        is_reservable: true,
+      }
+    })
+    setExtractedReservationAreas(nextAreas)
+  }
+
+  const updateReservationArea = <K extends keyof ReservationAreaRecord>(
+    index: number,
+    key: K,
+    value: ReservationAreaRecord[K],
+  ) => {
+    setExtractedReservationAreas((prev) => {
+      const next = [...prev]
+      next[index] = {
+        ...next[index],
+        [key]: value,
+      }
+
+      if (key === 'name') {
+        const used = new Set(
+          next
+            .filter((_, idx) => idx !== index)
+            .map((area) => area.name),
+        )
+        next[index] = {
+          ...next[index],
+          name: normalizeRoomName(String(value ?? ''), used),
+        }
+      }
+
+      syncReservationAreasText(next, (names) => {
+        setValue('reservation_areas', names, { shouldDirty: true, shouldValidate: true })
+      })
+
+      setBuilderDesks((prevDesks) => {
+        let areaCursor = -1
+        return prevDesks.map((desk) => {
+          if (desk.isReservable === false) {
+            return desk
+          }
+
+          areaCursor += 1
+          const syncedArea = next[areaCursor]
+          if (!syncedArea) {
+            return desk
+          }
+
+          return {
+            ...desk,
+            name: syncedArea.name,
+            price: syncedArea.price ?? desk.price,
+            includes: syncedArea.includes ?? [],
+            isReservable: syncedArea.is_reservable !== false,
+          }
+        })
+      })
+
+      return next
+    })
+  }
+
+  const addReservationArea = () => {
+    setExtractedReservationAreas((prev) => {
+      const used = new Set(prev.map((area) => area.name))
+      const newName = normalizeRoomName(`Room ${prev.length + 1}`, used)
+      const next = [
+        ...prev,
+        {
+          name: newName,
+          price: getValues('pricing') ?? 0,
+          includes: [],
+          is_reservable: true,
+        },
+      ]
+      syncReservationAreasText(next, (names) => {
+        setValue('reservation_areas', names, { shouldDirty: true, shouldValidate: true })
+      })
+      return next
+    })
+  }
+
+  const removeReservationArea = (index: number) => {
+    setExtractedReservationAreas((prev) => {
+      const next = prev.filter((_, idx) => idx !== index)
+      syncReservationAreasText(next, (names) => {
+        setValue('reservation_areas', names, { shouldDirty: true, shouldValidate: true })
+      })
+      return next
+    })
+  }
+
+  const draftFloor: FloorRecord = {
+    id: value?.id ?? 'draft-floor',
+    place_id: getValues('place_id') || value?.place_id || places[0]?.id || '',
+    floor_name: getValues('floor_name') || value?.floor_name || title,
+    floor_number: Number(getValues('floor_number') ?? value?.floor_number ?? 0),
+    floor_size_sqm: Number(getValues('floor_size_sqm') ?? value?.floor_size_sqm ?? 100),
+    floor_shape: getValues('floor_shape') ?? value?.floor_shape ?? 'RECTANGLE',
+    capacity: Number(getValues('capacity') ?? value?.capacity ?? 1),
+    pricing: Number(getValues('pricing') ?? value?.pricing ?? 0),
+    description: getValues('description') || value?.description || '',
+    blueprint_image: getValues('blueprint_image') || value?.blueprint_image || '',
+    reservation_areas: extractedReservationAreas,
+    status: getValues('status') ?? value?.status ?? 'ACTIVE',
+    created_date: value?.created_date ?? new Date().toISOString(),
+  }
+
+  const handleBuildFloorSave = async (desks: DeskZone[]) => {
+    const areas = deriveReservationAreasFromDesks(desks, Number(getValues('pricing') ?? 0))
+
+    setValue('blueprint_image', JSON.stringify(desks), { shouldDirty: true, shouldValidate: true })
+    setExtractedReservationAreas(areas)
+    syncReservationAreasText(areas, (names) => {
+      setValue('reservation_areas', names, { shouldDirty: true, shouldValidate: true })
+    })
+    setUploadError(null)
+    setBuildFloorOpen(false)
+  }
+
+  const handleBuilderDesksLiveChange = (desks: DeskZone[]) => {
+    setBuilderDesks(desks)
+    const areas = deriveReservationAreasFromDesks(desks, Number(getValues('pricing') ?? 0))
+    setExtractedReservationAreas(areas)
+    syncReservationAreasText(areas, (names) => {
+      setValue('reservation_areas', names, { shouldDirty: true, shouldValidate: true })
+    })
   }
 
   const extractReservationAreasFromBlueprint = () => {
@@ -1041,9 +1326,8 @@ export const FloorDialog = ({
       const extractedAreas = parsed
         .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === 'object')
         .filter((item) => item.isReservable !== false)
-        .filter((item) => typeof item.name === 'string' && item.name.trim().length > 0)
-        .map((item) => ({
-          name: String(item.name).trim(),
+        .map((item, index) => ({
+          name: String(item.name ?? `Room ${index + 1}`).trim(),
           price: Number(item.price ?? getValues('pricing') ?? 0),
           includes: Array.isArray(item.includes)
             ? item.includes.filter((entry): entry is string => typeof entry === 'string' && entry.trim().length > 0)
@@ -1060,8 +1344,14 @@ export const FloorDialog = ({
         }))
 
       const uniqueAreaMap = new Map<string, ReservationAreaRecord>()
-      extractedAreas.forEach((area) => {
-        uniqueAreaMap.set(area.name, area)
+      const usedNames = new Set<string>()
+      extractedAreas.forEach((area, index) => {
+        const defaultName = area.name || `Room ${index + 1}`
+        const normalizedName = normalizeRoomName(defaultName, usedNames)
+        uniqueAreaMap.set(normalizedName, {
+          ...area,
+          name: normalizedName,
+        })
       })
       const uniqueAreas = Array.from(uniqueAreaMap.values())
 
@@ -1071,6 +1361,42 @@ export const FloorDialog = ({
       }
 
       setExtractedReservationAreas(uniqueAreas)
+      setBuilderDesks((prevDesks) => {
+        if (!prevDesks.length) {
+          return uniqueAreas.map((area, idx) => ({
+            name: area.name,
+            x: area.geometry?.x ?? 20 + (idx % 4) * 110,
+            y: area.geometry?.y ?? 20 + Math.floor(idx / 4) * 80,
+            w: area.geometry?.w ?? 90,
+            h: area.geometry?.h ?? 60,
+            price: area.price ?? Number(getValues('pricing') ?? 0),
+            includes: area.includes ?? [],
+            type: (area.geometry?.type as DeskZone['type'] | undefined) ?? 'desk',
+            rotation: area.geometry?.rotation ?? 0,
+            isReservable: area.is_reservable !== false,
+            image_urls: [],
+          }))
+        }
+
+        let cursor = -1
+        return prevDesks.map((desk) => {
+          if (desk.isReservable === false) {
+            return desk
+          }
+          cursor += 1
+          const synced = uniqueAreas[cursor]
+          if (!synced) {
+            return desk
+          }
+          return {
+            ...desk,
+            name: synced.name,
+            price: synced.price ?? desk.price,
+            includes: synced.includes ?? [],
+            isReservable: synced.is_reservable !== false,
+          }
+        })
+      })
       setValue('reservation_areas', uniqueAreas.map((area) => area.name).join(', '), {
         shouldDirty: true,
         shouldValidate: true,
@@ -1082,6 +1408,7 @@ export const FloorDialog = ({
   }
 
   return (
+    <>
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth sx={dialogPaperSx}>
       <DialogTitle sx={{ px: 3, pt: 3, pb: 0 }}>
         <DialogHeading
@@ -1161,12 +1488,20 @@ export const FloorDialog = ({
                 onChange={handleBlueprintUpload}
               />
             </Button>
+            <Button
+              variant="contained"
+              onClick={() => setBuildFloorOpen(true)}
+              sx={{ height: 40, mt: 0.5, whiteSpace: 'nowrap' }}
+            >
+              Open Builder
+            </Button>
           </Stack>
 
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ alignItems: { sm: 'flex-start' } }}>
             <TextField
               label="Reservation Areas"
               {...register('reservation_areas')}
+              onChange={(event) => handleReservationAreasInputChange(event.target.value)}
               error={Boolean(errors.reservation_areas)}
               helperText={errors.reservation_areas?.message ?? 'Comma separated values'}
               fullWidth
@@ -1179,6 +1514,80 @@ export const FloorDialog = ({
               Extract Reservation Areas
             </Button>
           </Stack>
+
+          <Paper variant="outlined" sx={{ p: 2, borderRadius: 2.5 }}>
+            <Stack spacing={1.5}>
+              <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
+                  Reservation Areas
+                </Typography>
+                <Button size="small" onClick={addReservationArea}>Add area</Button>
+              </Stack>
+              {extractedReservationAreas.length === 0 ? (
+                <Alert severity="info" sx={{ borderRadius: 2 }}>
+                  Extract reservation areas from Build Floor JSON, or add areas manually.
+                </Alert>
+              ) : (
+                <Stack spacing={1.5}>
+                  {extractedReservationAreas.map((area, index) => (
+                    <Grid key={`${area.name}-${index}`} container spacing={1.25} sx={{ alignItems: 'flex-start' }}>
+                      <Grid size={{ xs: 12, md: 3 }}>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          label="Room Name"
+                          value={area.name}
+                          onChange={(event) => updateReservationArea(index, 'name', event.target.value)}
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, md: 2 }}>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          type="number"
+                          label="Price"
+                          value={area.price ?? 0}
+                          onChange={(event) => updateReservationArea(index, 'price', Number(event.target.value) || 0)}
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, md: 4 }}>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          label="Includes"
+                          value={(area.includes ?? []).join(', ')}
+                          onChange={(event) => updateReservationArea(
+                            index,
+                            'includes',
+                            event.target.value
+                              .split(',')
+                              .map((item) => item.trim())
+                              .filter(Boolean),
+                          )}
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, md: 2 }}>
+                        <FormControlLabel
+                          control={(
+                            <Switch
+                              checked={area.is_reservable !== false}
+                              onChange={(event) => updateReservationArea(index, 'is_reservable', event.target.checked)}
+                            />
+                          )}
+                          label="Reservable"
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, md: 1 }}>
+                        <Button color="error" onClick={() => removeReservationArea(index)} sx={{ minWidth: 0, px: 1 }}>
+                          Remove
+                        </Button>
+                      </Grid>
+                    </Grid>
+                  ))}
+                </Stack>
+              )}
+            </Stack>
+          </Paper>
           <TextField select label="Status" defaultValue={value?.status ?? 'ACTIVE'} {...register('status')} error={Boolean(errors.status)} helperText={errors.status?.message}>
             <MenuItem value="ACTIVE">Active</MenuItem>
             <MenuItem value="SUSPENDED">Suspended</MenuItem>
@@ -1192,6 +1601,17 @@ export const FloorDialog = ({
         </Button>
       </DialogActions>
     </Dialog>
+
+    <FloorBuilderDialog
+      open={buildFloorOpen}
+      floor={draftFloor}
+      onClose={() => setBuildFloorOpen(false)}
+      onSave={handleBuildFloorSave}
+      isSaving={false}
+      desksState={builderDesks}
+      onDesksStateChange={handleBuilderDesksLiveChange}
+    />
+    </>
   )
 }
 

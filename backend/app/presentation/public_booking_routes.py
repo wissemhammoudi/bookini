@@ -228,6 +228,8 @@ async def _build_public_rooms_catalog(session: AsyncSession) -> list[dict[str, o
                     "id": floor.id,
                     "floor_name": floor.floor_name,
                     "floor_number": floor.floor_number,
+                    "floor_size_sqm": floor.floor_size_sqm,
+                    "floor_shape": floor.floor_shape,
                     "capacity": floor.capacity,
                     "price": floor.pricing,
                     "blueprint_image": floor.blueprint_image,
@@ -286,8 +288,7 @@ def _resolve_hourly_rate(
         (
             floor
             for floor in floors
-            if isinstance(floor, dict)
-            and str(floor.get("id", "")) == selected_floor_id
+            if isinstance(floor, dict) and str(floor.get("id", "")) == selected_floor_id
         ),
         None,
     )
@@ -405,11 +406,7 @@ async def create_booking(
 
     public_rooms = await _build_public_rooms_catalog(session)
     selected_room = next(
-        (
-            room
-            for room in public_rooms
-            if int(room.get("id", -1)) == request.room_id
-        ),
+        (room for room in public_rooms if int(room.get("id", -1)) == request.room_id),
         None,
     )
     if selected_room is None:
@@ -488,8 +485,7 @@ async def create_booking(
             or 0
         )
         canonical_hourly_rate = sum(
-            float(area.get("price", floor_rate) or floor_rate)
-            for area in matched_areas
+            float(area.get("price", floor_rate) or floor_rate) for area in matched_areas
         )
         resolved_area_keys = unique_area_keys
     else:
@@ -507,9 +503,7 @@ async def create_booking(
             "Price mismatch. "
             f"Expected {expected_price:.2f} based on selected booking scope"
         )
-        raise ValidationException(
-            mismatch_message
-        )
+        raise ValidationException(mismatch_message)
 
     canonical_room_name = str(selected_room.get("name", request.room_name))
     if selected_floor and selected_floor.get("floor_name"):

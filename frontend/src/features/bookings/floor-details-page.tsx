@@ -9,6 +9,10 @@ import {
   CardContent,
   Container,
   Divider,
+  Dialog as MuiDialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   Grid,
   MenuItem,
   Rating,
@@ -19,10 +23,11 @@ import {
 } from '@mui/material'
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew'
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos'
-import EventAvailableOutlinedIcon from '@mui/icons-material/EventAvailableOutlined'
 import MeetingRoomOutlinedIcon from '@mui/icons-material/MeetingRoomOutlined'
-import VideoLibraryOutlinedIcon from '@mui/icons-material/VideoLibraryOutlined'
 import PhotoLibraryOutlinedIcon from '@mui/icons-material/PhotoLibraryOutlined'
+import AspectRatioIcon from '@mui/icons-material/AspectRatio'
+import ShapeLineIcon from '@mui/icons-material/ShapeLine'
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
 import { useNavigate, useParams } from 'react-router-dom'
 
 import { useColorMode } from '@/app/use-color-mode'
@@ -30,7 +35,6 @@ import { PublicFooter } from '@/features/public/components/public-footer'
 import { PublicNavbar } from '@/features/public/components/public-navbar'
 import { BookingDialog } from './components/BookingDialog'
 import type { BookingFormData } from './types'
-import type { PublicRoom } from '@/lib/api'
 import {
   createPublicBookingRequest,
   listPublicBookingCalendarSlots,
@@ -62,9 +66,6 @@ const overlaps = (startA: string, endA: string, startB: string, endB: string) =>
   return aStart < bEnd && aEnd > bStart
 }
 
-const UUID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
-
 type FloorRoomPreview = {
   name: string
   price: number
@@ -74,11 +75,20 @@ type FloorRoomPreview = {
 }
 
 type BookingType = 'WHOLE_FLOOR' | 'SELECTED_AREAS'
-type FloorReservationArea = NonNullable<PublicRoom['floors']>[number]['reservation_areas'][number]
 
 const parseFloorRoomPreviews = (
   blueprintImage: string | null | undefined,
-  reservationAreas: NonNullable<PublicRoom['floors']>[number]['reservation_areas'] | undefined,
+  reservationAreas:
+    | Array<
+        | string
+        | {
+            name: string;
+            price?: number;
+            includes?: string[];
+            is_reservable?: boolean;
+          }
+      >
+    | undefined,
   fallbackPrice: number,
 ) => {
   const previewMap = new Map<string, FloorRoomPreview>()
@@ -108,12 +118,12 @@ const parseFloorRoomPreviews = (
             })
         }
       } catch {
-        // Ignore malformed blueprint JSON and fall back to reservation_areas metadata.
+        // Ignore blueprint JSON issues
       }
     }
   }
 
-  ;(reservationAreas ?? []).forEach((area: FloorReservationArea) => {
+  ;(reservationAreas ?? []).forEach((area) => {
     if (typeof area === 'string') {
       if (!previewMap.has(area)) {
         previewMap.set(area, {
@@ -133,7 +143,7 @@ const parseFloorRoomPreviews = (
 
     const existing = previewMap.get(area.name)
     const includes = Array.isArray(area.includes)
-      ? area.includes.filter((entry): entry is string => typeof entry === 'string' && entry.trim().length > 0)
+      ? area.includes.filter((entry: unknown): entry is string => typeof entry === 'string' && entry.trim().length > 0)
       : []
 
     if (existing) {
@@ -157,39 +167,19 @@ const parseFloorRoomPreviews = (
   return Array.from(previewMap.values()).filter((item) => item.isReservable)
 }
 
-const buildMedia = (room: PublicRoom) => {
-  const imageSeed = encodeURIComponent(room.name.toLowerCase().replace(/\s+/g, '-'))
-
-  const fallback = [
-    `https://picsum.photos/seed/${imageSeed}-1/1400/780`,
-    `https://picsum.photos/seed/${imageSeed}-2/1200/700`,
-    `https://picsum.photos/seed/${imageSeed}-3/1200/700`,
-  ]
-
-  const images = [room.cover_image, ...(room.gallery ?? [])]
-    .filter((item): item is string => Boolean(item))
-    .slice(0, 3)
-
-  return {
-    images: images.length > 0 ? images : fallback,
-    videos: room.video_url
-      ? [room.video_url]
-      : ['https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=0&rel=0'],
-  }
-}
-
-export const PlaceDetailsPage = () => {
+export const FloorDetailsPage = () => {
   const navigate = useNavigate()
-  const { roomId = '' } = useParams()
+  const { roomId = '', floorId = '' } = useParams()
   const { mode } = useColorMode()
   const isLight = mode === 'light'
 
   const [selectedPlan] = useState('pay-as-you-go')
   const [bookingDialogOpen, setBookingDialogOpen] = useState(false)
   const [bookingError, setBookingError] = useState<string | null>(null)
-  const [selectedFloorId, setSelectedFloorId] = useState<string | undefined>(undefined)
   const [bookingType, setBookingType] = useState<BookingType>('WHOLE_FLOOR')
   const [selectedAreaKeys, setSelectedAreaKeys] = useState<string[]>([])
+  const [selectedAreaDetails, setSelectedAreaDetails] = useState<FloorRoomPreview | null>(null)
+
   const [floorRating, setFloorRating] = useState(5)
   const [floorComment, setFloorComment] = useState('')
   const [floorReviewsPage, setFloorReviewsPage] = useState(0)
@@ -206,28 +196,15 @@ export const PlaceDetailsPage = () => {
     return (roomsQuery.data ?? []).find((item) => item.id === Number.parseInt(roomId, 10)) ?? null
   }, [roomsQuery.data, roomId])
 
-  const resolvedSelectedFloorId = useMemo(() => {
-    if (!room) {
-      return undefined
-    }
+  const floor = useMemo(() => {
+    if (!room?.floors) return null
+    return room.floors.find((f) => f.id === floorId) ?? null
+  }, [room, floorId])
 
-    const floorIds = room.floors?.map((floor) => floor.id) ?? []
-    if (selectedFloorId && floorIds.includes(selectedFloorId)) {
-      return selectedFloorId
-    }
-
-    return room.primary_floor_id ?? room.floors?.[0]?.id
-  }, [room, selectedFloorId])
-
-  const selectedFloor = useMemo(() => {
-    if (!room?.floors?.length) return undefined
-    return room.floors.find((floor) => floor.id === resolvedSelectedFloorId) ?? room.floors[0]
-  }, [room, resolvedSelectedFloorId])
-
-  const selectedFloorPrice = selectedFloor?.price ?? room?.price ?? 0
+  const floorPrice = floor?.price ?? room?.price ?? 0
   const floorRoomPreviews = useMemo(
-    () => parseFloorRoomPreviews(selectedFloor?.blueprint_image, selectedFloor?.reservation_areas, selectedFloorPrice),
-    [selectedFloor?.blueprint_image, selectedFloor?.reservation_areas, selectedFloorPrice],
+    () => parseFloorRoomPreviews(floor?.blueprint_image, floor?.reservation_areas, floorPrice),
+    [floor?.blueprint_image, floor?.reservation_areas, floorPrice],
   )
   const areaOptions = useMemo(
     () => floorRoomPreviews.map((item) => ({
@@ -235,9 +212,9 @@ export const PlaceDetailsPage = () => {
       label: item.name,
       price: item.price,
       includes: item.includes,
-      capacity: selectedFloor?.capacity,
+      capacity: floor?.capacity,
     })),
-    [floorRoomPreviews, selectedFloor?.capacity],
+    [floorRoomPreviews, floor?.capacity],
   )
   const resolvedSelectedAreaKeys = useMemo(
     () => selectedAreaKeys.filter((key) => areaOptions.some((option) => option.key === key)),
@@ -250,29 +227,39 @@ export const PlaceDetailsPage = () => {
   const selectedAreasHourlyRate = selectedAreaOptions.reduce((sum, option) => sum + option.price, 0)
   const effectiveDisplayPrice = bookingType === 'SELECTED_AREAS' && selectedAreaOptions.length > 0
     ? selectedAreasHourlyRate
-    : selectedFloorPrice
+    : floorPrice
 
-  const media = useMemo(() => (room ? buildMedia(room) : { images: [], videos: [] }), [room])
+  const images = useMemo(() => {
+    if (!room) return []
+    const imageSeed = encodeURIComponent(room.name.toLowerCase().replace(/\s+/g, '-'))
+    const fallback = [
+      `https://picsum.photos/seed/${imageSeed}-1/1400/780`,
+      `https://picsum.photos/seed/${imageSeed}-2/1200/700`,
+      `https://picsum.photos/seed/${imageSeed}-3/1200/700`,
+    ]
+    const list = [floor?.blueprint_image, room.cover_image, ...(room.gallery ?? [])]
+      .filter((item): item is string => typeof item === 'string' && !item.startsWith('['))
+      .slice(0, 3)
+    return list.length > 0 ? list : fallback;
+  }, [room, floor])
 
   const createBookingMutation = useMutation({ mutationFn: createPublicBookingRequest })
   const floorReviewsLimit = 5
-  const reviewFloorId = resolvedSelectedFloorId
-  const hasReviewableFloor = Boolean(reviewFloorId && (UUID_PATTERN.test(reviewFloorId) || reviewFloorId.startsWith('floor-')))
 
   const floorReviewsQuery = useQuery({
-    queryKey: ['floor-reviews', reviewFloorId, floorReviewsPage, floorReviewsMinFilter],
+    queryKey: ['floor-reviews', floorId, floorReviewsPage, floorReviewsMinFilter],
     queryFn: () =>
-      listFloorReviews(reviewFloorId!, {
+      listFloorReviews(floorId, {
         limit: floorReviewsLimit,
         offset: floorReviewsPage * floorReviewsLimit,
         min_rating: floorReviewsMinFilter > 0 ? floorReviewsMinFilter : undefined,
       }),
-    enabled: hasReviewableFloor,
+    enabled: Boolean(floorId),
   })
 
   const upsertFloorReviewMutation = useMutation({
     mutationFn: (payload: { rating: number; comment?: string }) =>
-      upsertMyFloorReview(reviewFloorId!, payload),
+      upsertMyFloorReview(floorId, payload),
     onSuccess: async () => {
       await floorReviewsQuery.refetch()
       setFloorComment('')
@@ -281,7 +268,7 @@ export const PlaceDetailsPage = () => {
   })
 
   const deleteFloorReviewMutation = useMutation({
-    mutationFn: () => deleteMyFloorReview(reviewFloorId!),
+    mutationFn: () => deleteMyFloorReview(floorId),
     onSuccess: async () => {
       await floorReviewsQuery.refetch()
     },
@@ -332,9 +319,7 @@ export const PlaceDetailsPage = () => {
   }
 
   const handleCalendarDateClick = (date: Date) => {
-    if (!room) {
-      return
-    }
+    if (!room) return
 
     if (bookingType === 'SELECTED_AREAS' && resolvedSelectedAreaKeys.length === 0) {
       setBookingError('Select one or more areas from this floor before opening the booking form.')
@@ -394,25 +379,30 @@ export const PlaceDetailsPage = () => {
     }
   }
 
+  const formatShape = (shape: string | undefined) => {
+    if (!shape) return 'N/A'
+    return shape.toLowerCase().replace('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+  }
+
   if (roomsQuery.isLoading) {
     return (
       <Box sx={{ minHeight: '100vh' }}>
         <PublicNavbar isLight={isLight} />
         <Container maxWidth="lg" sx={{ py: 8 }}>
-          <Alert severity="info">Loading place details...</Alert>
+          <Alert severity="info">Loading floor details...</Alert>
         </Container>
         <PublicFooter isLight={isLight} />
       </Box>
     )
   }
 
-  if (!room) {
+  if (!room || !floor) {
     return (
       <Box sx={{ minHeight: '100vh' }}>
         <PublicNavbar isLight={isLight} />
         <Container maxWidth="lg" sx={{ py: 8 }}>
           <Stack spacing={2}>
-            <Alert severity="error">Place not found.</Alert>
+            <Alert severity="error">Floor not found.</Alert>
             <Button variant="outlined" onClick={() => navigate('/book')}>Back to spaces</Button>
           </Stack>
         </Container>
@@ -435,14 +425,9 @@ export const PlaceDetailsPage = () => {
       <Container maxWidth="lg" sx={{ py: { xs: 5, md: 8 } }}>
         <Stack spacing={4}>
           <Stack direction="row" spacing={1} sx={{ alignSelf: 'flex-start' }}>
-            <Button variant="outlined" onClick={() => navigate('/book')}>
-              Back to spaces
+            <Button variant="outlined" onClick={() => navigate(`/book/place/${roomId}`)}>
+              Back to place
             </Button>
-            {room.admin_id ? (
-              <Button variant="text" onClick={() => navigate(`/admins/${room.admin_id}`)}>
-                View owner
-              </Button>
-            ) : null}
           </Stack>
 
           <Paper
@@ -457,55 +442,49 @@ export const PlaceDetailsPage = () => {
                 : 'linear-gradient(120deg, rgba(16,29,50,0.88) 0%, rgba(10,14,26,0.9) 100%)',
             }}
           >
-            <Stack spacing={2}>
+            <Stack spacing={2.5}>
               <Chip
-                icon={<EventAvailableOutlinedIcon />}
-                label="Place Details"
+                icon={<AspectRatioIcon />}
+                label={`Floor ${floor.floor_number}`}
                 color="primary"
                 variant="outlined"
                 sx={{ alignSelf: 'flex-start', fontWeight: 700 }}
               />
               <Typography variant="h3" sx={{ fontWeight: 900, letterSpacing: '-0.03em' }}>
-                {room.name}
+                {floor.floor_name}
               </Typography>
               <Typography color="text.secondary" variant="h6">
-                Capacity {room.capacity} people • €{effectiveDisplayPrice}/hour
+                Capacity {floor.capacity} people • €{effectiveDisplayPrice}/hour
               </Typography>
-              {room.description ? (
-                <Typography color="text.secondary" sx={{ maxWidth: 760 }}>
-                  {room.description}
+              
+              <Grid container spacing={2} sx={{ mt: 1 }}>
+                <Grid size={{ xs: 6, sm: 3 }}>
+                  <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+                    <AspectRatioIcon color="primary" />
+                    <Box>
+                      <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>Floor Size</Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 700 }}>{floor.floor_size_sqm ?? 100} sqm</Typography>
+                    </Box>
+                  </Stack>
+                </Grid>
+                <Grid size={{ xs: 6, sm: 3 }}>
+                  <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+                    <ShapeLineIcon color="primary" />
+                    <Box>
+                      <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>Floor Shape</Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 700 }}>{formatShape(floor.floor_shape)}</Typography>
+                    </Box>
+                  </Stack>
+                </Grid>
+              </Grid>
+
+              {floor.description ? (
+                <Typography color="text.secondary" sx={{ maxWidth: 760, mt: 1.5 }}>
+                  {floor.description}
                 </Typography>
-              ) : null}
-              {room.address ? (
-                <Typography variant="body2" color="text.secondary">
-                  {room.address}
-                </Typography>
-              ) : null}
-              {room.availability ? (
-                <Chip label={room.availability} size="small" variant="outlined" sx={{ alignSelf: 'flex-start' }} />
-              ) : null}
-              <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
-                {(room.features ?? room.amenities).map((amenity) => (
-                  <Chip key={amenity} label={amenity} size="small" variant="outlined" />
-                ))}
-              </Stack>
-              {room.floors && room.floors.length > 0 ? (
-                <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
-                  {room.floors.map((floor) => (
-                    <Chip
-                      key={floor.id}
-                      label={`${floor.floor_name} • €${floor.price ?? room.price}/h`}
-                      color={floor.id === selectedFloor?.id ? 'primary' : 'default'}
-                      variant={floor.id === selectedFloor?.id ? 'filled' : 'outlined'}
-                      onClick={() => {
-                        navigate(`/book/place/${roomId}/floor/${floor.id}`)
-                      }}
-                    />
-                  ))}
-                </Stack>
               ) : null}
 
-              <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
+              <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1, mt: 2 }}>
                 <Chip
                   label="Book Whole Floor"
                   color={bookingType === 'WHOLE_FLOOR' ? 'primary' : 'default'}
@@ -534,14 +513,14 @@ export const PlaceDetailsPage = () => {
                 <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
                   <MeetingRoomOutlinedIcon color="primary" />
                   <Typography variant="h6" sx={{ fontWeight: 800 }}>
-                    Rooms On {selectedFloor?.floor_name}
+                    Select Reservation Areas / Rooms
                   </Typography>
                 </Stack>
 
                 <Box
                   sx={{
                     display: 'grid',
-                    gap: 1.25,
+                    gap: 2,
                     gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))' },
                   }}
                 >
@@ -558,7 +537,7 @@ export const PlaceDetailsPage = () => {
                         )
                       }}
                       sx={{
-                        p: 1.25,
+                        p: 2,
                         borderRadius: 2,
                         cursor: bookingType === 'SELECTED_AREAS' ? 'pointer' : 'default',
                         borderColor: resolvedSelectedAreaKeys.includes(roomPreview.name) ? 'primary.main' : 'divider',
@@ -567,47 +546,43 @@ export const PlaceDetailsPage = () => {
                           : undefined,
                       }}
                     >
-                      <Stack spacing={1}>
+                      <Stack spacing={1.5}>
                         <Stack direction="row" spacing={1} sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
-                          <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
+                          <Typography variant="subtitle2" sx={{ fontWeight: 800, fontSize: '1.05rem' }}>
                             {roomPreview.name}
                           </Typography>
-                          {bookingType === 'SELECTED_AREAS' ? (
-                            <Chip
+                          <Stack direction="row" spacing={1}>
+                            <Button
                               size="small"
-                              label={resolvedSelectedAreaKeys.includes(roomPreview.name) ? 'Selected' : 'Select'}
-                              color={resolvedSelectedAreaKeys.includes(roomPreview.name) ? 'primary' : 'default'}
-                              variant={resolvedSelectedAreaKeys.includes(roomPreview.name) ? 'filled' : 'outlined'}
-                            />
-                          ) : null}
+                              variant="text"
+                              startIcon={<InfoOutlinedIcon fontSize="small" />}
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setSelectedAreaDetails(roomPreview)
+                              }}
+                            >
+                              Details
+                            </Button>
+                            {bookingType === 'SELECTED_AREAS' && (
+                              <Chip
+                                size="small"
+                                label={resolvedSelectedAreaKeys.includes(roomPreview.name) ? 'Selected' : 'Select'}
+                                color={resolvedSelectedAreaKeys.includes(roomPreview.name) ? 'primary' : 'default'}
+                                variant={resolvedSelectedAreaKeys.includes(roomPreview.name) ? 'filled' : 'outlined'}
+                              />
+                            )}
+                          </Stack>
                         </Stack>
-                        <Typography variant="caption" color="text.secondary">
+                        <Typography variant="body2" color="text.secondary">
                           €{roomPreview.price}/hour
                         </Typography>
                         {roomPreview.includes.length > 0 ? (
                           <Stack direction="row" spacing={0.5} sx={{ flexWrap: 'wrap', gap: 0.5 }}>
-                            {roomPreview.includes.map((feature) => (
+                            {roomPreview.includes.slice(0, 3).map((feature) => (
                               <Chip key={`${roomPreview.name}-${feature}`} size="small" label={feature} variant="outlined" />
                             ))}
                           </Stack>
                         ) : null}
-                        <Box
-                          sx={{
-                            display: 'grid',
-                            gap: 0.75,
-                            gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-                          }}
-                        >
-                          {(roomPreview.image_urls.length ? roomPreview.image_urls : media.images.slice(0, 2)).map((imageUrl, imageIndex) => (
-                            <Box
-                              key={`${roomPreview.name}-image-${imageIndex}`}
-                              component="img"
-                              src={imageUrl}
-                              alt={`${roomPreview.name} image ${imageIndex + 1}`}
-                              sx={{ width: '100%', height: 110, objectFit: 'cover', borderRadius: 1.25 }}
-                            />
-                          ))}
-                        </Box>
                       </Stack>
                     </Paper>
                   ))}
@@ -634,44 +609,25 @@ export const PlaceDetailsPage = () => {
               >
                 <Box
                   component="img"
-                  src={media.images[0]}
-                  alt={`${room.name} main`}
+                  src={images[0]}
+                  alt={`${floor.floor_name} main`}
                   sx={{ width: '100%', height: { xs: 220, md: 360 }, objectFit: 'cover', borderRadius: 2 }}
                 />
                 <Stack spacing={1.5}>
                   <Box
                     component="img"
-                    src={media.images[1]}
-                    alt={`${room.name} secondary 1`}
+                    src={images[1] || images[0]}
+                    alt={`${floor.floor_name} secondary 1`}
                     sx={{ width: '100%', height: { xs: 140, md: 172 }, objectFit: 'cover', borderRadius: 2 }}
                   />
                   <Box
                     component="img"
-                    src={media.images[2]}
-                    alt={`${room.name} secondary 2`}
+                    src={images[2] || images[0]}
+                    alt={`${floor.floor_name} secondary 2`}
                     sx={{ width: '100%', height: { xs: 140, md: 172 }, objectFit: 'cover', borderRadius: 2 }}
                   />
                 </Stack>
               </Box>
-            </Stack>
-          </Paper>
-
-          <Paper elevation={0} sx={{ p: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
-            <Stack spacing={2}>
-              <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-                <VideoLibraryOutlinedIcon color="primary" />
-                <Typography variant="h6" sx={{ fontWeight: 800 }}>
-                  Video Tour
-                </Typography>
-              </Stack>
-              <Box
-                component="iframe"
-                src={media.videos[0]}
-                title={`${room.name} video tour`}
-                sx={{ width: '100%', height: { xs: 220, md: 420 }, border: 0, borderRadius: 2 }}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
             </Stack>
           </Paper>
 
@@ -716,211 +672,9 @@ export const PlaceDetailsPage = () => {
 
               {bookingError ? <Alert severity="error">{bookingError}</Alert> : null}
 
-              <Paper
-                elevation={0}
-                sx={{
-                  p: 3,
-                  borderRadius: 3,
-                  border: '1px solid',
-                  borderColor: isLight ? 'rgba(0, 89, 179, 0.08)' : 'rgba(255, 255, 255, 0.05)',
-                  background: isLight ? '#ffffff' : 'rgba(10, 14, 26, 0.45)',
-                }}
-              >
-                <Stack spacing={2.5}>
-                  <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ justifyContent: 'space-between', alignItems: { xs: 'flex-start', md: 'center' } }}>
-                    <Box>
-                      <Typography variant="h5" sx={{ fontWeight: 800 }}>
-                        Ratings & Comments
-                      </Typography>
-                      <Typography color="text.secondary" variant="body2">
-                        See what people said about this space and leave your own rating.
-                      </Typography>
-                    </Box>
-                    <Stack spacing={0.5} sx={{ minWidth: 130 }}>
-                      <Typography variant="body2" color="text.secondary">
-                        Average rating
-                      </Typography>
-                      <Typography variant="h4" sx={{ fontWeight: 900 }}>
-                        {floorReviewsQuery.data?.average_rating?.toFixed(1) ?? '0.0'}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {floorReviewsQuery.data?.rating_count ?? 0} reviews
-                      </Typography>
-                    </Stack>
-                  </Stack>
-
-                  {hasReviewableFloor && floorReviewsQuery.isError ? <Alert severity="error">Could not load ratings and comments right now.</Alert> : null}
-
-                  <Grid container spacing={2.5}>
-                    <Grid size={{ xs: 12, md: 5 }}>
-                      <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider', height: '100%' }}>
-                        <CardContent>
-                          <Stack spacing={2}>
-                            <Typography variant="h6" sx={{ fontWeight: 800 }}>
-                              Rate this place
-                            </Typography>
-                            <Rating value={floorRating} onChange={(_, value) => setFloorRating(value ?? 5)} precision={1} />
-                            <TextField
-                              label="Comment"
-                              value={floorComment}
-                              onChange={(event) => setFloorComment(event.target.value)}
-                              minRows={4}
-                              multiline
-                            />
-                            <Stack direction="row" spacing={1}>
-                              <Button
-                                variant="contained"
-                                disabled={upsertFloorReviewMutation.isPending || !hasReviewableFloor}
-                                onClick={() =>
-                                  hasReviewableFloor
-                                    ? upsertFloorReviewMutation.mutate({
-                                      rating: floorRating,
-                                      comment: floorComment.trim() || undefined,
-                                    })
-                                    : null
-                                }
-                              >
-                                Save rating
-                              </Button>
-                              <Button
-                                variant="outlined"
-                                color="error"
-                                disabled={deleteFloorReviewMutation.isPending || !hasReviewableFloor}
-                                onClick={() => {
-                                  if (!hasReviewableFloor) return
-                                  deleteFloorReviewMutation.mutate()
-                                }}
-                              >
-                                Delete my rating
-                              </Button>
-                            </Stack>
-                            {!hasReviewableFloor ? (
-                              <Alert severity="info">Ratings are not available for this place yet.</Alert>
-                            ) : null}
-                            {upsertFloorReviewMutation.isError || deleteFloorReviewMutation.isError ? (
-                              <Alert severity="error">You need to be logged in and have a completed booking to rate this place.</Alert>
-                            ) : null}
-                          </Stack>
-                        </CardContent>
-                      </Card>
-                    </Grid>
-
-                    <Grid size={{ xs: 12, md: 7 }}>
-                      <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider', height: '100%' }}>
-                        <CardContent>
-                          <Typography variant="h6" sx={{ fontWeight: 800, mb: 1.5 }}>
-                            Recent comments
-                          </Typography>
-                          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ mb: 1.5 }}>
-                            <TextField
-                              select
-                              label="Minimum rating"
-                              size="small"
-                              value={floorReviewsMinFilter}
-                              onChange={(event) => {
-                                setFloorReviewsPage(0)
-                                setFloorReviewsMinFilter(Number(event.target.value))
-                              }}
-                              sx={{ width: { xs: '100%', sm: 180 } }}
-                            >
-                              <MenuItem value={0}>All</MenuItem>
-                              <MenuItem value={5}>5 stars</MenuItem>
-                              <MenuItem value={4}>4+ stars</MenuItem>
-                              <MenuItem value={3}>3+ stars</MenuItem>
-                              <MenuItem value={2}>2+ stars</MenuItem>
-                              <MenuItem value={1}>1+ stars</MenuItem>
-                            </TextField>
-                          </Stack>
-
-                          <Stack spacing={1.5}>
-                            {(floorReviewsQuery.data?.reviews ?? []).map((review) => (
-                              <Box key={review.id}>
-                                <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
-                                  <Rating value={review.rating} precision={1} readOnly size="small" />
-                                  <Typography variant="caption" color="text.secondary">
-                                    {new Date(review.created_at).toLocaleDateString()}
-                                  </Typography>
-                                </Stack>
-                                {review.comment ? (
-                                  <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                                    {review.comment}
-                                  </Typography>
-                                ) : null}
-                                <Divider sx={{ mt: 1 }} />
-                              </Box>
-                            ))}
-                            {!(floorReviewsQuery.data?.reviews ?? []).length ? <Alert severity="info">No comments yet.</Alert> : null}
-                            <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
-                              <Button
-                                variant="outlined"
-                                size="small"
-                                disabled={floorReviewsPage === 0}
-                                onClick={() => setFloorReviewsPage((prev) => Math.max(0, prev - 1))}
-                              >
-                                Previous
-                              </Button>
-                              <Button
-                                variant="outlined"
-                                size="small"
-                                disabled={(floorReviewsQuery.data?.reviews ?? []).length < floorReviewsLimit}
-                                onClick={() => setFloorReviewsPage((prev) => prev + 1)}
-                              >
-                                Next
-                              </Button>
-                            </Stack>
-                          </Stack>
-                        </CardContent>
-                      </Card>
-                    </Grid>
-                  </Grid>
-                </Stack>
-              </Paper>
-
-              <Paper
-                elevation={0}
-                sx={{
-                  p: 2,
-                  borderRadius: 2,
-                  border: '1px solid',
-                  borderColor: isLight ? 'rgba(0, 89, 179, 0.16)' : 'rgba(255, 255, 255, 0.16)',
-                  background: isLight ? '#f9fcff' : 'rgba(16, 29, 50, 0.55)',
-                }}
-              >
-                <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ justifyContent: 'space-between', alignItems: { xs: 'flex-start', md: 'center' } }}>
-                  <Stack direction="row" spacing={1.25} sx={{ alignItems: 'center' }}>
-                    <MeetingRoomOutlinedIcon color="primary" />
-                    <Box>
-                      <Typography sx={{ fontWeight: 800 }}>{room.name}</Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Capacity {room.capacity} • €{room.price}/hour
-                      </Typography>
-                    </Box>
-                  </Stack>
-                  <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
-                    {(room.features ?? room.amenities).slice(0, 3).map((item) => (
-                      <Chip key={item} label={item} size="small" variant="outlined" />
-                    ))}
-                  </Stack>
-                </Stack>
-              </Paper>
-
               <Typography variant="h6" sx={{ fontWeight: 700 }}>
                 {monthLabel}
               </Typography>
-
-              <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
-                <Chip label="Available" size="small" variant="outlined" />
-                <Chip label="Reserved slots" size="small" color="primary" variant="outlined" />
-                <Chip label="Click any date to reserve" size="small" variant="outlined" />
-              </Stack>
-
-              <Divider />
-
-              {calendarSlotsQuery.isError ? (
-                <Alert severity="error" sx={{ borderRadius: 2 }}>
-                  Could not load reservation calendar right now.
-                </Alert>
-              ) : null}
 
               <Box
                 sx={{
@@ -1013,7 +767,7 @@ export const PlaceDetailsPage = () => {
                 >
                   <Stack spacing={1}>
                     <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-                      Reserved slots for {selectedCalendarDate} ({room.name})
+                      Reserved slots for {selectedCalendarDate} ({floor.floor_name})
                     </Typography>
 
                     {(reservedByDate[selectedCalendarDate] ?? []).length === 0 ? (
@@ -1038,17 +792,168 @@ export const PlaceDetailsPage = () => {
               ) : null}
             </Stack>
           </Paper>
+
+          <Paper
+            elevation={0}
+            sx={{
+              p: 3,
+              borderRadius: 3,
+              border: '1px solid',
+              borderColor: isLight ? 'rgba(0, 89, 179, 0.08)' : 'rgba(255, 255, 255, 0.05)',
+              background: isLight ? '#ffffff' : 'rgba(10, 14, 26, 0.45)',
+            }}
+          >
+            <Stack spacing={2.5}>
+              <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ justifyContent: 'space-between', alignItems: { xs: 'flex-start', md: 'center' } }}>
+                <Box>
+                  <Typography variant="h5" sx={{ fontWeight: 800 }}>
+                    Ratings & Comments
+                  </Typography>
+                  <Typography color="text.secondary" variant="body2">
+                    See what people said about this floor and leave your own rating.
+                  </Typography>
+                </Box>
+                <Stack spacing={0.5} sx={{ minWidth: 130 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Average rating
+                  </Typography>
+                  <Typography variant="h4" sx={{ fontWeight: 900 }}>
+                    {floorReviewsQuery.data?.average_rating?.toFixed(1) ?? '0.0'}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {floorReviewsQuery.data?.rating_count ?? 0} reviews
+                  </Typography>
+                </Stack>
+              </Stack>
+
+              {floorReviewsQuery.isError ? <Alert severity="error">Could not load ratings and comments right now.</Alert> : null}
+
+              <Grid container spacing={2.5}>
+                <Grid size={{ xs: 12, md: 5 }}>
+                  <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider', height: '100%' }}>
+                    <CardContent>
+                      <Stack spacing={2}>
+                        <Typography variant="h6" sx={{ fontWeight: 800 }}>
+                          Rate this floor
+                        </Typography>
+                        <Rating value={floorRating} onChange={(_, value) => setFloorRating(value ?? 5)} precision={1} />
+                        <TextField
+                          label="Comment"
+                          value={floorComment}
+                          onChange={(event) => setFloorComment(event.target.value)}
+                          minRows={4}
+                          multiline
+                        />
+                        <Stack direction="row" spacing={1}>
+                          <Button
+                            variant="contained"
+                            disabled={upsertFloorReviewMutation.isPending}
+                            onClick={() =>
+                              upsertFloorReviewMutation.mutate({
+                                rating: floorRating,
+                                comment: floorComment.trim() || undefined,
+                              })
+                            }
+                          >
+                            Save rating
+                          </Button>
+                          <Button
+                            variant="outlined"
+                            color="error"
+                            disabled={deleteFloorReviewMutation.isPending}
+                            onClick={() => {
+                              deleteFloorReviewMutation.mutate()
+                            }}
+                          >
+                            Delete my rating
+                          </Button>
+                        </Stack>
+                        {upsertFloorReviewMutation.isError || deleteFloorReviewMutation.isError ? (
+                          <Alert severity="error">Failed to submit rating. Please try again.</Alert>
+                        ) : null}
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+
+                <Grid size={{ xs: 12, md: 7 }}>
+                  <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider', height: '100%' }}>
+                    <CardContent>
+                      <Typography variant="h6" sx={{ fontWeight: 800, mb: 1.5 }}>
+                        Recent comments
+                      </Typography>
+                      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ mb: 1.5 }}>
+                        <TextField
+                          select
+                          label="Minimum rating"
+                          size="small"
+                          value={floorReviewsMinFilter}
+                          onChange={(event) => {
+                            setFloorReviewsPage(0)
+                            setFloorReviewsMinFilter(Number(event.target.value))
+                          }}
+                          sx={{ width: { xs: '100%', sm: 180 } }}
+                        >
+                          <MenuItem value={0}>All</MenuItem>
+                          <MenuItem value={5}>5 stars</MenuItem>
+                          <MenuItem value={4}>4+ stars</MenuItem>
+                          <MenuItem value={3}>3+ stars</MenuItem>
+                          <MenuItem value={2}>2+ stars</MenuItem>
+                          <MenuItem value={1}>1+ stars</MenuItem>
+                        </TextField>
+                      </Stack>
+
+                      <Stack spacing={1.5}>
+                        {(floorReviewsQuery.data?.reviews ?? []).map((review) => (
+                          <Box key={review.id}>
+                            <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
+                              <Rating value={review.rating} precision={1} readOnly size="small" />
+                              <Typography variant="caption" color="text.secondary">
+                                {new Date(review.created_at).toLocaleDateString()}
+                              </Typography>
+                            </Stack>
+                            {review.comment ? (
+                              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                                {review.comment}
+                              </Typography>
+                            ) : null}
+                            <Divider sx={{ mt: 1 }} />
+                          </Box>
+                        ))}
+                        {!(floorReviewsQuery.data?.reviews ?? []).length ? <Alert severity="info">No comments yet.</Alert> : null}
+                        <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            disabled={floorReviewsPage === 0}
+                            onClick={() => setFloorReviewsPage((prev) => Math.max(0, prev - 1))}
+                          >
+                            Previous
+                          </Button>
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            disabled={(floorReviewsQuery.data?.reviews ?? []).length < floorReviewsLimit}
+                            onClick={() => setFloorReviewsPage((prev) => prev + 1)}
+                          >
+                            Next
+                          </Button>
+                        </Stack>
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              </Grid>
+            </Stack>
+          </Paper>
         </Stack>
       </Container>
 
+      {/* Booking Dialog */}
       <BookingDialog
         open={bookingDialogOpen}
         room={room}
-        selectedFloorId={resolvedSelectedFloorId}
-        onFloorChange={(floorId) => {
-          setSelectedFloorId(floorId)
-          setSelectedAreaKeys([])
-        }}
+        selectedFloorId={floor.id}
         bookingType={bookingType}
         selectedAreaKeys={resolvedSelectedAreaKeys}
         areaOptions={areaOptions}
@@ -1063,6 +968,63 @@ export const PlaceDetailsPage = () => {
         error={bookingError}
         initialBookingDate={selectedCalendarDate}
       />
+
+      {/* Area Details Modal */}
+      <MuiDialog
+        open={Boolean(selectedAreaDetails)}
+        onClose={() => setSelectedAreaDetails(null)}
+        maxWidth="sm"
+        fullWidth
+        sx={{
+          '& .MuiDialog-paper': {
+            borderRadius: 3,
+            background: isLight ? '#ffffff' : 'rgba(10, 14, 26, 0.95)',
+          },
+        }}
+      >
+        <DialogTitle sx={{ fontWeight: 800 }}>
+          {selectedAreaDetails?.name} Details
+        </DialogTitle>
+        <DialogContent dividers>
+          <Stack spacing={2}>
+            <Box>
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>Pricing</Typography>
+              <Typography variant="body1" sx={{ fontWeight: 700 }}>€{selectedAreaDetails?.price}/hour</Typography>
+            </Box>
+            {selectedAreaDetails?.includes && selectedAreaDetails.includes.length > 0 && (
+              <Box>
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>Features Included</Typography>
+                <Stack direction="row" spacing={0.75} sx={{ flexWrap: 'wrap', gap: 0.75, mt: 0.5 }}>
+                  {selectedAreaDetails.includes.map((feature) => (
+                    <Chip key={feature} size="small" label={feature} variant="outlined" />
+                  ))}
+                </Stack>
+              </Box>
+            )}
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setSelectedAreaDetails(null)} variant="outlined">
+            Close
+          </Button>
+          {bookingType === 'SELECTED_AREAS' && (
+            <Button
+              variant="contained"
+              onClick={() => {
+                if (selectedAreaDetails) {
+                  const key = selectedAreaDetails.name
+                  setSelectedAreaKeys((current) =>
+                    current.includes(key) ? current : [...current, key]
+                  )
+                  setSelectedAreaDetails(null)
+                }
+              }}
+            >
+              Select Area
+            </Button>
+          )}
+        </DialogActions>
+      </MuiDialog>
 
       <PublicFooter isLight={isLight} />
     </Box>

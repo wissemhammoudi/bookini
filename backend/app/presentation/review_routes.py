@@ -271,6 +271,41 @@ async def list_floor_reviews(
     max_rating: int | None = Query(default=None, ge=1, le=5),
     session: AsyncSession = Depends(get_db_session),
 ) -> dict[str, object]:
+    if floor_id.startswith("floor-"):
+        from app.services.review_service import InMemoryFloorReview
+
+        raw_reviews = AdminWorkspaceStateStore.get_floor_reviews(floor_id)
+        filtered = []
+        for r in raw_reviews:
+            rating = r["rating"]
+            if min_rating is not None and rating < min_rating:
+                continue
+            if max_rating is not None and rating > max_rating:
+                continue
+            filtered.append(InMemoryFloorReview(r))
+
+        count = len(raw_reviews)
+        average = sum(r["rating"] for r in raw_reviews) / count if count > 0 else 0.0
+        sliced = filtered[offset : offset + limit]
+
+        return success_response(
+            message="Floor reviews retrieved successfully",
+            data={
+                "average_rating": round(average, 2),
+                "rating_count": count,
+                "reviews": [_serialize_floor_review(item) for item in sliced],
+                "pagination": {
+                    "limit": limit,
+                    "offset": offset,
+                    "returned": len(sliced),
+                },
+                "filters": {
+                    "min_rating": min_rating,
+                    "max_rating": max_rating,
+                },
+            },
+        )
+
     service = _service_from_session(session)
     items = await service.list_floor_reviews(
         floor_id=floor_id,
@@ -311,9 +346,33 @@ async def upsert_floor_review(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ) -> dict[str, object]:
-    service = _service_from_session(session)
     audit_service = _audit_service_from_session(session)
 
+    if floor_id.startswith("floor-"):
+        from app.services.review_service import InMemoryFloorReview
+
+        review_data = AdminWorkspaceStateStore.upsert_floor_review(
+            floor_id=floor_id,
+            user_id=str(current_user.id),
+            rating=payload.rating,
+            comment=payload.comment,
+            user_name=current_user.full_name,
+        )
+        review = InMemoryFloorReview(review_data)
+
+        await audit_service.record(
+            user_id=current_user.id,
+            action="FLOOR_REVIEW_UPSERTED",
+            ip_address=_client_ip(request),
+            metadata={"floor_id": floor_id, "rating": payload.rating},
+        )
+
+        return success_response(
+            message="Floor review saved successfully",
+            data=_serialize_floor_review(review),
+        )
+
+    service = _service_from_session(session)
     review = await service.upsert_floor_review(
         floor_id=floor_id,
         current_user=current_user,
@@ -340,9 +399,24 @@ async def delete_floor_review(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ) -> dict[str, object]:
-    service = _service_from_session(session)
     audit_service = _audit_service_from_session(session)
 
+    if floor_id.startswith("floor-"):
+        deleted = AdminWorkspaceStateStore.delete_floor_review(
+            floor_id=floor_id, user_id=str(current_user.id)
+        )
+        if not deleted:
+            raise NotFoundException("Floor review not found")
+
+        await audit_service.record(
+            user_id=current_user.id,
+            action="FLOOR_REVIEW_DELETED",
+            ip_address=_client_ip(request),
+            metadata={"floor_id": floor_id},
+        )
+        return success_response(message="Floor review deleted successfully", data={})
+
+    service = _service_from_session(session)
     await service.delete_floor_review(floor_id=floor_id, current_user=current_user)
     await audit_service.record(
         user_id=current_user.id,

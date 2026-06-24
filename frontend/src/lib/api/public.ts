@@ -24,6 +24,8 @@ export type PublicFloor = {
   id: string
   floor_name: string
   floor_number: number
+  floor_size_sqm?: number
+  floor_shape?: string
   capacity: number
   price?: number
   blueprint_image?: string | null

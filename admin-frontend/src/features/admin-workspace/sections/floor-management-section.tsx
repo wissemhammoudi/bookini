@@ -44,7 +44,7 @@ import { workspaceQueryKey } from '@/features/admin-workspace/admin-workspace-co
 
 type ElementType = 'desk' | 'table' | 'chair' | 'projector' | 'plant' | 'door' | 'wall'
 
-type DeskZone = {
+export type DeskZone = {
   name: string
   x: number
   y: number
@@ -452,12 +452,22 @@ type FloorBuilderDialogProps = {
   onClose: () => void
   onSave: (desks: DeskZone[]) => Promise<void>
   isSaving: boolean
+  desksState?: DeskZone[]
+  onDesksStateChange?: (desks: DeskZone[]) => void
 }
 
-function FloorBuilderDialog({ open, floor, onClose, onSave, isSaving }: FloorBuilderDialogProps) {
+export function FloorBuilderDialog({
+  open,
+  floor,
+  onClose,
+  onSave,
+  isSaving,
+  desksState,
+  onDesksStateChange,
+}: FloorBuilderDialogProps) {
   const [isUploadingRoomImages, setIsUploadingRoomImages] = useState(false)
   const [roomImageError, setRoomImageError] = useState<string | null>(null)
-  const [desks, setDesks] = useState<DeskZone[]>(() => {
+  const [internalDesks, setInternalDesks] = useState<DeskZone[]>(() => {
     const parsedLayout = parseBlueprintLayout(floor.blueprint_image)
     if (parsedLayout) return parsedLayout
 
@@ -475,6 +485,20 @@ function FloorBuilderDialog({ open, floor, onClose, onSave, isSaving }: FloorBui
       image_urls: [],
     }))
   })
+  const desks = desksState ?? internalDesks
+
+  const setDesks = (updater: DeskZone[] | ((prev: DeskZone[]) => DeskZone[])) => {
+    const next = typeof updater === 'function'
+      ? (updater as (prev: DeskZone[]) => DeskZone[])(desks)
+      : updater
+
+    if (onDesksStateChange) {
+      onDesksStateChange(next)
+      return
+    }
+
+    setInternalDesks(next)
+  }
 
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
 
@@ -516,7 +540,8 @@ function FloorBuilderDialog({ open, floor, onClose, onSave, isSaving }: FloorBui
 
   const handleAddTemplate = (template: typeof TOOLBOX_TEMPLATES[number]) => {
     const typeCount = desks.filter((d) => (d.type || 'desk') === template.type).length + 1
-    const defaultName = `${template.label} ${typeCount}`
+    const roomCount = desks.filter((d) => d.isReservable !== false).length + 1
+    const defaultName = template.isReservable ? `Room ${roomCount}` : `${template.label} ${typeCount}`
 
     const newElement: DeskZone = {
       name: defaultName,
