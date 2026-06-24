@@ -189,22 +189,6 @@ erDiagram
         datetime created_at "timestamp with timezone"
         datetime updated_at "timestamp with timezone"
     }
-    PARTNERSHIP_REQUESTS {
-        uuid id PK
-        string company_name "varchar(255)"
-        string contact_person "varchar(255)"
-        string contact_email "varchar(255) indexed"
-        string contact_phone "varchar(20)"
-        int number_of_floors
-        int expected_users
-        string description "text"
-        string status "ENUM: PENDING | APPROVED | REJECTED"
-        string admin_notes "text nullable"
-        uuid reviewed_by_admin_id "nullable"
-        jsonb metadata
-        datetime created_at "timestamp with timezone"
-        datetime updated_at "timestamp with timezone"
-    }
     PUBLIC_BOOKINGS {
         uuid id PK
         string booking_reference UK "varchar(50) indexed"
@@ -362,30 +346,7 @@ Allows corporate users to submit reviews and feedback on floor configurations, s
 
 ---
 
-#### 8. `partnership_requests` Table
-Tracks business development requests submitted by external companies seeking custom reservation space access.
-* **Indexes**: Primary Key `pk_partnership_requests` (on `id`), Index `ix_partnership_email` (on `contact_email`), Index `ix_partnership_status` (on `status`).
-
-| Column Name | Data Type | Constraints | Default Value | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| `id` | `UUID` | Primary Key, Not Null | `uuid_generate_v4()` | Unique request identifier. |
-| `company_name` | `VARCHAR(255)`| Not Null | None | Name of the prospective client company. |
-| `contact_person`| `VARCHAR(255)`| Not Null | None | Full name of client contact representative. |
-| `contact_email` | `VARCHAR(255)`| Indexed, Not Null | None | Email address of company contact. |
-| `contact_phone` | `VARCHAR(20)` | Not Null | None | Phone number of company contact. |
-| `number_of_floors`| `INTEGER` | Not Null | None | Number of floors requested to manage. |
-| `expected_users`| `INTEGER` | Not Null | None | Total expected user seats required. |
-| `description` | `TEXT` | Not Null | None | Detailed space request or business plan details. |
-| `status` | `VARCHAR(50)` | Not Null | `PENDING` | ENUM statuses: `PENDING`, `APPROVED`, `REJECTED`. |
-| `admin_notes` | `TEXT` | Nullable | `NULL` | Review response notes from Super Admin. |
-| `reviewed_by_admin_id`| `UUID` | Nullable | `NULL` | Super Admin identifier performing reviews. |
-| `metadata` | `JSON` | Not Null | `{}` | Extra parameter payload tracking metadata fields. |
-| `created_at` | `TIMESTAMP` | Not Null | `NOW()` | Submission time of form. |
-| `updated_at` | `TIMESTAMP` | Not Null | `NOW()` | Timestamp tracking administrative changes. |
-
----
-
-#### 9. `public_bookings` Table
+#### 8. `public_bookings` Table
 Registers Pay-As-You-Go single-slot space reservations submitted by guest/public non-registered users.
 * **Indexes**: Primary Key `pk_public_bookings` (on `id`), Unique Index `uq_public_booking_ref` (on `booking_reference`), Index `ix_public_bookings_date` (on `booking_date`), Index `ix_public_bookings_email` (on `guest_email`), Index `ix_public_bookings_status` (on `status`).
 

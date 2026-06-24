@@ -2,7 +2,6 @@ from fastapi import APIRouter, Depends, File, Request, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.responses import success_response
-from app.core.security import decode_token
 from app.dependencies.auth import get_current_user
 from app.infrastructure.session import get_db_session
 from app.models.user import User
@@ -12,7 +11,6 @@ from app.schemas.auth import (
     ChangePasswordRequest,
     ConfirmPasswordResetRequest,
     LoginRequest,
-    LogoutRequest,
     RefreshTokenRequest,
     RegisterRequest,
     RequestPasswordResetRequest,
@@ -112,30 +110,6 @@ async def refresh_token(
     service = _service_from_session(session)
     tokens = await service.refresh_token(payload.refresh_token)
     return success_response(message="Token refresh successful", data=tokens)
-
-
-@router.post("/logout")
-async def logout(
-    payload: LogoutRequest,
-    request: Request,
-    session: AsyncSession = Depends(get_db_session),
-) -> dict[str, object]:
-    service = _service_from_session(session)
-    audit_service = _audit_service_from_session(session)
-
-    await service.logout(payload.refresh_token)
-
-    decoded = decode_token(payload.refresh_token)
-    user_id = decoded.get("sub")
-    if user_id:
-        await audit_service.record(
-            user_id=user_id,
-            action="LOGOUT",
-            ip_address=_client_ip(request),
-            metadata={},
-        )
-
-    return success_response(message="Logout successful", data={})
 
 
 @router.post("/password-reset/request")

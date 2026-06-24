@@ -40,20 +40,6 @@ async def admin_dashboard(
     )
 
 
-@router.post("/floors/{floor_id}/archive")
-async def archive_floor(
-    floor_id: str,
-    current_user: User = Depends(require_roles(["ADMIN", "SUPER_ADMIN"])),
-) -> dict[str, object]:
-    return success_response(
-        message="Sensitive floor operation authorized",
-        data={
-            "floor_id": floor_id,
-            "performed_by": str(current_user.id),
-        },
-    )
-
-
 @router.get("/reservations")
 async def list_all_reservations(
     _: User = Depends(require_roles(["ADMIN", "SUPER_ADMIN"])),

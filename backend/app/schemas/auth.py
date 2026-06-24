@@ -16,10 +16,6 @@ class RefreshTokenRequest(BaseModel):
     refresh_token: str = Field(min_length=10)
 
 
-class LogoutRequest(BaseModel):
-    refresh_token: str = Field(min_length=10)
-
-
 class RequestPasswordResetRequest(BaseModel):
     email: EmailStr
 
