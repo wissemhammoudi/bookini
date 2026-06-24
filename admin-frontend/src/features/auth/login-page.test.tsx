@@ -5,6 +5,7 @@ import { MemoryRouter } from 'react-router-dom'
 
 import { LoginPage } from './login-page'
 import { AuthProvider } from '@/features/auth/auth-context'
+import { ColorModeProvider } from '@/app/color-mode'
 
 const createWrapper = () => {
   const client = new QueryClient({
@@ -17,7 +18,9 @@ const createWrapper = () => {
   return ({ children }: { children: React.ReactNode }) => (
     <MemoryRouter>
       <QueryClientProvider client={client}>
-        <AuthProvider>{children}</AuthProvider>
+        <ColorModeProvider>
+          <AuthProvider>{children}</AuthProvider>
+        </ColorModeProvider>
       </QueryClientProvider>
     </MemoryRouter>
   )

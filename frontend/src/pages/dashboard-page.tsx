@@ -18,8 +18,8 @@ import {
   listReservationHistory,
   cancelReservationRequest,
   listPublicRooms,
-  ReservationItem,
 } from '@/lib/api'
+import type { ReservationItem } from '@/lib/api'
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday'
 import EventAvailableIcon from '@mui/icons-material/EventAvailable'
 import HistoryIcon from '@mui/icons-material/History'

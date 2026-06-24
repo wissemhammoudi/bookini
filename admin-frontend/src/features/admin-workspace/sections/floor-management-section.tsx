@@ -765,7 +765,7 @@ function FloorBuilderDialog({ open, floor, onClose, onSave, isSaving }: FloorBui
                       label="Type"
                       size="small"
                       value={selectedDesk.type || 'desk'}
-                      onChange={(e) => handleUpdateSelected('type', e.target.value)}
+                      onChange={(e) => handleUpdateSelected('type', e.target.value as ElementType)}
                     >
                       <MenuItem value="desk">Work Desk</MenuItem>
                       <MenuItem value="table">Meeting Table</MenuItem>
