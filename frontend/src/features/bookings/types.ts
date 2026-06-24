@@ -7,6 +7,7 @@ export interface BookingFormData {
   guestEmail: string
   guestPhone: string
   bookingDate: string
+  endDate: string
   startTime: string
   endTime: string
   participants: string
@@ -28,6 +29,7 @@ export interface BookingConfirmation {
   reference: string
   roomName: string
   date: string
+  endDate?: string
   startTime: string
   endTime: string
   guestName: string

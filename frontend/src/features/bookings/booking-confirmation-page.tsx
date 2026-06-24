@@ -67,14 +67,18 @@ export const BookingConfirmationPage = () => {
   const downloadICalendar = () => {
     if (!booking) return
 
+    const endDateRaw = booking.metadata_payload?.end_date || booking.booking_date
+    const dtstart = `${booking.booking_date.replace(/-/g, '')}T${booking.start_time.replace(/:/g, '')}00`
+    const dtend = `${endDateRaw.replace(/-/g, '')}T${booking.end_time.replace(/:/g, '')}00`
+
     const event = `BEGIN:VCALENDAR
 VERSION:2.0
 PRODID:-//bookiwa7dek//EN
 BEGIN:VEVENT
 UID:${booking.booking_reference}@bookiwa7dek.com
 DTSTAMP:20240622T143000Z
-DTSTART:${booking.booking_date.replace(/-/g, '')}T${booking.start_time.replace(/:/g, '')}00
-DTEND:${booking.booking_date.replace(/-/g, '')}T${booking.end_time.replace(/:/g, '')}00
+DTSTART:${dtstart}
+DTEND:${dtend}
 SUMMARY:${booking.room_name} - bookiwa7dek Booking
 DESCRIPTION:Booking Reference: ${booking.booking_reference}\\nGuest: ${booking.guest_name}\\nParticipants: ${booking.participants}
 LOCATION:${booking.room_name}
@@ -169,7 +173,14 @@ END:VCALENDAR`
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ flexWrap: 'wrap', gap: 1 }}>
                   <Chip label={booking.booking_reference} variant="outlined" sx={{ fontWeight: 800 }} />
                   <Chip label={booking.room_name} variant="outlined" />
-                  <Chip label={new Date(booking.booking_date).toLocaleDateString()} variant="outlined" />
+                  {booking.metadata_payload?.end_date ? (
+                    <Chip
+                      label={`${new Date(booking.booking_date).toLocaleDateString()} - ${new Date(booking.metadata_payload.end_date).toLocaleDateString()} (${booking.metadata_payload.number_of_days} days)`}
+                      variant="outlined"
+                    />
+                  ) : (
+                    <Chip label={new Date(booking.booking_date).toLocaleDateString()} variant="outlined" />
+                  )}
                   <Chip label={`${booking.start_time} - ${booking.end_time}`} variant="outlined" />
                 </Stack>
               ) : null}
@@ -249,12 +260,29 @@ END:VCALENDAR`
                               Date
                             </Typography>
                             <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                              {new Date(booking.booking_date).toLocaleDateString('en-US', {
-                                weekday: 'long',
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric',
-                              })}
+                              {booking.metadata_payload?.end_date ? (
+                                <>
+                                  {new Date(booking.booking_date).toLocaleDateString('en-US', {
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric',
+                                  })}
+                                  {' - '}
+                                  {new Date(booking.metadata_payload.end_date).toLocaleDateString('en-US', {
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric',
+                                  })}
+                                  {` (${booking.metadata_payload.number_of_days} days)`}
+                                </>
+                              ) : (
+                                new Date(booking.booking_date).toLocaleDateString('en-US', {
+                                  weekday: 'long',
+                                  year: 'numeric',
+                                  month: 'long',
+                                  day: 'numeric',
+                                })
+                              )}
                             </Typography>
                           </Box>
                         </Stack>

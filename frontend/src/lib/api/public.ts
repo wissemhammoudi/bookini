@@ -13,6 +13,7 @@ export type PublicBookingCreatePayload = {
   guest_email: string
   guest_phone: string
   booking_date: string
+  end_date?: string
   start_time: string
   end_time: string
   participants: number
@@ -94,6 +95,7 @@ export type PublicBookingDetails = {
   price: number
   status: string
   created_at: string
+  metadata_payload?: Record<string, any>
 }
 
 export type PublicBookingListItem = {

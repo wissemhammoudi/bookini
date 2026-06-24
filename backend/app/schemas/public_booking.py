@@ -17,6 +17,7 @@ class PublicBookingCreateRequest(BaseModel):
     guest_email: EmailStr
     guest_phone: str = Field(min_length=1, max_length=20)
     booking_date: str = Field(pattern=r"^\d{4}-\d{2}-\d{2}$")
+    end_date: str | None = Field(default=None, pattern=r"^\d{4}-\d{2}-\d{2}$")
     start_time: str = Field(pattern=r"^\d{2}:\d{2}$")
     end_time: str = Field(pattern=r"^\d{2}:\d{2}$")
     participants: int = Field(ge=1)

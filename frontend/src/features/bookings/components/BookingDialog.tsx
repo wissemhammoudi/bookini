@@ -80,7 +80,9 @@ export const BookingDialog = ({
     }
   }, [open, initialBookingDate, handleInputChange])
 
-  const price = room ? calculatePrice(hourlyRate, formData.startTime, formData.endTime, selectedPlan) : 0
+  const { price, originalPrice, discount, days } = room
+    ? calculatePrice(hourlyRate, formData.startTime, formData.endTime, selectedPlan, formData.bookingDate, formData.endDate)
+    : { price: 0, originalPrice: 0, discount: 0, days: 1 }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -258,16 +260,27 @@ export const BookingDialog = ({
                   Date & Time
                 </Typography>
                 <Stack spacing={1.5}>
-                  <TextField
-                    label="Date"
-                    type="date"
-                    value={formData.bookingDate}
-                    onChange={(e) => handleInputChange('bookingDate', e.target.value)}
-                    required
-                    fullWidth
-                    size="small"
-                    slotProps={{ inputLabel: { shrink: true } }}
-                  />
+                  <Stack direction="row" spacing={1.5}>
+                    <TextField
+                      label="Start Date"
+                      type="date"
+                      value={formData.bookingDate}
+                      onChange={(e) => handleInputChange('bookingDate', e.target.value)}
+                      required
+                      fullWidth
+                      size="small"
+                      slotProps={{ inputLabel: { shrink: true } }}
+                    />
+                    <TextField
+                      label="End Date (Optional)"
+                      type="date"
+                      value={formData.endDate}
+                      onChange={(e) => handleInputChange('endDate', e.target.value)}
+                      fullWidth
+                      size="small"
+                      slotProps={{ inputLabel: { shrink: true } }}
+                    />
+                  </Stack>
                   <Stack direction="row" spacing={1.5}>
                     <TextField
                       label="Start Time"
@@ -399,14 +412,36 @@ export const BookingDialog = ({
                   <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, display: 'block' }}>
                     Estimated Price
                   </Typography>
-                  <Typography variant="h4" sx={{ fontWeight: 900, color: 'primary.main', lineHeight: 1 }}>
-                    €{price.toFixed(2)}
-                  </Typography>
+                  <Stack direction="row" spacing={1.5} sx={{ alignItems: 'baseline' }}>
+                    <Typography variant="h4" sx={{ fontWeight: 900, color: 'primary.main', lineHeight: 1 }}>
+                      €{price.toFixed(2)}
+                    </Typography>
+                    {discount > 0 && (
+                      <Typography
+                        variant="body1"
+                        sx={{
+                          textDecoration: 'line-through',
+                          color: 'text.secondary',
+                          fontWeight: 500,
+                        }}
+                      >
+                        €{originalPrice.toFixed(2)}
+                      </Typography>
+                    )}
+                  </Stack>
+                  {discount > 0 && (
+                    <Chip
+                      size="small"
+                      color="success"
+                      label={`Saved ${(discount * 100).toFixed(0)}% (${days} days)`}
+                      sx={{ mt: 0.75, fontWeight: 700 }}
+                    />
+                  )}
                 </Box>
 
-                <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', justifyContent: 'flex-end', alignItems: 'center' }}>
                   <Chip icon={<AttachMoneyIcon />} label={`€${hourlyRate}/hour`} variant="outlined" />
-                  <Chip label={formData.startTime && formData.endTime ? `${Math.max(0, parseInt(formData.endTime.split(':')[0]) - parseInt(formData.startTime.split(':')[0]))}h selected` : 'Pick time range'} variant="outlined" />
+                  <Chip label={formData.startTime && formData.endTime ? `${Math.max(0, parseInt(formData.endTime.split(':')[0]) - parseInt(formData.startTime.split(':')[0]))}h${days > 1 ? ` x ${days} days` : ''} selected` : 'Pick time range'} variant="outlined" />
                 </Stack>
               </Stack>
             </Paper>

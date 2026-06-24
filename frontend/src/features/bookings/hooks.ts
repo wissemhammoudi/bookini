@@ -11,6 +11,7 @@ export const useBookingForm = () => {
     guestEmail: '',
     guestPhone: '',
     bookingDate: '',
+    endDate: '',
     startTime: '',
     endTime: '',
     participants: '',
@@ -27,6 +28,7 @@ export const useBookingForm = () => {
       guestEmail: '',
       guestPhone: '',
       bookingDate: '',
+      endDate: '',
       startTime: '',
       endTime: '',
       participants: '',
@@ -46,28 +48,57 @@ export const usePriceCalculation = () => {
     startTime: string,
     endTime: string,
     planId: string,
+    bookingDate?: string,
+    endDate?: string,
     includedHours?: number,
     additionalRate?: number,
-  ): number => {
-    if (!startTime || !endTime) return 0
+  ): { price: number; originalPrice: number; discount: number; days: number } => {
+    if (!startTime || !endTime) {
+      return { price: 0, originalPrice: 0, discount: 0, days: 1 }
+    }
 
     const [startHour] = startTime.split(':').map(Number)
     const [endHour] = endTime.split(':').map(Number)
     const hours = Math.max(0, endHour - startHour)
 
-    if (planId === 'pay-as-you-go') {
-      return hours * roomHourlyRate
-    }
-
-    if (includedHours !== undefined && additionalRate !== undefined) {
-      if (hours <= includedHours) {
-        return 0
+    let days = 1
+    if (bookingDate && endDate && endDate !== bookingDate) {
+      const start = new Date(bookingDate)
+      const end = new Date(endDate)
+      const diffTime = end.getTime() - start.getTime()
+      if (diffTime >= 0) {
+        days = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1
       }
-      const additionalHours = hours - includedHours
-      return (includedHours * roomHourlyRate) + (additionalHours * additionalRate)
     }
 
-    return hours * roomHourlyRate
+    let hourlyPrice = hours * roomHourlyRate
+    if (planId !== 'pay-as-you-go' && includedHours !== undefined && additionalRate !== undefined) {
+      if (hours > includedHours) {
+        const additionalHours = hours - includedHours
+        hourlyPrice = (includedHours * roomHourlyRate) + (additionalHours * additionalRate)
+      } else {
+        hourlyPrice = 0
+      }
+    }
+
+    const originalPrice = hourlyPrice * days
+    let discount = 0
+    if (days >= 30) {
+      discount = 0.50
+    } else if (days >= 6) {
+      discount = 0.20
+    } else if (days >= 3) {
+      discount = 0.10
+    }
+
+    const price = originalPrice * (1 - discount)
+
+    return {
+      price,
+      originalPrice,
+      discount,
+      days,
+    }
   }, [])
 
   return { calculatePrice }

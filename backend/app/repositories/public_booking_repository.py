@@ -69,9 +69,17 @@ class PublicBookingRepository:
         statuses: list[PublicBookingStatus] | None = None,
         limit: int = 500,
     ) -> list[PublicBooking]:
+        from datetime import datetime, timedelta
+        try:
+            start_dt = datetime.strptime(start_date, "%Y-%m-%d")
+            query_start_dt = start_dt - timedelta(days=60)
+            query_start_date = query_start_dt.strftime("%Y-%m-%d")
+        except ValueError:
+            query_start_date = start_date
+
         filters = [
             PublicBooking.room_id == room_id,
-            PublicBooking.booking_date >= start_date,
+            PublicBooking.booking_date >= query_start_date,
             PublicBooking.booking_date <= end_date,
         ]
         if statuses:
@@ -84,7 +92,15 @@ class PublicBookingRepository:
             .limit(limit)
         )
         result = await self.session.execute(stmt)
-        return result.scalars().all()
+        bookings = result.scalars().all()
+
+        filtered_bookings = []
+        for booking in bookings:
+            b_start = booking.booking_date
+            b_end = (booking.metadata_payload or {}).get("end_date") or b_start
+            if b_start <= end_date and b_end >= start_date:
+                filtered_bookings.append(booking)
+        return filtered_bookings
 
     async def update_status(
         self,

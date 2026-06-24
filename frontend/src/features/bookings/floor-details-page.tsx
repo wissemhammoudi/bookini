@@ -339,7 +339,7 @@ export const FloorDetailsPage = () => {
       const latestSlots = await listPublicBookingCalendarSlots({
         room_id: data.roomId,
         start_date: data.bookingDate,
-        end_date: data.bookingDate,
+        end_date: data.endDate || data.bookingDate,
       })
 
       const conflictingSlot = latestSlots.find((slot) =>
@@ -364,6 +364,7 @@ export const FloorDetailsPage = () => {
         guest_email: data.guestEmail,
         guest_phone: data.guestPhone,
         booking_date: data.bookingDate,
+        end_date: data.endDate || undefined,
         start_time: data.startTime,
         end_time: data.endTime,
         participants: Number.parseInt(data.participants, 10) || 1,

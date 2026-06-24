@@ -1,6 +1,6 @@
 import json
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, select
@@ -24,9 +24,20 @@ from app.services.admin_workspace_state_store import AdminWorkspaceStateStore
 router = APIRouter(prefix="/public", tags=["public"])
 
 
-def _room_id_from_floor_id(floor_id: uuid.UUID) -> int:
+def _room_id_from_floor_id(floor_id: uuid.UUID | str) -> int:
     # Deterministic integer mapping for compatibility with public booking schema.
-    return (floor_id.int % 2_000_000_000) + 1
+    if isinstance(floor_id, uuid.UUID):
+        return (floor_id.int % 2_000_000_000) + 1
+    
+    try:
+        parsed = uuid.UUID(floor_id)
+        return (parsed.int % 2_000_000_000) + 1
+    except ValueError:
+        pass
+
+    import hashlib
+    h = hashlib.md5(str(floor_id).encode("utf-8")).hexdigest()
+    return (int(h, 16) % 2_000_000_000) + 1
 
 
 def _organization_id_from_building(building: str) -> str:
@@ -206,7 +217,8 @@ async def _build_public_rooms_catalog(session: AsyncSession) -> list[dict[str, o
 
     for place in managed_places:
         related_floors = [floor for floor in state.floors if floor.place_id == place.id]
-        room_id = _room_id_from_floor_id(uuid.uuid4())
+        primary_floor_id = related_floors[0].id if related_floors else place.id
+        room_id = _room_id_from_floor_id(primary_floor_id)
         primary_floor = related_floors[0] if related_floors else None
         organization_name = next(
             (
@@ -509,8 +521,28 @@ async def create_booking(
             request.room_key,
         )
 
+    number_of_days = 1
+    discount_applied = 0.0
+    if request.end_date:
+        try:
+            start_dt = datetime.strptime(request.booking_date, "%Y-%m-%d")
+            end_dt = datetime.strptime(request.end_date, "%Y-%m-%d")
+            number_of_days = (end_dt - start_dt).days + 1
+            if number_of_days < 1:
+                raise ValidationException("End date must be on or after booking date")
+        except ValueError:
+            raise ValidationException("Invalid date format. Use YYYY-MM-DD")
+
+    if number_of_days >= 30:
+        discount_applied = 0.50
+    elif number_of_days >= 6:
+        discount_applied = 0.20
+    elif number_of_days >= 3:
+        discount_applied = 0.10
+
     billable_hours = _calculate_billable_hours(request.start_time, request.end_time)
-    expected_price = round(canonical_hourly_rate * billable_hours, 2)
+    base_total = canonical_hourly_rate * billable_hours * number_of_days
+    expected_price = round(base_total * (1.0 - discount_applied), 2)
     submitted_price = round(float(request.price), 2)
     if abs(submitted_price - expected_price) > 0.01:
         mismatch_message = (
@@ -532,17 +564,18 @@ async def create_booking(
 
     repository = PublicBookingRepository(session)
 
-    existing_same_day = await repository.list_by_room_and_date_range(
+    query_end_date = request.end_date or request.booking_date
+    existing_bookings = await repository.list_by_room_and_date_range(
         room_id=request.room_id,
         start_date=request.booking_date,
-        end_date=request.booking_date,
+        end_date=query_end_date,
         statuses=[PublicBookingStatus.PENDING, PublicBookingStatus.CONFIRMED],
     )
 
     conflicting = next(
         (
             booking
-            for booking in existing_same_day
+            for booking in existing_bookings
             if _has_time_overlap(
                 request.start_time,
                 request.end_time,
@@ -583,6 +616,9 @@ async def create_booking(
             "submitted_price": submitted_price,
             "canonical_hourly_rate": canonical_hourly_rate,
             "billable_hours": billable_hours,
+            "end_date": request.end_date,
+            "number_of_days": number_of_days,
+            "discount_applied": discount_applied,
         },
     }
 
@@ -597,7 +633,6 @@ async def create_booking(
             "status": booking.status.value,
         },
     )
-
 
 @router.get("/bookings/calendar")
 async def list_booking_calendar_slots(
@@ -621,21 +656,44 @@ async def list_booking_calendar_slots(
         statuses=[PublicBookingStatus.PENDING, PublicBookingStatus.CONFIRMED],
     )
 
+    slots = []
+    for booking in bookings:
+        b_start = booking.booking_date
+        b_end = (booking.metadata_payload or {}).get("end_date") or b_start
+        try:
+            b_start_dt = datetime.strptime(b_start, "%Y-%m-%d")
+            b_end_dt = datetime.strptime(b_end, "%Y-%m-%d")
+            curr = b_start_dt
+            while curr <= b_end_dt:
+                curr_str = curr.strftime("%Y-%m-%d")
+                if start_date <= curr_str <= end_date:
+                    slots.append({
+                        "id": str(booking.id),
+                        "booking_reference": booking.booking_reference,
+                        "room_id": booking.room_id,
+                        "room_name": booking.room_name,
+                        "booking_date": curr_str,
+                        "start_time": booking.start_time,
+                        "end_time": booking.end_time,
+                        "status": booking.status.value,
+                    })
+                curr += timedelta(days=1)
+        except ValueError:
+            if start_date <= b_start <= end_date:
+                slots.append({
+                    "id": str(booking.id),
+                    "booking_reference": booking.booking_reference,
+                    "room_id": booking.room_id,
+                    "room_name": booking.room_name,
+                    "booking_date": b_start,
+                    "start_time": booking.start_time,
+                    "end_time": booking.end_time,
+                    "status": booking.status.value,
+                })
+
     return success_response(
         message="Calendar slots retrieved",
-        data=[
-            {
-                "id": str(booking.id),
-                "booking_reference": booking.booking_reference,
-                "room_id": booking.room_id,
-                "room_name": booking.room_name,
-                "booking_date": booking.booking_date,
-                "start_time": booking.start_time,
-                "end_time": booking.end_time,
-                "status": booking.status.value,
-            }
-            for booking in bookings
-        ],
+        data=slots,
     )
 
 
@@ -672,6 +730,7 @@ async def get_booking(
             "price": booking.price,
             "status": booking.status.value,
             "created_at": booking.created_at.isoformat(),
+            "metadata_payload": booking.metadata_payload,
         },
     )
 
