@@ -33,10 +33,13 @@ interface BookingDialogProps {
   room: PublicRoom | null
   selectedFloorId?: string
   onFloorChange?: (floorId: string) => void
+  selectedRoomKey?: string
+  onRoomChange?: (roomKey: string) => void
+  roomOptions?: Array<{ key: string; label: string; price: number; capacity?: number }>
   selectedPlan: string
   isLight: boolean
   onClose: () => void
-  onSubmit: (data: BookingFormData & { roomId: number; floorId?: string; roomName: string; planId: string; price: number }) => Promise<boolean> | boolean
+  onSubmit: (data: BookingFormData & { roomId: number; floorId?: string; roomKey?: string; roomName: string; planId: string; price: number }) => Promise<boolean> | boolean
   isLoading?: boolean
   error?: string | null
   initialBookingDate?: string | null
@@ -47,6 +50,9 @@ export const BookingDialog = ({
   room,
   selectedFloorId,
   onFloorChange,
+  selectedRoomKey,
+  onRoomChange,
+  roomOptions = [],
   selectedPlan,
   isLight,
   onClose,
@@ -59,8 +65,9 @@ export const BookingDialog = ({
   const { calculatePrice } = usePriceCalculation()
 
   const resolvedFloor = room?.floors?.find((floor) => floor.id === selectedFloorId) ?? room?.floors?.[0]
-  const hourlyRate = resolvedFloor?.price ?? room?.price ?? 0
-  const roomCapacity = resolvedFloor?.capacity ?? room?.capacity ?? 0
+  const selectedRoomOption = roomOptions.find((option) => option.key === selectedRoomKey)
+  const hourlyRate = selectedRoomOption?.price ?? resolvedFloor?.price ?? room?.price ?? 0
+  const roomCapacity = selectedRoomOption?.capacity ?? resolvedFloor?.capacity ?? room?.capacity ?? 0
 
   useEffect(() => {
     if (open && initialBookingDate) {
@@ -79,7 +86,12 @@ export const BookingDialog = ({
       ...formData,
       roomId: room.id,
       floorId: resolvedFloor?.id,
-      roomName: resolvedFloor ? `${room.name} - ${resolvedFloor.floor_name}` : room.name,
+      roomKey: selectedRoomOption?.key,
+      roomName: selectedRoomOption
+        ? `${room.name} - ${selectedRoomOption.label}`
+        : resolvedFloor
+          ? `${room.name} - ${resolvedFloor.floor_name}`
+          : room.name,
       planId: selectedPlan,
       price,
     }
@@ -194,6 +206,24 @@ export const BookingDialog = ({
                   {room.floors.map((floor) => (
                     <MenuItem key={floor.id} value={floor.id}>
                       {floor.floor_name} • €{floor.price ?? room.price}/hr • {floor.capacity} seats
+                    </MenuItem>
+                  ))}
+                </TextField>
+              ) : null}
+
+              {roomOptions.length > 0 ? (
+                <TextField
+                  select
+                  fullWidth
+                  size="small"
+                  label="Room"
+                  value={selectedRoomKey ?? ''}
+                  onChange={(event) => onRoomChange?.(event.target.value)}
+                  sx={{ mt: 1.5 }}
+                >
+                  {roomOptions.map((roomOption) => (
+                    <MenuItem key={roomOption.key} value={roomOption.key}>
+                      {roomOption.label} • €{roomOption.price}/hr{roomOption.capacity ? ` • ${roomOption.capacity} seats` : ''}
                     </MenuItem>
                   ))}
                 </TextField>

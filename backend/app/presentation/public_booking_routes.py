@@ -1,3 +1,4 @@
+import json
 import uuid
 from datetime import datetime
 
@@ -113,6 +114,8 @@ async def _build_public_rooms_catalog(session: AsyncSession) -> list[dict[str, o
                         "floor_name": floor_name,
                         "floor_number": floor.floor_number,
                         "capacity": floor.capacity,
+                        "price": 0,
+                        "blueprint_image": None,
                         "description": floor.description,
                         "status": floor.status.value,
                         "reservation_areas": [],
@@ -170,6 +173,7 @@ async def _build_public_rooms_catalog(session: AsyncSession) -> list[dict[str, o
                     "floor_number": floor.floor_number,
                     "capacity": floor.capacity,
                     "price": floor.pricing,
+                    "blueprint_image": floor.blueprint_image,
                     "description": floor.description,
                     "status": floor.status,
                     "reservation_areas": floor.reservation_areas,
@@ -211,6 +215,7 @@ def _calculate_billable_hours(start_time: str, end_time: str) -> int:
 def _resolve_hourly_rate(
     room_entry: dict[str, object],
     selected_floor_id: str | None,
+    selected_room_key: str | None = None,
 ) -> float:
     room_rate = float(room_entry.get("price", 0) or 0)
     floors = room_entry.get("floors", [])
@@ -229,7 +234,46 @@ def _resolve_hourly_rate(
     if not matched_floor:
         return room_rate
 
-    return float(matched_floor.get("price", room_rate) or room_rate)
+    floor_rate = float(matched_floor.get("price", room_rate) or room_rate)
+    if not selected_room_key:
+        return floor_rate
+
+    matched_room = _resolve_blueprint_room(matched_floor, selected_room_key)
+    if not matched_room:
+        return floor_rate
+
+    return float(matched_room.get("price", floor_rate) or floor_rate)
+
+
+def _resolve_blueprint_room(
+    floor_entry: dict[str, object],
+    selected_room_key: str,
+) -> dict[str, object] | None:
+    blueprint_raw = floor_entry.get("blueprint_image")
+    if not isinstance(blueprint_raw, str) or not blueprint_raw.strip().startswith("["):
+        return None
+
+    try:
+        parsed = json.loads(blueprint_raw)
+        if not isinstance(parsed, list):
+            return None
+
+        matched_room = next(
+            (
+                item
+                for item in parsed
+                if isinstance(item, dict)
+                and str(item.get("name", "")) == selected_room_key
+                and item.get("isReservable", True) is not False
+            ),
+            None,
+        )
+        if not matched_room:
+            return None
+
+        return matched_room
+    except (TypeError, ValueError, json.JSONDecodeError):
+        return None
 
 
 def generate_booking_reference() -> str:
@@ -293,7 +337,19 @@ async def create_booking(
         if selected_floor is None:
             raise ValidationException("Selected floor does not belong to the room")
 
-    canonical_hourly_rate = _resolve_hourly_rate(selected_room, request.floor_id)
+    if request.room_key and not selected_floor:
+        raise ValidationException("Room selection requires a valid floor")
+
+    if request.room_key and selected_floor:
+        matched_floor_room = _resolve_blueprint_room(selected_floor, request.room_key)
+        if matched_floor_room is None:
+            raise ValidationException("Selected room does not belong to the floor")
+
+    canonical_hourly_rate = _resolve_hourly_rate(
+        selected_room,
+        request.floor_id,
+        request.room_key,
+    )
     billable_hours = _calculate_billable_hours(request.start_time, request.end_time)
     expected_price = round(canonical_hourly_rate * billable_hours, 2)
     submitted_price = round(float(request.price), 2)
@@ -309,6 +365,8 @@ async def create_booking(
     canonical_room_name = str(selected_room.get("name", request.room_name))
     if selected_floor and selected_floor.get("floor_name"):
         canonical_room_name = f"{canonical_room_name} - {selected_floor['floor_name']}"
+    if request.room_key:
+        canonical_room_name = f"{canonical_room_name} - {request.room_key}"
 
     repository = PublicBookingRepository(session)
 
@@ -357,6 +415,7 @@ async def create_booking(
             "user_agent": "web",
             "source": "public_booking",
             "floor_id": request.floor_id,
+            "room_key": request.room_key,
             "submitted_price": submitted_price,
             "canonical_hourly_rate": canonical_hourly_rate,
             "billable_hours": billable_hours,

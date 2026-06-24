@@ -65,6 +65,42 @@ const overlaps = (startA: string, endA: string, startB: string, endB: string) =>
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
+type FloorRoomPreview = {
+  name: string
+  price: number
+  image_urls: string[]
+  isReservable: boolean
+}
+
+const parseFloorRoomPreviews = (
+  blueprintImage: string | null | undefined,
+  fallbackPrice: number,
+) => {
+  if (!blueprintImage) return [] as FloorRoomPreview[]
+  const source = blueprintImage.trim()
+  if (!source.startsWith('[')) return [] as FloorRoomPreview[]
+
+  try {
+    const parsed = JSON.parse(source)
+    if (!Array.isArray(parsed)) return [] as FloorRoomPreview[]
+
+    return parsed
+      .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === 'object')
+      .filter((item) => typeof item.name === 'string')
+      .map((item) => ({
+        name: String(item.name),
+        price: Number(item.price ?? fallbackPrice),
+        image_urls: Array.isArray(item.image_urls)
+          ? item.image_urls.filter((url): url is string => typeof url === 'string' && url.trim().length > 0)
+          : [],
+        isReservable: item.isReservable === false ? false : true,
+      }))
+      .filter((item) => item.isReservable)
+  } catch {
+    return [] as FloorRoomPreview[]
+  }
+}
+
 const buildMedia = (room: PublicRoom) => {
   const imageSeed = encodeURIComponent(room.name.toLowerCase().replace(/\s+/g, '-'))
 
@@ -96,6 +132,7 @@ export const PlaceDetailsPage = () => {
   const [bookingDialogOpen, setBookingDialogOpen] = useState(false)
   const [bookingError, setBookingError] = useState<string | null>(null)
   const [selectedFloorId, setSelectedFloorId] = useState<string | undefined>(undefined)
+  const [selectedRoomKey, setSelectedRoomKey] = useState<string | undefined>(undefined)
   const [floorRating, setFloorRating] = useState(5)
   const [floorComment, setFloorComment] = useState('')
   const [floorReviewsPage, setFloorReviewsPage] = useState(0)
@@ -124,6 +161,38 @@ export const PlaceDetailsPage = () => {
 
     return room.primary_floor_id ?? room.floors?.[0]?.id
   }, [room, selectedFloorId])
+
+  const selectedFloor = useMemo(() => {
+    if (!room?.floors?.length) return undefined
+    return room.floors.find((floor) => floor.id === resolvedSelectedFloorId) ?? room.floors[0]
+  }, [room, resolvedSelectedFloorId])
+
+  const selectedFloorPrice = selectedFloor?.price ?? room?.price ?? 0
+  const floorRoomPreviews = useMemo(
+    () => parseFloorRoomPreviews(selectedFloor?.blueprint_image, selectedFloorPrice),
+    [selectedFloor?.blueprint_image, selectedFloorPrice],
+  )
+  const roomOptions = useMemo(
+    () => floorRoomPreviews.map((item) => ({
+      key: item.name,
+      label: item.name,
+      price: item.price,
+      capacity: selectedFloor?.capacity,
+    })),
+    [floorRoomPreviews, selectedFloor?.capacity],
+  )
+  const resolvedSelectedRoomKey = useMemo(() => {
+    if (!roomOptions.length) return undefined
+    if (selectedRoomKey && roomOptions.some((option) => option.key === selectedRoomKey)) {
+      return selectedRoomKey
+    }
+    return roomOptions[0].key
+  }, [roomOptions, selectedRoomKey])
+  const selectedRoomOption = useMemo(
+    () => roomOptions.find((option) => option.key === resolvedSelectedRoomKey),
+    [roomOptions, resolvedSelectedRoomKey],
+  )
+  const effectiveDisplayPrice = selectedRoomOption?.price ?? selectedFloorPrice
 
   const media = useMemo(() => (room ? buildMedia(room) : { images: [], videos: [] }), [room])
 
@@ -215,7 +284,7 @@ export const PlaceDetailsPage = () => {
     setBookingDialogOpen(true)
   }
 
-  const handleBookingSubmit = async (data: BookingFormData & { roomId: number; floorId?: string; roomName: string; planId: string; price: number }) => {
+  const handleBookingSubmit = async (data: BookingFormData & { roomId: number; floorId?: string; roomKey?: string; roomName: string; planId: string; price: number }) => {
     setBookingError(null)
 
     try {
@@ -238,6 +307,7 @@ export const PlaceDetailsPage = () => {
       const created = await createBookingMutation.mutateAsync({
         room_id: data.roomId,
         floor_id: data.floorId,
+        room_key: data.roomKey,
         room_name: data.roomName,
         plan_id: data.planId,
         guest_name: data.guestName,
@@ -334,7 +404,7 @@ export const PlaceDetailsPage = () => {
                 {room.name}
               </Typography>
               <Typography color="text.secondary" variant="h6">
-                Capacity {room.capacity} people • €{room.price}/hour
+                Capacity {room.capacity} people • €{effectiveDisplayPrice}/hour
               </Typography>
               {room.description ? (
                 <Typography color="text.secondary" sx={{ maxWidth: 760 }}>
@@ -354,8 +424,75 @@ export const PlaceDetailsPage = () => {
                   <Chip key={amenity} label={amenity} size="small" variant="outlined" />
                 ))}
               </Stack>
+              {room.floors && room.floors.length > 0 ? (
+                <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
+                  {room.floors.map((floor) => (
+                    <Chip
+                      key={floor.id}
+                      label={`${floor.floor_name} • €${floor.price ?? room.price}/h`}
+                      color={floor.id === selectedFloor?.id ? 'primary' : 'default'}
+                      variant={floor.id === selectedFloor?.id ? 'filled' : 'outlined'}
+                      onClick={() => {
+                        setSelectedFloorId(floor.id)
+                        setSelectedRoomKey(undefined)
+                      }}
+                    />
+                  ))}
+                </Stack>
+              ) : null}
             </Stack>
           </Paper>
+
+          {floorRoomPreviews.length > 0 ? (
+            <Paper elevation={0} sx={{ p: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
+              <Stack spacing={2}>
+                <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+                  <MeetingRoomOutlinedIcon color="primary" />
+                  <Typography variant="h6" sx={{ fontWeight: 800 }}>
+                    Rooms On {selectedFloor?.floor_name}
+                  </Typography>
+                </Stack>
+
+                <Box
+                  sx={{
+                    display: 'grid',
+                    gap: 1.25,
+                    gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))' },
+                  }}
+                >
+                  {floorRoomPreviews.map((roomPreview, index) => (
+                    <Paper key={`${roomPreview.name}-${index}`} variant="outlined" sx={{ p: 1.25, borderRadius: 2 }}>
+                      <Stack spacing={1}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
+                          {roomPreview.name}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          €{roomPreview.price}/hour
+                        </Typography>
+                        <Box
+                          sx={{
+                            display: 'grid',
+                            gap: 0.75,
+                            gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                          }}
+                        >
+                          {(roomPreview.image_urls.length ? roomPreview.image_urls : media.images.slice(0, 2)).map((imageUrl, imageIndex) => (
+                            <Box
+                              key={`${roomPreview.name}-image-${imageIndex}`}
+                              component="img"
+                              src={imageUrl}
+                              alt={`${roomPreview.name} image ${imageIndex + 1}`}
+                              sx={{ width: '100%', height: 110, objectFit: 'cover', borderRadius: 1.25 }}
+                            />
+                          ))}
+                        </Box>
+                      </Stack>
+                    </Paper>
+                  ))}
+                </Box>
+              </Stack>
+            </Paper>
+          ) : null}
 
           <Paper elevation={0} sx={{ p: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
             <Stack spacing={2}>
@@ -786,7 +923,13 @@ export const PlaceDetailsPage = () => {
         open={bookingDialogOpen}
         room={room}
         selectedFloorId={resolvedSelectedFloorId}
-        onFloorChange={setSelectedFloorId}
+        onFloorChange={(floorId) => {
+          setSelectedFloorId(floorId)
+          setSelectedRoomKey(undefined)
+        }}
+        selectedRoomKey={resolvedSelectedRoomKey}
+        onRoomChange={setSelectedRoomKey}
+        roomOptions={roomOptions}
         selectedPlan={selectedPlan}
         isLight={isLight}
         onClose={() => {
