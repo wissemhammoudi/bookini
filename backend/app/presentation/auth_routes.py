@@ -183,10 +183,18 @@ async def update_profile(
 
 @router.post("/me/avatar")
 async def upload_avatar(
-    file: UploadFile = File(...),
+    file: UploadFile | None = File(default=None),
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ) -> dict[str, object]:
+    if file is None:
+        from fastapi import HTTPException
+
+        raise HTTPException(
+            status_code=400,
+            detail="No file provided. Use multipart/form-data with field name 'file'.",
+        )
+
     if not file.content_type or not file.content_type.startswith("image/"):
         from fastapi import HTTPException
 
@@ -219,9 +227,17 @@ async def upload_avatar(
 
 @router.post("/upload")
 async def upload_file(
-    file: UploadFile = File(...),
+    file: UploadFile | None = File(default=None),
     current_user: User = Depends(get_current_user),
 ) -> dict[str, object]:
+    if file is None:
+        from fastapi import HTTPException
+
+        raise HTTPException(
+            status_code=400,
+            detail="No file provided. Use multipart/form-data with field name 'file'.",
+        )
+
     if not file.content_type or not file.content_type.startswith("image/"):
         from fastapi import HTTPException
 
@@ -233,7 +249,7 @@ async def upload_file(
     file_ext = os.path.splitext(file.filename)[1] if file.filename else ".jpg"
     if not file_ext:
         file_ext = ".jpg"
-    object_name = f"uploads/{uuid.uuid4()}{file_ext}"
+    object_name = f"{uuid.uuid4()}{file_ext}"
 
     file_data = await file.read()
     from app.infrastructure.minio_client import MinioClient

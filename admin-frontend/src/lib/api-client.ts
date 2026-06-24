@@ -16,6 +16,10 @@ export const apiClient = axios.create({
 })
 
 apiClient.interceptors.request.use((config) => {
+  if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
+    delete config.headers['Content-Type']
+  }
+
   const token = getStoredAccessToken()
   if (token) {
     config.headers.Authorization = `Bearer ${token}`

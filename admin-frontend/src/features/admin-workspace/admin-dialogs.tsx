@@ -33,6 +33,24 @@ import type {
   UserRecord,
 } from '@/lib/api-types'
 
+const isAbsoluteUrl = (value: string) => {
+  try {
+    const parsed = new URL(value)
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
+const isUploadPath = (value: string) => value.startsWith('/api/v1/auth/uploads/')
+
+const optionalImageLocation = (label: string) => z
+  .string()
+  .refine(
+    (value) => value === '' || isAbsoluteUrl(value) || isUploadPath(value),
+    { message: `Valid ${label} URL required` },
+  )
+
 const userSchema = z.object({
   full_name: z.string().min(2, 'Full name is required'),
   email: z.email('Valid email is required'),
@@ -48,8 +66,8 @@ const organizationSchema = z.object({
   contact_email: z.email('Valid email is required'),
   contact_phone: z.string().min(6, 'Phone is required'),
   website: z.url('Valid website URL required').or(z.literal('')),
-  logo: z.url('Valid logo URL required').or(z.literal('')),
-  cover_image: z.url('Valid cover image URL required').or(z.literal('')),
+  logo: optionalImageLocation('logo'),
+  cover_image: optionalImageLocation('cover image'),
   social_links: z.string(),
   status: z.enum(['ACTIVE', 'SUSPENDED']),
 })
@@ -63,7 +81,7 @@ const placeSchema = z.object({
   address: z.string().min(5, 'Address is required'),
   pricing: z.number().min(0, 'Pricing must be positive'),
   availability: z.string().min(2, 'Availability is required'),
-  cover_image: z.url('Valid cover image URL required').or(z.literal('')),
+  cover_image: optionalImageLocation('cover image'),
   gallery: z.string(),
   features: z.string(),
   status: z.enum(['ACTIVE', 'SUSPENDED']),
