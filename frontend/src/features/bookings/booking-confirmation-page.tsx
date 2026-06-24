@@ -31,6 +31,24 @@ import { PublicNavbar } from '@/features/public/components/public-navbar'
 import { PublicFooter } from '@/features/public/components/public-footer'
 import { getPublicBookingByReference } from '@/lib/api'
 
+const formatDate = (dateValue: unknown, locale: string = 'en-US', options?: Intl.DateTimeFormatOptions) => {
+  if (typeof dateValue !== 'string' || !dateValue) {
+    return 'N/A'
+  }
+
+  const date = new Date(dateValue)
+  if (Number.isNaN(date.getTime())) {
+    return 'N/A'
+  }
+
+  return date.toLocaleDateString(locale, options)
+}
+
+const formatPrice = (priceValue: unknown) => {
+  const numeric = typeof priceValue === 'number' ? priceValue : Number(priceValue)
+  return Number.isFinite(numeric) ? numeric.toFixed(2) : '0.00'
+}
+
 /**
  * Booking Confirmation Page
  * Displays booking details and allows searching for existing bookings
@@ -56,6 +74,12 @@ export const BookingConfirmationPage = () => {
   })
 
   const booking = bookingQuery.data
+  const metadata = booking?.metadata_payload ?? {}
+  const endDate = typeof metadata.end_date === 'string' ? metadata.end_date : undefined
+  const numberOfDays =
+    typeof metadata.number_of_days === 'number'
+      ? metadata.number_of_days
+      : Number(metadata.number_of_days) || undefined
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -67,7 +91,7 @@ export const BookingConfirmationPage = () => {
   const downloadICalendar = () => {
     if (!booking) return
 
-    const endDateRaw = (booking.metadata_payload?.end_date as string) || booking.booking_date
+    const endDateRaw = endDate || booking.booking_date
     const dtstart = `${booking.booking_date.replace(/-/g, '')}T${booking.start_time.replace(/:/g, '')}00`
     const dtend = `${endDateRaw.replace(/-/g, '')}T${booking.end_time.replace(/:/g, '')}00`
 
@@ -173,13 +197,13 @@ END:VCALENDAR`
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ flexWrap: 'wrap', gap: 1 }}>
                   <Chip label={booking.booking_reference} variant="outlined" sx={{ fontWeight: 800 }} />
                   <Chip label={booking.room_name} variant="outlined" />
-                  {booking.metadata_payload?.end_date ? (
+                  {endDate ? (
                     <Chip
-                      label={`${new Date(booking.booking_date).toLocaleDateString()} - ${new Date(booking.metadata_payload.end_date as string).toLocaleDateString()} (${booking.metadata_payload.number_of_days as number} days)`}
+                      label={`${formatDate(booking.booking_date)} - ${formatDate(endDate)}${numberOfDays ? ` (${numberOfDays} days)` : ''}`}
                       variant="outlined"
                     />
                   ) : (
-                    <Chip label={new Date(booking.booking_date).toLocaleDateString()} variant="outlined" />
+                    <Chip label={formatDate(booking.booking_date)} variant="outlined" />
                   )}
                   <Chip label={`${booking.start_time} - ${booking.end_time}`} variant="outlined" />
                 </Stack>
@@ -260,23 +284,23 @@ END:VCALENDAR`
                               Date
                             </Typography>
                             <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                              {booking.metadata_payload?.end_date ? (
+                              {endDate ? (
                                 <>
-                                  {new Date(booking.booking_date).toLocaleDateString('en-US', {
+                                  {formatDate(booking.booking_date, 'en-US', {
                                     year: 'numeric',
                                     month: 'long',
                                     day: 'numeric',
                                   })}
                                   {' - '}
-                                  {new Date(booking.metadata_payload.end_date as string).toLocaleDateString('en-US', {
+                                  {formatDate(endDate, 'en-US', {
                                     year: 'numeric',
                                     month: 'long',
                                     day: 'numeric',
                                   })}
-                                  {` (${booking.metadata_payload.number_of_days as number} days)`}
+                                  {numberOfDays ? ` (${numberOfDays} days)` : ''}
                                 </>
                               ) : (
-                                new Date(booking.booking_date).toLocaleDateString('en-US', {
+                                formatDate(booking.booking_date, 'en-US', {
                                   weekday: 'long',
                                   year: 'numeric',
                                   month: 'long',
@@ -323,7 +347,7 @@ END:VCALENDAR`
                             <Typography sx={{ fontWeight: 700 }}>Total Amount</Typography>
                           </Stack>
                           <Typography variant="h4" sx={{ fontWeight: 800, color: 'primary.main' }}>
-                            €{booking.price.toFixed(2)}
+                            €{formatPrice(booking.price)}
                           </Typography>
                         </Stack>
                       </Paper>
