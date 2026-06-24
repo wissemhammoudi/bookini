@@ -152,7 +152,11 @@ async def _build_public_rooms_catalog(session: AsyncSession) -> list[dict[str, o
             ],
         }
 
-        if not any(existing["name"] == room_entry["name"] and existing["address"] == room_entry["address"] for existing in rooms):
+        if not any(
+            existing["name"] == room_entry["name"]
+            and existing["address"] == room_entry["address"]
+            for existing in rooms
+        ):
             rooms.append(room_entry)
 
     return rooms
