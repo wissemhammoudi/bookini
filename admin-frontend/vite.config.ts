@@ -22,6 +22,11 @@ const vitestConfig = defineConfig({
       provider: 'v8',
       reporter: ['text', 'html'],
     },
+    server: {
+      deps: {
+        inline: ['@mui/material', 'react-transition-group'],
+      },
+    },
   },
 })
 
