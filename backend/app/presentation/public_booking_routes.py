@@ -298,8 +298,12 @@ async def create_booking(
     expected_price = round(canonical_hourly_rate * billable_hours, 2)
     submitted_price = round(float(request.price), 2)
     if abs(submitted_price - expected_price) > 0.01:
+        mismatch_message = (
+            "Price mismatch. "
+            f"Expected {expected_price:.2f} based on selected room/floor pricing"
+        )
         raise ValidationException(
-            f"Price mismatch. Expected {expected_price:.2f} based on selected room/floor pricing"
+            mismatch_message
         )
 
     canonical_room_name = str(selected_room.get("name", request.room_name))
