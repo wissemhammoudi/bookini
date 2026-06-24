@@ -46,7 +46,7 @@ class DashboardData(BaseModel):
 
 class UserRecord(BaseModel):
     id: str
-    profile_image: HttpUrl | None = None
+    profile_image: str | None = None
     full_name: str
     email: EmailStr
     phone: str
@@ -67,8 +67,8 @@ class UserUpsertRequest(BaseModel):
 
 class OrganizationRecord(BaseModel):
     id: str
-    logo: HttpUrl | None = None
-    cover_image: HttpUrl | None = None
+    logo: str | None = None
+    cover_image: str | None = None
     name: str
     description: str
     address: str
@@ -87,8 +87,8 @@ class OrganizationUpsertRequest(BaseModel):
     contact_email: EmailStr
     contact_phone: str = Field(min_length=6, max_length=30)
     website: HttpUrl | None = None
-    logo: HttpUrl | None = None
-    cover_image: HttpUrl | None = None
+    logo: str | None = None
+    cover_image: str | None = None
     social_links: list[HttpUrl] = Field(default_factory=list)
     status: StatusValue = "ACTIVE"
 
@@ -103,8 +103,8 @@ class PlaceRecord(BaseModel):
     address: str
     pricing: float
     availability: str
-    cover_image: HttpUrl | None = None
-    gallery: list[HttpUrl] = Field(default_factory=list)
+    cover_image: str | None = None
+    gallery: list[str] = Field(default_factory=list)
     features: list[str] = Field(default_factory=list)
     status: StatusValue
     created_date: datetime
@@ -119,8 +119,8 @@ class PlaceUpsertRequest(BaseModel):
     address: str = Field(min_length=5, max_length=255)
     pricing: float = Field(ge=0)
     availability: str = Field(min_length=2, max_length=120)
-    cover_image: HttpUrl | None = None
-    gallery: list[HttpUrl] = Field(default_factory=list)
+    cover_image: str | None = None
+    gallery: list[str] = Field(default_factory=list)
     features: list[str] = Field(default_factory=list)
     status: StatusValue = "ACTIVE"
 

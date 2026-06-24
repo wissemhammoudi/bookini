@@ -117,6 +117,16 @@ class AdminWorkspaceOrganizationService:
     @staticmethod
     def create_place(payload: PlaceUpsertRequest) -> PlaceRecord:
         state = AdminWorkspaceStateStore.get_state()
+        organization_exists = any(
+            organization.id == payload.organization_id
+            for organization in state.organizations
+        )
+        if not organization_exists:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Selected organization does not exist",
+            )
+
         place = PlaceRecord(
             id=f"place-{utc_now().strftime('%H%M%S%f')[-8:]}",
             created_date=utc_now(),
@@ -131,6 +141,16 @@ class AdminWorkspaceOrganizationService:
     @staticmethod
     def update_place(place_id: str, payload: PlaceUpsertRequest) -> PlaceRecord:
         state = AdminWorkspaceStateStore.get_state()
+        organization_exists = any(
+            organization.id == payload.organization_id
+            for organization in state.organizations
+        )
+        if not organization_exists:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Selected organization does not exist",
+            )
+
         for index, place in enumerate(state.places):
             if place.id == place_id:
                 updated = place.model_copy(update=payload.model_dump())

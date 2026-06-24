@@ -97,6 +97,64 @@ async def _build_public_rooms_catalog(session: AsyncSession) -> list[dict[str, o
             }
         )
 
+    # Also include admin workspace-managed places/floors (in-memory state),
+    # excluding old demo-only records that were not created by the admin UI.
+    state = AdminWorkspaceStateStore.get_state()
+    managed_places = [
+        place
+        for place in state.places
+        if place.id.startswith("place-") and place.organization_id.startswith("org-")
+    ]
+
+    for place in managed_places:
+        related_floors = [floor for floor in state.floors if floor.place_id == place.id]
+        room_id = _room_id_from_floor_id(uuid.uuid4())
+        organization_name = next(
+            (
+                org.name
+                for org in state.organizations
+                if org.id == place.organization_id
+            ),
+            place.organization_id,
+        )
+
+        room_entry = {
+            "id": room_id,
+            "primary_floor_id": related_floors[0].id if related_floors else None,
+            "name": place.name,
+            "description": place.description,
+            "capacity": place.capacity,
+            "price": place.pricing,
+            "address": place.address,
+            "availability": place.availability,
+            "amenities": place.features,
+            "features": place.features,
+            "image": organization_name[:1].upper() if organization_name else "B",
+            "cover_image": str(place.cover_image) if place.cover_image else None,
+            "gallery": [str(item) for item in place.gallery],
+            "video_url": None,
+            "admin_id": None,
+            "average_rating": 0.0,
+            "rating_count": 0,
+            "organization_id": place.organization_id,
+            "organization_name": organization_name,
+            "floors": [
+                {
+                    "id": floor.id,
+                    "floor_name": floor.floor_name,
+                    "floor_number": floor.floor_number,
+                    "capacity": floor.capacity,
+                    "description": floor.description,
+                    "status": floor.status,
+                    "reservation_areas": floor.reservation_areas,
+                }
+                for floor in related_floors
+            ],
+        }
+
+        if not any(existing["name"] == room_entry["name"] and existing["address"] == room_entry["address"] for existing in rooms):
+            rooms.append(room_entry)
+
     return rooms
 
 
