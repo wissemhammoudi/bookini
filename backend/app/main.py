@@ -16,7 +16,7 @@ from app.api.v1.router import api_v1_router
 from app.core.config import get_settings
 from app.core.exception_handlers import register_exception_handlers
 from app.core.logging_config import get_logger, setup_logging
-from app.core.seed import seed_default_users, seed_super_admin_account
+from app.core.seed import seed_super_admin_account
 from app.infrastructure.session import get_session_factory
 
 REQUEST_COUNT = Counter(
@@ -42,7 +42,6 @@ async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
         logger.error(f"Failed to initialize MinIO bucket: {e}")
 
     await seed_super_admin_account(get_session_factory(), settings)
-    await seed_default_users(get_session_factory(), settings)
     logger.info("Application startup complete")
     yield
     logger.info("Application shutdown complete")
