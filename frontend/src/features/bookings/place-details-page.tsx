@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import {
   Alert,
@@ -109,14 +109,18 @@ export const PlaceDetailsPage = () => {
     return (roomsQuery.data ?? []).find((item) => item.id === Number.parseInt(roomId, 10)) ?? null
   }, [roomsQuery.data, roomId])
 
-  useEffect(() => {
+  const resolvedSelectedFloorId = useMemo(() => {
     if (!room) {
-      setSelectedFloorId(undefined)
-      return
+      return undefined
     }
 
-    setSelectedFloorId(room.primary_floor_id ?? room.floors?.[0]?.id)
-  }, [room])
+    const floorIds = room.floors?.map((floor) => floor.id) ?? []
+    if (selectedFloorId && floorIds.includes(selectedFloorId)) {
+      return selectedFloorId
+    }
+
+    return room.primary_floor_id ?? room.floors?.[0]?.id
+  }, [room, selectedFloorId])
 
   const media = useMemo(() => (room ? buildMedia(room) : { images: [], videos: [] }), [room])
 
@@ -769,7 +773,7 @@ export const PlaceDetailsPage = () => {
       <BookingDialog
         open={bookingDialogOpen}
         room={room}
-        selectedFloorId={selectedFloorId}
+        selectedFloorId={resolvedSelectedFloorId}
         onFloorChange={setSelectedFloorId}
         selectedPlan={selectedPlan}
         isLight={isLight}
