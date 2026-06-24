@@ -56,10 +56,14 @@ export const ProfilePage = () => {
       })
     },
     onError: (error) => {
-      const err = error as { response?: { data?: { message?: string } }; message?: string }
+      const err = error as {
+        response?: { data?: { message?: string; errors?: Array<{ detail?: string; msg?: string }> } }
+        message?: string
+      }
+      const backendDetail = err.response?.data?.errors?.[0]?.detail ?? err.response?.data?.errors?.[0]?.msg
       setToast({
         open: true,
-        message: err.response?.data?.message || err.message || 'Failed to upload avatar',
+        message: backendDetail || err.response?.data?.message || err.message || 'Failed to upload avatar',
         severity: 'error',
       })
     },

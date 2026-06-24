@@ -303,7 +303,11 @@ export const OrganizationDialog = ({
   title,
   value,
 }: OrganizationDialogProps) => {
-  const { handleSubmit, register, reset, formState: { errors } } = useForm<OrganizationFormValues>({
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false)
+  const [isUploadingCover, setIsUploadingCover] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+
+  const { handleSubmit, register, reset, setValue, formState: { errors } } = useForm<OrganizationFormValues>({
     resolver: zodResolver(organizationSchema),
     values: {
       name: value?.name ?? '',
@@ -319,8 +323,43 @@ export const OrganizationDialog = ({
     },
   })
 
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setIsUploadingLogo(true)
+    setUploadError(null)
+    try {
+      const response = await uploadImageRequest(file)
+      setValue('logo', response.url)
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } }; message?: string }
+      setUploadError(error.response?.data?.message || error.message || 'Failed to upload logo image')
+    } finally {
+      setIsUploadingLogo(false)
+      e.target.value = ''
+    }
+  }
+
+  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setIsUploadingCover(true)
+    setUploadError(null)
+    try {
+      const response = await uploadImageRequest(file)
+      setValue('cover_image', response.url)
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } }; message?: string }
+      setUploadError(error.response?.data?.message || error.message || 'Failed to upload cover image')
+    } finally {
+      setIsUploadingCover(false)
+      e.target.value = ''
+    }
+  }
+
   const handleClose = () => {
     reset()
+    setUploadError(null)
     onClose()
   }
 
@@ -346,7 +385,7 @@ export const OrganizationDialog = ({
               .filter(Boolean),
           })
         })}>
-          {error ? <Alert severity="error" sx={{ borderRadius: 2 }}>{error}</Alert> : null}
+          {(error || uploadError) ? <Alert severity="error" sx={{ borderRadius: 2 }}>{error || uploadError}</Alert> : null}
           <Grid container spacing={2}>
             <Grid size={{ xs: 12, md: 6 }}>
               <TextField fullWidth label="Organization Name" {...register('name')} error={Boolean(errors.name)} helperText={errors.name?.message} />
@@ -367,8 +406,55 @@ export const OrganizationDialog = ({
           <TextField label="Address" {...register('address')} error={Boolean(errors.address)} helperText={errors.address?.message} />
           <TextField label="Description" multiline minRows={3} {...register('description')} error={Boolean(errors.description)} helperText={errors.description?.message} />
           <TextField label="Website" {...register('website')} error={Boolean(errors.website)} helperText={errors.website?.message ?? 'Optional'} />
-          <TextField label="Logo URL" {...register('logo')} error={Boolean(errors.logo)} helperText={errors.logo?.message ?? 'Optional'} />
-          <TextField label="Cover Image URL" {...register('cover_image')} error={Boolean(errors.cover_image)} helperText={errors.cover_image?.message ?? 'Optional'} />
+
+          <Stack direction="row" spacing={1.5} sx={{ alignItems: 'flex-start' }}>
+            <TextField
+              label="Logo URL"
+              {...register('logo')}
+              error={Boolean(errors.logo)}
+              helperText={errors.logo?.message ?? 'Optional URL or upload an image'}
+              fullWidth
+            />
+            <Button
+              variant="outlined"
+              component="label"
+              disabled={isUploadingLogo}
+              sx={{ height: 40, mt: 0.5, whiteSpace: 'nowrap' }}
+            >
+              {isUploadingLogo ? 'Uploading...' : 'Upload File'}
+              <input
+                type="file"
+                accept="image/*"
+                hidden
+                onChange={handleLogoUpload}
+              />
+            </Button>
+          </Stack>
+
+          <Stack direction="row" spacing={1.5} sx={{ alignItems: 'flex-start' }}>
+            <TextField
+              label="Cover Image URL"
+              {...register('cover_image')}
+              error={Boolean(errors.cover_image)}
+              helperText={errors.cover_image?.message ?? 'Optional URL or upload an image'}
+              fullWidth
+            />
+            <Button
+              variant="outlined"
+              component="label"
+              disabled={isUploadingCover}
+              sx={{ height: 40, mt: 0.5, whiteSpace: 'nowrap' }}
+            >
+              {isUploadingCover ? 'Uploading...' : 'Upload File'}
+              <input
+                type="file"
+                accept="image/*"
+                hidden
+                onChange={handleCoverUpload}
+              />
+            </Button>
+          </Stack>
+
           <TextField label="Social Links" {...register('social_links')} error={Boolean(errors.social_links)} helperText={errors.social_links?.message ?? 'Comma separated URLs'} />
         </Stack>
       </DialogContent>
