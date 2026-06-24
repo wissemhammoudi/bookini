@@ -525,7 +525,7 @@ async def create_booking(
 
     number_of_days = 1
     discount_applied = 0.0
-    if request.end_date:
+    if request.end_date and request.end_date.strip():
         try:
             start_dt = datetime.strptime(request.booking_date, "%Y-%m-%d")
             end_dt = datetime.strptime(request.end_date, "%Y-%m-%d")
@@ -566,7 +566,11 @@ async def create_booking(
 
     repository = PublicBookingRepository(session)
 
-    query_end_date = request.end_date or request.booking_date
+    query_end_date = (
+        request.end_date
+        if (request.end_date and request.end_date.strip())
+        else request.booking_date
+    )
     existing_bookings = await repository.list_by_room_and_date_range(
         room_id=request.room_id,
         start_date=request.booking_date,
@@ -618,7 +622,11 @@ async def create_booking(
             "submitted_price": submitted_price,
             "canonical_hourly_rate": canonical_hourly_rate,
             "billable_hours": billable_hours,
-            "end_date": request.end_date,
+            "end_date": (
+                request.end_date
+                if (request.end_date and request.end_date.strip())
+                else None
+            ),
             "number_of_days": number_of_days,
             "discount_applied": discount_applied,
         },
