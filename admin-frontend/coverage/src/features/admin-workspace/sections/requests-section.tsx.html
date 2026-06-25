@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">3.44% </span>
+                <span class="strong">6.89% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>1/29</span>
+                <span class='fraction'>2/29</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">3.7% </span>
+                <span class="strong">7.4% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>1/27</span>
+                <span class='fraction'>2/27</span>
             </div>
         
             
@@ -261,19 +261,7 @@
 <a name='L196'></a><a href='#L196'>196</a>
 <a name='L197'></a><a href='#L197'>197</a>
 <a name='L198'></a><a href='#L198'>198</a>
-<a name='L199'></a><a href='#L199'>199</a>
-<a name='L200'></a><a href='#L200'>200</a>
-<a name='L201'></a><a href='#L201'>201</a>
-<a name='L202'></a><a href='#L202'>202</a>
-<a name='L203'></a><a href='#L203'>203</a>
-<a name='L204'></a><a href='#L204'>204</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L199'></a><a href='#L199'>199</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -300,23 +288,11 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -325,13 +301,27 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -490,6 +480,8 @@ import type { ContactActionHandler } from '@/features/admin-workspace/admin-work
 import { EmptyState, SectionHeader, StatusChip } from '@/features/admin-workspace/admin-workspace-utils'
 import type { ContactRequestRecord } from '@/lib/api-types'
 &nbsp;
+const PAGE_SIZE = 3
+&nbsp;
 type RequestsSectionProps = {
   contactRequests: ContactRequestRecord[]
   onPreviewMessage: (request: ContactRequestRecord) =&gt; void
@@ -507,9 +499,6 @@ export const <span class="fstat-no" title="function not covered" >RequestsSectio
   const [contactStatus, <span class="cstat-no" title="statement not covered" >setContactStatus] = useState('ALL')</span>
   const [contactPage, <span class="cstat-no" title="statement not covered" >setContactPage] = useState(0)</span>
 &nbsp;
-  const PAGE_SIZE = <span class="cstat-no" title="statement not covered" >3</span>
-&nbsp;
-  // Filter contact requests
   const <span class="cstat-no" title="statement not covered" >filteredContactRequests = <span class="fstat-no" title="function not covered" >useMemo(() =&gt; {</span></span>
 <span class="cstat-no" title="statement not covered" >    return contactRequests.<span class="fstat-no" title="function not covered" >filter((r</span>equest) =&gt; {</span>
       const matchesSearch =
@@ -523,7 +512,6 @@ export const <span class="fstat-no" title="function not covered" >RequestsSectio
     })
   }, [contactRequests, contactSearch, contactStatus])
 &nbsp;
-  // Paginate contact requests
   const <span class="cstat-no" title="statement not covered" >paginatedContactRequests = <span class="fstat-no" title="function not covered" >useMemo(() =&gt; {</span></span>
     const start = <span class="cstat-no" title="statement not covered" >contactPage * PAGE_SIZE</span>
 <span class="cstat-no" title="statement not covered" >    return filteredContactRequests.slice(start, start + PAGE_SIZE)</span>
@@ -533,10 +521,7 @@ export const <span class="fstat-no" title="function not covered" >RequestsSectio
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  return (</span>
     &lt;Stack spacing={3}&gt;
-      &lt;SectionHeader
-        title="Contact Requests"
-        description="Resolve support and contact requests from users."
-      /&gt;
+      &lt;SectionHeader title="Contact Requests" description="Resolve support and contact requests from users." /&gt;
       &lt;Grid container spacing={2.5}&gt;
         &lt;Grid size={{ xs: 12 }}&gt;
           &lt;Paper
@@ -679,7 +664,7 @@ export const <span class="fstat-no" title="function not covered" >RequestsSectio
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-06-24T21:45:35.158Z
+                at 2026-06-25T10:58:02.395Z
             </div>
         <script src="../../../../prettify.js"></script>
         <script>
