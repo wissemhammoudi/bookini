@@ -1,32 +1,24 @@
 import { useEffect } from 'react'
 import {
   Alert,
-  Box,
   Button,
-  Chip,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  Divider,
-  InputAdornment,
-  MenuItem,
-  Paper,
   Stack,
-  TextField,
-  Typography,
   alpha,
 } from '@mui/material'
-import EventIcon from '@mui/icons-material/Event'
-import GroupIcon from '@mui/icons-material/Group'
-import RoomServiceIcon from '@mui/icons-material/RoomService'
-import EmailIcon from '@mui/icons-material/Email'
-import PhoneIcon from '@mui/icons-material/Phone'
-import AttachMoneyIcon from '@mui/icons-material/AttachMoney'
 
 import type { PublicRoom } from '@/lib/api'
 import type { BookingFormData } from '../types'
 import { useBookingForm, usePriceCalculation } from '../hooks'
+import {
+  BookingDialogHeader,
+  BookingFormFields,
+  PriceSummaryCard,
+  SelectedSpaceCard,
+} from './booking-dialog-sections'
 
 type BookingType = 'WHOLE_FLOOR' | 'SELECTED_AREAS'
 
@@ -130,46 +122,12 @@ export const BookingDialog = ({
       }}
     >
       <DialogTitle sx={{ p: 0 }}>
-        <Box
-          sx={{
-            px: 3,
-            pt: 3,
-            pb: 2,
-            background: isLight
-              ? 'linear-gradient(135deg, rgba(0,89,179,0.08) 0%, rgba(0,168,143,0.06) 100%)'
-              : 'linear-gradient(135deg, rgba(0,89,179,0.22) 0%, rgba(0,168,143,0.12) 100%)',
-          }}
-        >
-          <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', mb: 1 }}>
-            <Box
-              sx={{
-                width: 40,
-                height: 40,
-                borderRadius: 999,
-                display: 'grid',
-                placeItems: 'center',
-                bgcolor: 'primary.main',
-                color: '#fff',
-              }}
-            >
-              <RoomServiceIcon fontSize="small" />
-            </Box>
-            <Box>
-              <Typography variant="overline" color="text.secondary" sx={{ lineHeight: 1 }}>
-                Reservation Request
-              </Typography>
-              <Typography variant="h5" sx={{ fontWeight: 900, lineHeight: 1.15 }}>
-                {room?.name}
-              </Typography>
-            </Box>
-          </Stack>
-
-          <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1, mt: 1 }}>
-            <Chip icon={<EventIcon />} label="Choose your date & time" size="small" variant="outlined" />
-            <Chip icon={<GroupIcon />} label={`Capacity ${roomCapacity}`} size="small" variant="outlined" />
-            <Chip label={`€${hourlyRate}/hour`} size="small" color="primary" variant="filled" />
-          </Stack>
-        </Box>
+        <BookingDialogHeader
+          isLight={isLight}
+          roomName={room?.name}
+          roomCapacity={roomCapacity}
+          hourlyRate={hourlyRate}
+        />
       </DialogTitle>
 
       <form onSubmit={handleSubmit}>
@@ -180,271 +138,32 @@ export const BookingDialog = ({
                 {error}
               </Alert>
             ) : null}
-            <Paper
-              elevation={0}
-              sx={{
-                p: 2,
-                borderRadius: 3,
-                border: '1px solid',
-                borderColor: isLight ? 'rgba(0, 89, 179, 0.1)' : 'rgba(255, 255, 255, 0.08)',
-                background: isLight ? '#f8fbff' : alpha('#0a0e1a', 0.28),
-              }}
-            >
-              <Stack direction="row" spacing={2} sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
-                <Box>
-                  <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, display: 'block' }}>
-                    Selected Space
-                  </Typography>
-                  <Typography sx={{ fontWeight: 800 }}>{room?.name}</Typography>
-                </Box>
-                <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                  <Chip size="small" label={`${roomCapacity} seats`} variant="outlined" />
-                  <Chip size="small" label={`€${hourlyRate}/hr`} color="primary" variant="outlined" />
-                </Stack>
-              </Stack>
+            <SelectedSpaceCard
+              room={room}
+              resolvedFloor={resolvedFloor}
+              roomCapacity={roomCapacity}
+              hourlyRate={hourlyRate}
+              bookingType={bookingType}
+              selectedAreaOptions={selectedAreaOptions}
+              onFloorChange={onFloorChange}
+              isLight={isLight}
+            />
 
-              <Chip
-                size="small"
-                color={bookingType === 'SELECTED_AREAS' ? 'secondary' : 'primary'}
-                variant="outlined"
-                label={bookingType === 'SELECTED_AREAS' ? 'Booking Scope: Selected Areas' : 'Booking Scope: Whole Floor'}
-                sx={{ mt: 1.5 }}
-              />
+            <BookingFormFields
+              formData={formData}
+              handleInputChange={handleInputChange}
+              roomCapacity={roomCapacity}
+            />
 
-              {room?.floors && room.floors.length > 0 ? (
-                <TextField
-                  select
-                  fullWidth
-                  size="small"
-                  label="Floor"
-                  value={resolvedFloor?.id ?? ''}
-                  onChange={(event) => onFloorChange?.(event.target.value)}
-                  sx={{ mt: 1.5 }}
-                >
-                  {room.floors.map((floor) => (
-                    <MenuItem key={floor.id} value={floor.id}>
-                      {floor.floor_name} • €{floor.price ?? room.price}/hr • {floor.capacity} seats
-                    </MenuItem>
-                  ))}
-                </TextField>
-              ) : null}
-
-              {bookingType === 'SELECTED_AREAS' ? (
-                <Stack spacing={1} sx={{ mt: 1.5 }}>
-                  <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
-                    Selected Areas
-                  </Typography>
-                  {selectedAreaOptions.length ? (
-                    <Stack direction="row" spacing={0.75} sx={{ flexWrap: 'wrap', gap: 0.75 }}>
-                      {selectedAreaOptions.map((area) => (
-                        <Chip
-                          key={area.key}
-                          size="small"
-                          label={`${area.label} • €${area.price}/hr${area.includes?.length ? ` • ${area.includes.join(' / ')}` : ''}`}
-                          variant="outlined"
-                        />
-                      ))}
-                    </Stack>
-                  ) : (
-                    <Alert severity="warning" sx={{ borderRadius: 2 }}>
-                      No area selected yet. Go back and pick one or more areas from the floor.
-                    </Alert>
-                  )}
-                </Stack>
-              ) : null}
-            </Paper>
-
-            <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-              <Box sx={{ flex: 1 }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 1 }}>
-                  Date & Time
-                </Typography>
-                <Stack spacing={1.5}>
-                  <Stack direction="row" spacing={1.5}>
-                    <TextField
-                      label="Start Date"
-                      type="date"
-                      value={formData.bookingDate}
-                      onChange={(e) => handleInputChange('bookingDate', e.target.value)}
-                      required
-                      fullWidth
-                      size="small"
-                      slotProps={{ inputLabel: { shrink: true } }}
-                    />
-                    <TextField
-                      label="End Date (Optional)"
-                      type="date"
-                      value={formData.endDate}
-                      onChange={(e) => handleInputChange('endDate', e.target.value)}
-                      fullWidth
-                      size="small"
-                      slotProps={{ inputLabel: { shrink: true } }}
-                    />
-                  </Stack>
-                  <Stack direction="row" spacing={1.5}>
-                    <TextField
-                      label="Start Time"
-                      type="time"
-                      value={formData.startTime}
-                      onChange={(e) => handleInputChange('startTime', e.target.value)}
-                      required
-                      fullWidth
-                      size="small"
-                      slotProps={{ inputLabel: { shrink: true } }}
-                    />
-                    <TextField
-                      label="End Time"
-                      type="time"
-                      value={formData.endTime}
-                      onChange={(e) => handleInputChange('endTime', e.target.value)}
-                      required
-                      fullWidth
-                      size="small"
-                      slotProps={{ inputLabel: { shrink: true } }}
-                    />
-                  </Stack>
-                </Stack>
-              </Box>
-
-              <Box sx={{ flex: 1 }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 1 }}>
-                  Guest Details
-                </Typography>
-                <Stack spacing={1.5}>
-                  <TextField
-                    label="Full Name"
-                    value={formData.guestName}
-                    onChange={(e) => handleInputChange('guestName', e.target.value)}
-                    required
-                    fullWidth
-                    size="small"
-                  />
-                  <Stack direction="row" spacing={1.5}>
-                    <TextField
-                      label="Email"
-                      type="email"
-                      value={formData.guestEmail}
-                      onChange={(e) => handleInputChange('guestEmail', e.target.value)}
-                      required
-                      fullWidth
-                      size="small"
-                      slotProps={{
-                        input: {
-                          startAdornment: (
-                            <InputAdornment position="start">
-                              <EmailIcon sx={{ fontSize: '1.1rem' }} />
-                            </InputAdornment>
-                          ),
-                        },
-                      }}
-                    />
-                    <TextField
-                      label="Phone"
-                      value={formData.guestPhone}
-                      onChange={(e) => handleInputChange('guestPhone', e.target.value)}
-                      required
-                      fullWidth
-                      size="small"
-                      slotProps={{
-                        input: {
-                          startAdornment: (
-                            <InputAdornment position="start">
-                              <PhoneIcon sx={{ fontSize: '1.1rem' }} />
-                            </InputAdornment>
-                          ),
-                        },
-                      }}
-                    />
-                  </Stack>
-                </Stack>
-              </Box>
-            </Stack>
-
-            <Divider />
-
-            <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-              <Box sx={{ flex: 1 }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 1 }}>
-                  Capacity
-                </Typography>
-                <TextField
-                  label="Number of Participants"
-                  type="number"
-                  value={formData.participants}
-                  onChange={(e) => handleInputChange('participants', e.target.value)}
-                  fullWidth
-                  size="small"
-                  slotProps={{ htmlInput: { min: 1, max: roomCapacity } }}
-                />
-              </Box>
-
-              <Box sx={{ flex: 2 }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 1 }}>
-                  Notes
-                </Typography>
-                <TextField
-                  label="Special Requests or Notes"
-                  multiline
-                  minRows={3}
-                  value={formData.notes}
-                  onChange={(e) => handleInputChange('notes', e.target.value)}
-                  fullWidth
-                  size="small"
-                  placeholder="Any special requirements or notes..."
-                />
-              </Box>
-            </Stack>
-
-            <Paper
-              elevation={0}
-              sx={{
-                p: 2.25,
-                borderRadius: 3,
-                border: '1px solid',
-                borderColor: isLight ? 'rgba(0, 89, 179, 0.1)' : 'rgba(255, 255, 255, 0.08)',
-                background: isLight
-                  ? 'linear-gradient(135deg, rgba(0,89,179,0.04) 0%, rgba(0,168,143,0.04) 100%)'
-                  : alpha('#0a0e1a', 0.34),
-              }}
-            >
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' } }}>
-                <Box>
-                  <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, display: 'block' }}>
-                    Estimated Price
-                  </Typography>
-                  <Stack direction="row" spacing={1.5} sx={{ alignItems: 'baseline' }}>
-                    <Typography variant="h4" sx={{ fontWeight: 900, color: 'primary.main', lineHeight: 1 }}>
-                      €{price.toFixed(2)}
-                    </Typography>
-                    {discount > 0 && (
-                      <Typography
-                        variant="body1"
-                        sx={{
-                          textDecoration: 'line-through',
-                          color: 'text.secondary',
-                          fontWeight: 500,
-                        }}
-                      >
-                        €{originalPrice.toFixed(2)}
-                      </Typography>
-                    )}
-                  </Stack>
-                  {discount > 0 && (
-                    <Chip
-                      size="small"
-                      color="success"
-                      label={`Saved ${(discount * 100).toFixed(0)}% (${days} days)`}
-                      sx={{ mt: 0.75, fontWeight: 700 }}
-                    />
-                  )}
-                </Box>
-
-                <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', justifyContent: 'flex-end', alignItems: 'center' }}>
-                  <Chip icon={<AttachMoneyIcon />} label={`€${hourlyRate}/hour`} variant="outlined" />
-                  <Chip label={formData.startTime && formData.endTime ? `${Math.max(0, parseInt(formData.endTime.split(':')[0]) - parseInt(formData.startTime.split(':')[0]))}h${days > 1 ? ` x ${days} days` : ''} selected` : 'Pick time range'} variant="outlined" />
-                </Stack>
-              </Stack>
-            </Paper>
+            <PriceSummaryCard
+              isLight={isLight}
+              price={price}
+              originalPrice={originalPrice}
+              discount={discount}
+              days={days}
+              hourlyRate={hourlyRate}
+              formData={formData}
+            />
           </Stack>
         </DialogContent>
 
