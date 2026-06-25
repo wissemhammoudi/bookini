@@ -1,0 +1,132 @@
+import { useState } from 'react'
+import type { ChangeEvent } from 'react'
+import type { UseFormGetValues, UseFormReset, UseFormSetValue } from 'react-hook-form'
+
+import { uploadImageRequest } from '@/lib/api'
+import {
+  buildDesksFromFloor,
+  deriveReservationAreasFromDesks,
+} from '@/features/admin-workspace/dialogs/shared'
+import {
+  buildInitialReservationAreas,
+} from '@/features/admin-workspace/dialogs/floor-dialog/area-utils'
+import { useFloorDialogAreaState } from '@/features/admin-workspace/dialogs/floor-dialog/use-floor-dialog-area-state'
+import type { FloorFormValues } from '@/features/admin-workspace/dialogs/shared'
+import type { DeskZone } from '@/features/admin-workspace/sections/floor-builder/floor-layout-utils'
+import type { FloorRecord, PlaceRecord, ReservationAreaRecord } from '@/lib/api-types'
+
+type UseFloorDialogStateParams = {
+  value: FloorRecord | undefined
+  places: PlaceRecord[]
+  title: string
+  getValues: UseFormGetValues<FloorFormValues>
+  setValue: UseFormSetValue<FloorFormValues>
+  reset: UseFormReset<FloorFormValues>
+  onClose: () => void
+}
+
+export function useFloorDialogState({ value, places, title, getValues, setValue, reset, onClose }: UseFloorDialogStateParams) {
+  const [isUploadingBlueprint, setIsUploadingBlueprint] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+  const [buildFloorOpen, setBuildFloorOpen] = useState(true)
+  const [builderDesks, setBuilderDesks] = useState<DeskZone[]>(() => buildDesksFromFloor(value, value?.pricing ?? 0))
+  const initialAreas = buildInitialReservationAreas(value?.reservation_areas, value?.pricing ?? 0)
+  const {
+    extractedReservationAreas,
+    setExtractedReservationAreas,
+    handleReservationAreasInputChange,
+    updateReservationArea,
+    addReservationArea,
+    removeReservationArea,
+    syncFromBuilderDesks,
+    extractReservationAreasFromBlueprint,
+  } = useFloorDialogAreaState({
+    initialAreas,
+    setBuilderDesks,
+    getValues,
+    setValue,
+  })
+
+  const handleBlueprintUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    setIsUploadingBlueprint(true)
+    setUploadError(null)
+    try {
+      const response = await uploadImageRequest(file)
+      setValue('blueprint_image', response.url)
+    } catch (err) {
+      const typedError = err as { response?: { data?: { message?: string } }; message?: string }
+      setUploadError(typedError.response?.data?.message || typedError.message || 'Failed to upload blueprint')
+    } finally {
+      setIsUploadingBlueprint(false)
+      event.target.value = ''
+    }
+  }
+
+  const handleClose = () => {
+    reset()
+    setExtractedReservationAreas([])
+    setBuildFloorOpen(false)
+    onClose()
+  }
+
+  const handleBuildFloorSave = async (desks: DeskZone[]) => {
+    const areas = deriveReservationAreasFromDesks(desks, Number(getValues('pricing') ?? 0))
+    setValue('blueprint_image', JSON.stringify(desks), { shouldDirty: true, shouldValidate: true })
+    syncFromBuilderDesks(desks)
+    setUploadError(null)
+    setBuildFloorOpen(false)
+  }
+
+  const handleBuilderDesksLiveChange = (desks: DeskZone[]) => {
+    setBuilderDesks(desks)
+    syncFromBuilderDesks(desks)
+  }
+
+  const extractReservationAreasFromBlueprint = () => {
+    const extractionError = extractReservationAreasFromBlueprint()
+    if (extractionError) {
+      setUploadError(extractionError)
+      return
+    }
+
+      setUploadError(null)
+  }
+
+  const draftFloor: FloorRecord = {
+    id: value?.id ?? 'draft-floor',
+    place_id: getValues('place_id') || value?.place_id || places[0]?.id || '',
+    floor_name: getValues('floor_name') || value?.floor_name || title,
+    floor_number: Number(getValues('floor_number') ?? value?.floor_number ?? 0),
+    floor_size_sqm: Number(getValues('floor_size_sqm') ?? value?.floor_size_sqm ?? 100),
+    floor_shape: getValues('floor_shape') ?? value?.floor_shape ?? 'RECTANGLE',
+    capacity: Number(getValues('capacity') ?? value?.capacity ?? 1),
+    pricing: Number(getValues('pricing') ?? value?.pricing ?? 0),
+    description: getValues('description') || value?.description || '',
+    blueprint_image: getValues('blueprint_image') || value?.blueprint_image || '',
+    reservation_areas: extractedReservationAreas,
+    status: getValues('status') ?? value?.status ?? 'ACTIVE',
+    created_date: value?.created_date ?? new Date().toISOString(),
+  }
+
+  return {
+    isUploadingBlueprint,
+    uploadError,
+    buildFloorOpen,
+    builderDesks,
+    extractedReservationAreas,
+    draftFloor,
+    setBuildFloorOpen,
+    handleBlueprintUpload,
+    handleClose,
+    handleReservationAreasInputChange,
+    updateReservationArea,
+    addReservationArea,
+    removeReservationArea,
+    handleBuildFloorSave,
+    handleBuilderDesksLiveChange,
+    extractReservationAreasFromBlueprint,
+  }
+}

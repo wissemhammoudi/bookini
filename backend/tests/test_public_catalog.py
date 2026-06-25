@@ -103,33 +103,33 @@ def test_create_multiday_booking_with_discounts() -> None:
         assert booking_data["metadata_payload"]["discount_applied"] == 0.10
         return dummy_booking
 
-    with patch.object(
-        PublicBookingRepository,
-        "list_by_room_and_date_range",
-        side_effect=dummy_list,
-    ), patch.object(
-        PublicBookingRepository, "create", side_effect=dummy_create
+    with (
+        patch.object(
+            PublicBookingRepository,
+            "list_by_room_and_date_range",
+            side_effect=dummy_list,
+        ),
+        patch.object(PublicBookingRepository, "create", side_effect=dummy_create),
     ):
-
-         payload = {
-             "room_id": room_id,
-             "floor_id": floor_id,
-             "room_name": "Marseille Innovation Lab",
-             "plan_id": "standard",
-             "guest_name": "Test Guest",
-             "guest_email": "guest@example.com",
-             "guest_phone": "1234567890",
-             "booking_date": "2026-06-25",
-             "end_date": "2026-06-27",
-             "start_time": "09:00",
-             "end_time": "18:00",
-             "participants": 5,
-             "price": discounted_price,
-         }
-         resp = client.post("/api/v1/public/bookings", json=payload)
-         assert resp.status_code == 200
-         body = resp.json()
-         assert body["success"] is True
-         assert body["data"]["booking_reference"] == "BK-2026-TEST"
+        payload = {
+            "room_id": room_id,
+            "floor_id": floor_id,
+            "room_name": "Marseille Innovation Lab",
+            "plan_id": "standard",
+            "guest_name": "Test Guest",
+            "guest_email": "guest@example.com",
+            "guest_phone": "1234567890",
+            "booking_date": "2026-06-25",
+            "end_date": "2026-06-27",
+            "start_time": "09:00",
+            "end_time": "18:00",
+            "participants": 5,
+            "price": discounted_price,
+        }
+        resp = client.post("/api/v1/public/bookings", json=payload)
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["success"] is True
+        assert body["data"]["booking_reference"] == "BK-2026-TEST"
 
     app.dependency_overrides.clear()

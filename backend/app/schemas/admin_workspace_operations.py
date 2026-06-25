@@ -5,7 +5,10 @@ from typing import Literal
 
 from pydantic import BaseModel, EmailStr
 
-from app.schemas.admin_workspace_common import RequestStatusValue, ReservationStatusValue
+from app.schemas.admin_workspace_common import (
+    RequestStatusValue,
+    ReservationStatusValue,
+)
 
 
 class ReservationRecord(BaseModel):

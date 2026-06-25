@@ -19,6 +19,8 @@ import type { ContactActionHandler } from '@/features/admin-workspace/admin-work
 import { EmptyState, SectionHeader, StatusChip } from '@/features/admin-workspace/admin-workspace-utils'
 import type { ContactRequestRecord } from '@/lib/api-types'
 
+const PAGE_SIZE = 3
+
 type RequestsSectionProps = {
   contactRequests: ContactRequestRecord[]
   onPreviewMessage: (request: ContactRequestRecord) => void
@@ -36,9 +38,6 @@ export const RequestsSection = ({
   const [contactStatus, setContactStatus] = useState('ALL')
   const [contactPage, setContactPage] = useState(0)
 
-  const PAGE_SIZE = 3
-
-  // Filter contact requests
   const filteredContactRequests = useMemo(() => {
     return contactRequests.filter((request) => {
       const matchesSearch =
@@ -52,7 +51,6 @@ export const RequestsSection = ({
     })
   }, [contactRequests, contactSearch, contactStatus])
 
-  // Paginate contact requests
   const paginatedContactRequests = useMemo(() => {
     const start = contactPage * PAGE_SIZE
     return filteredContactRequests.slice(start, start + PAGE_SIZE)
@@ -62,10 +60,7 @@ export const RequestsSection = ({
 
   return (
     <Stack spacing={3}>
-      <SectionHeader
-        title="Contact Requests"
-        description="Resolve support and contact requests from users."
-      />
+      <SectionHeader title="Contact Requests" description="Resolve support and contact requests from users." />
       <Grid container spacing={2.5}>
         <Grid size={{ xs: 12 }}>
           <Paper

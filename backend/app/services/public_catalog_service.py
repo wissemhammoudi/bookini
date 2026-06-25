@@ -1,5 +1,4 @@
 import hashlib
-import json
 import uuid
 
 from sqlalchemy import func, select
@@ -119,7 +118,9 @@ class PublicCatalogService:
             normalized.append(
                 {
                     "name": area_name,
-                    "price": float(area_dict.get("price", fallback_price) or fallback_price),
+                    "price": float(
+                        area_dict.get("price", fallback_price) or fallback_price
+                    ),
                     "includes": includes,
                     "is_reservable": area_dict.get("is_reservable", True) is not False,
                     "geometry": geometry,
@@ -170,7 +171,9 @@ class PublicCatalogService:
                     "availability": availability,
                     "amenities": [],
                     "features": [],
-                    "image": organization_name[:1].upper() if organization_name else "B",
+                    "image": organization_name[:1].upper()
+                    if organization_name
+                    else "B",
                     "cover_image": None,
                     "gallery": [],
                     "video_url": None,
@@ -199,11 +202,14 @@ class PublicCatalogService:
         managed_places = [
             place
             for place in state.places
-            if place.id.startswith("place-") and place.organization_id.startswith("org-")
+            if place.id.startswith("place-")
+            and place.organization_id.startswith("org-")
         ]
 
         for place in managed_places:
-            related_floors = [floor for floor in state.floors if floor.place_id == place.id]
+            related_floors = [
+                floor for floor in state.floors if floor.place_id == place.id
+            ]
             primary_floor_id = related_floors[0].id if related_floors else place.id
             room_id = self._room_id_from_floor_id(primary_floor_id)
             primary_floor = related_floors[0] if related_floors else None

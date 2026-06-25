@@ -49,7 +49,9 @@ class PublicBookingService:
         selected_room_key: str,
     ) -> dict[str, object] | None:
         blueprint_raw = floor_entry.get("blueprint_image")
-        if not isinstance(blueprint_raw, str) or not blueprint_raw.strip().startswith("["):
+        if not isinstance(blueprint_raw, str) or not blueprint_raw.strip().startswith(
+            "["
+        ):
             return None
 
         try:
@@ -121,7 +123,8 @@ class PublicBookingService:
             (
                 floor
                 for floor in floors
-                if isinstance(floor, dict) and str(floor.get("id", "")) == selected_floor_id
+                if isinstance(floor, dict)
+                and str(floor.get("id", "")) == selected_floor_id
             ),
             None,
         )
@@ -134,7 +137,9 @@ class PublicBookingService:
 
         matched_room = self._resolve_blueprint_room(matched_floor, selected_room_key)
         if not matched_room:
-            matched_room = self._resolve_reservation_area(matched_floor, selected_room_key)
+            matched_room = self._resolve_reservation_area(
+                matched_floor, selected_room_key
+            )
         if not matched_room:
             return floor_rate
 
@@ -146,7 +151,9 @@ class PublicBookingService:
         unique_id = str(uuid.uuid4())[:5].upper()
         return f"BK-{timestamp}-{unique_id}"
 
-    async def create_booking(self, request: PublicBookingCreateRequest) -> dict[str, str]:
+    async def create_booking(
+        self, request: PublicBookingCreateRequest
+    ) -> dict[str, str]:
         start_hour = int(request.start_time.split(":")[0])
         end_hour = int(request.end_time.split(":")[0])
 
@@ -155,7 +162,11 @@ class PublicBookingService:
 
         public_rooms = await self.catalog_service.build_rooms_catalog()
         selected_room = next(
-            (room for room in public_rooms if int(room.get("id", -1)) == request.room_id),
+            (
+                room
+                for room in public_rooms
+                if int(room.get("id", -1)) == request.room_id
+            ),
             None,
         )
         if selected_room is None:
@@ -181,7 +192,9 @@ class PublicBookingService:
             raise ValidationException("Room selection requires a valid floor")
 
         if request.room_key and selected_floor:
-            matched_floor_room = self._resolve_blueprint_room(selected_floor, request.room_key)
+            matched_floor_room = self._resolve_blueprint_room(
+                selected_floor, request.room_key
+            )
             if matched_floor_room is None:
                 matched_floor_room = self._resolve_reservation_area(
                     selected_floor,
@@ -211,7 +224,9 @@ class PublicBookingService:
             raise ValidationException("Selected areas booking requires a valid floor")
 
         if effective_booking_type == "SELECTED_AREAS" and not selected_area_keys:
-            raise ValidationException("Selected areas booking requires at least one area")
+            raise ValidationException(
+                "Selected areas booking requires at least one area"
+            )
 
         canonical_hourly_rate = 0.0
         resolved_area_keys: list[str] = []
@@ -222,7 +237,9 @@ class PublicBookingService:
             for area_key in unique_area_keys:
                 matched_area = self._resolve_blueprint_room(selected_floor, area_key)
                 if matched_area is None:
-                    matched_area = self._resolve_reservation_area(selected_floor, area_key)
+                    matched_area = self._resolve_reservation_area(
+                        selected_floor, area_key
+                    )
                 if matched_area is None:
                     raise ValidationException(
                         f"Selected area '{area_key}' does not belong to the floor"
@@ -235,7 +252,8 @@ class PublicBookingService:
                 or 0
             )
             canonical_hourly_rate = sum(
-                float(area.get("price", floor_rate) or floor_rate) for area in matched_areas
+                float(area.get("price", floor_rate) or floor_rate)
+                for area in matched_areas
             )
             resolved_area_keys = unique_area_keys
         else:
@@ -253,7 +271,9 @@ class PublicBookingService:
                 end_dt = datetime.strptime(request.end_date, "%Y-%m-%d")
                 number_of_days = (end_dt - start_dt).days + 1
                 if number_of_days < 1:
-                    raise ValidationException("End date must be on or after booking date")
+                    raise ValidationException(
+                        "End date must be on or after booking date"
+                    )
             except ValueError:
                 raise ValidationException("Invalid date format. Use YYYY-MM-DD")
 
@@ -264,7 +284,9 @@ class PublicBookingService:
         elif number_of_days >= 3:
             discount_applied = 0.10
 
-        billable_hours = self._calculate_billable_hours(request.start_time, request.end_time)
+        billable_hours = self._calculate_billable_hours(
+            request.start_time, request.end_time
+        )
         base_total = canonical_hourly_rate * billable_hours * number_of_days
         expected_price = round(base_total * (1.0 - discount_applied), 2)
         submitted_price = round(float(request.price), 2)
@@ -277,7 +299,9 @@ class PublicBookingService:
 
         canonical_room_name = str(selected_room.get("name", request.room_name))
         if selected_floor and selected_floor.get("floor_name"):
-            canonical_room_name = f"{canonical_room_name} - {selected_floor['floor_name']}"
+            canonical_room_name = (
+                f"{canonical_room_name} - {selected_floor['floor_name']}"
+            )
         if effective_booking_type == "SELECTED_AREAS" and resolved_area_keys:
             canonical_room_name = (
                 f"{canonical_room_name} - {len(resolved_area_keys)} area"

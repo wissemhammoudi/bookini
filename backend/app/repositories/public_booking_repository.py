@@ -70,6 +70,7 @@ class PublicBookingRepository:
         limit: int = 500,
     ) -> list[PublicBooking]:
         from datetime import datetime, timedelta
+
         try:
             start_dt = datetime.strptime(start_date, "%Y-%m-%d")
             query_start_dt = start_dt - timedelta(days=60)

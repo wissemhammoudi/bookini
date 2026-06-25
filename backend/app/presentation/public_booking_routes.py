@@ -60,7 +60,9 @@ async def list_booking_calendar_slots(
 ) -> dict[str, object]:
     """Expose booked time slots by room and date range for public calendar rendering."""
     if end_date < start_date:
-        raise ValidationException("end_date must be greater than or equal to start_date")
+        raise ValidationException(
+            "end_date must be greater than or equal to start_date"
+        )
 
     service = _booking_service_from_session(session)
     slots = await service.list_calendar_slots(
