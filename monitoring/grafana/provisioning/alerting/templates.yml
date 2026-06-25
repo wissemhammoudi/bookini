@@ -1,0 +1,21 @@
+apiVersion: 1
+
+templates:
+  - orgId: 1
+    name: bookini.email
+    template: |
+      {{ define "bookini.subject" }}
+      [{{ .Status | toUpper }}] {{ .CommonLabels.alertname }} ({{ .CommonLabels.severity }})
+      {{ end }}
+
+      {{ define "bookini.message" }}
+      Alert status: {{ .Status }}
+
+      {{ range .Alerts }}
+      - Alert: {{ .Labels.alertname }}
+        Severity: {{ .Labels.severity }}
+        Team: {{ .Labels.team }}
+        Summary: {{ .Annotations.summary }}
+        Description: {{ .Annotations.description }}
+      {{ end }}
+      {{ end }}

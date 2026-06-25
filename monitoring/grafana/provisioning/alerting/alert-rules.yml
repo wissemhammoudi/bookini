@@ -55,6 +55,8 @@ groups:
           severity: critical
           team: platform
         annotations:
+          __dashboardUid__: bookiwa7dek-overview
+          __panelId__: "4"
           summary: Backend target is down
           description: Prometheus cannot scrape the backend target (job bookiwa7dek-backend) for more than 2 minutes.
         isPaused: false
@@ -108,6 +110,8 @@ groups:
           severity: critical
           team: backend
         annotations:
+          __dashboardUid__: bookiwa7dek-overview
+          __panelId__: "2"
           summary: High API 5xx error rate
           description: API 5xx error rate is above 5% for 10 minutes.
         isPaused: false
@@ -161,6 +165,8 @@ groups:
           severity: warning
           team: backend
         annotations:
+          __dashboardUid__: bookiwa7dek-overview
+          __panelId__: "8"
           summary: Elevated API 4xx error rate
           description: API 4xx error rate is above 25% for 15 minutes.
         isPaused: false
@@ -214,6 +220,8 @@ groups:
           severity: warning
           team: platform
         annotations:
+          __dashboardUid__: bookiwa7dek-overview
+          __panelId__: "9"
           summary: Node CPU usage is high
           description: CPU usage has been above 85% for 10 minutes on {{ $labels.instance }}.
         isPaused: false

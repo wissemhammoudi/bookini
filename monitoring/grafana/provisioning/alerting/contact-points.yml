@@ -1,0 +1,13 @@
+apiVersion: 1
+
+contactPoints:
+  - orgId: 1
+    name: bookini-email
+    receivers:
+      - uid: bookini-email-receiver
+        type: email
+        settings:
+          addresses: alerts@bookini.tn
+          singleEmail: true
+          subject: '{{ template "bookini.subject" . }}'
+          message: '{{ template "bookini.message" . }}'
