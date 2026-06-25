@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Box } from '@mui/material'
 
+import { PublicNavbar } from './components/public-navbar'
 import { PublicFooter } from './components/public-footer'
 import { LandingPageIntro } from './components/landing-page-intro'
 import { PublicLandingSections } from './components/public-landing-sections'
@@ -45,6 +46,8 @@ export const LandingPage = () => {
           : 'linear-gradient(180deg, #0b0f19 0%, #111827 45%, #0f172a 100%)',
       }}
     >
+      <PublicNavbar isLight={isLight} />
+
       <LandingPageIntro
         isLight={isLight}
         navigate={(path) => navigate(path)}

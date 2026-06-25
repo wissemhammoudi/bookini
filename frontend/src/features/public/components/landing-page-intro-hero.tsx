@@ -11,7 +11,6 @@ import {
 } from '@mui/material'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 
-import { PublicNavbar } from './public-navbar'
 import type { IntroHeroSpace } from './landing-page-intro-data'
 
 type LandingPageIntroHeroProps = {
@@ -24,7 +23,7 @@ export const LandingPageIntroHero = ({ isLight, heroSpaces, navigate }: LandingP
   return (
     <Box
       sx={{
-        pt: { xs: 8, md: 12 },
+        pt: { xs: 8, md: 10 },
         pb: { xs: 6, md: 8 },
         position: 'relative',
         overflow: 'hidden',
@@ -63,7 +62,6 @@ export const LandingPageIntroHero = ({ isLight, heroSpaces, navigate }: LandingP
         },
       }}
     >
-      <PublicNavbar isLight={isLight} />
       <Box sx={{ position: 'relative', zIndex: 1 }}>
         <Container maxWidth="lg">
           <Grid container spacing={5} sx={{ alignItems: 'center' }}>
