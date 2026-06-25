@@ -138,7 +138,7 @@ export const LoginPage = () => {
       >
         <Stack spacing={3.5}>
           {/* Branding */}
-          <Stack spacing={2} alignItems="center" sx={{ textAlign: 'center' }}>
+          <Stack spacing={2} sx={{ alignItems: 'center', textAlign: 'center' }}>
             <Box
               sx={{
                 width: 56,
