@@ -1,5 +1,5 @@
 import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined'
-import { Alert, Button, Dialog, DialogActions, DialogContent, DialogTitle, Grid, IconButton, Stack, Typography } from '@mui/material'
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Grid, IconButton, Stack, Typography } from '@mui/material'
 
 import { FloorBuilderCanvas } from '@/features/admin-workspace/sections/floor-builder/floor-builder-canvas'
 import { FloorBuilderInspector } from '@/features/admin-workspace/sections/floor-builder/floor-builder-inspector'

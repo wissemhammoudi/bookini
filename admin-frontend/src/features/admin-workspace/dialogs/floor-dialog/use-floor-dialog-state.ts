@@ -5,7 +5,6 @@ import type { UseFormGetValues, UseFormReset, UseFormSetValue } from 'react-hook
 import { uploadImageRequest } from '@/lib/api'
 import {
   buildDesksFromFloor,
-  deriveReservationAreasFromDesks,
 } from '@/features/admin-workspace/dialogs/shared'
 import {
   buildInitialReservationAreas,
@@ -13,7 +12,7 @@ import {
 import { useFloorDialogAreaState } from '@/features/admin-workspace/dialogs/floor-dialog/use-floor-dialog-area-state'
 import type { FloorFormValues } from '@/features/admin-workspace/dialogs/shared'
 import type { DeskZone } from '@/features/admin-workspace/sections/floor-builder/floor-layout-utils'
-import type { FloorRecord, PlaceRecord, ReservationAreaRecord } from '@/lib/api-types'
+import type { FloorRecord, PlaceRecord } from '@/lib/api-types'
 
 type UseFloorDialogStateParams = {
   value: FloorRecord | undefined
@@ -73,7 +72,6 @@ export function useFloorDialogState({ value, places, title, getValues, setValue,
   }
 
   const handleBuildFloorSave = async (desks: DeskZone[]) => {
-    const areas = deriveReservationAreasFromDesks(desks, Number(getValues('pricing') ?? 0))
     setValue('blueprint_image', JSON.stringify(desks), { shouldDirty: true, shouldValidate: true })
     syncFromBuilderDesks(desks)
     setUploadError(null)
@@ -85,14 +83,14 @@ export function useFloorDialogState({ value, places, title, getValues, setValue,
     syncFromBuilderDesks(desks)
   }
 
-  const extractReservationAreasFromBlueprint = () => {
+  const handleExtractReservationAreasFromBlueprint = () => {
     const extractionError = extractReservationAreasFromBlueprint()
     if (extractionError) {
       setUploadError(extractionError)
       return
     }
 
-      setUploadError(null)
+    setUploadError(null)
   }
 
   const draftFloor: FloorRecord = {
@@ -127,6 +125,6 @@ export function useFloorDialogState({ value, places, title, getValues, setValue,
     removeReservationArea,
     handleBuildFloorSave,
     handleBuilderDesksLiveChange,
-    extractReservationAreasFromBlueprint,
+    extractReservationAreasFromBlueprint: handleExtractReservationAreasFromBlueprint,
   }
 }

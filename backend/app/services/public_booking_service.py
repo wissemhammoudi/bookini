@@ -38,7 +38,8 @@ class PublicBookingService:
 
     @staticmethod
     def _calculate_billable_hours(start_time: str, end_time: str) -> int:
-        # Keep pricing logic aligned with current frontend calculation (hour granularity).
+        # Keep pricing logic aligned with current frontend
+        # calculation (hour granularity).
         start_hour = int(start_time.split(":")[0])
         end_hour = int(end_time.split(":")[0])
         return max(0, end_hour - start_hour)
