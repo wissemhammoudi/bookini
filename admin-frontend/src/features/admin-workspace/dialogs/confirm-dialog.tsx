@@ -1,12 +1,12 @@
 import { Alert, Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack } from '@mui/material'
 
 import {
-  ConfirmDialogProps,
   DialogHeading,
   dialogActionsSx,
   dialogContentSx,
   dialogPaperSx,
 } from '@/features/admin-workspace/dialogs/shared'
+import type { ConfirmDialogProps } from '@/features/admin-workspace/dialogs/shared'
 
 export const ConfirmDialog = ({
   color = 'primary',

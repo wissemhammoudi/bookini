@@ -19,13 +19,12 @@ import { useForm } from 'react-hook-form'
 
 import {
   DialogHeading,
-  SettingsDialogProps,
-  SettingsFormValues,
   dialogActionsSx,
   dialogContentSx,
   dialogPaperSx,
   settingsSchema,
 } from '@/features/admin-workspace/dialogs/shared'
+import type { SettingsDialogProps, SettingsFormValues } from '@/features/admin-workspace/dialogs/shared'
 
 export const SettingsDialog = ({
   error,
