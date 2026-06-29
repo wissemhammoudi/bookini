@@ -17,14 +17,10 @@ from app.schemas.public_booking import (
 )
 from app.services.admin_workspace_state_store import AdminWorkspaceStateStore
 from app.services.public_booking_service import PublicBookingService
-<<<<<<< HEAD
-from app.services.public_catalog_service import _CATALOG_CACHE_KEY, PublicCatalogService
-=======
 from app.services.public_catalog_service import (
     _CATALOG_CACHE_KEY,
     PublicCatalogService,
 )
->>>>>>> bba63e92ae87d08572775707c5f19acb2a429738
 
 router = APIRouter(prefix="/public", tags=["public"])
 
