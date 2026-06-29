@@ -1,18 +1,24 @@
 import hashlib
 import uuid
 
+import redis.asyncio as aioredis
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.infrastructure.cache import get_cached, set_cached
 from app.models.floor import Floor
 from app.models.floor_review import FloorReview
 from app.models.user import User
 from app.services.admin_workspace_state_store import AdminWorkspaceStateStore
 
+_CATALOG_CACHE_KEY = "bookini:catalog:rooms"
+_CATALOG_CACHE_TTL = 30  # seconds
+
 
 class PublicCatalogService:
-    def __init__(self, session: AsyncSession):
+    def __init__(self, session: AsyncSession, redis: aioredis.Redis | None = None):
         self.session = session
+        self._redis = redis
 
     @staticmethod
     def _room_id_from_floor_id(floor_id: uuid.UUID | str) -> int:
@@ -130,6 +136,12 @@ class PublicCatalogService:
         return normalized
 
     async def build_rooms_catalog(self) -> list[dict[str, object]]:
+        # ── Cache read ──────────────────────────────────────────────────────
+        if self._redis is not None:
+            cached = await get_cached(self._redis, _CATALOG_CACHE_KEY)
+            if cached is not None:
+                return cached  # type: ignore[return-value]
+
         statement = (
             select(
                 Floor,
@@ -269,5 +281,9 @@ class PublicCatalogService:
                 for existing in rooms
             ):
                 rooms.append(room_entry)
+
+        # ── Cache write ──────────────────────────────────────────────────────
+        if self._redis is not None:
+            await set_cached(self._redis, _CATALOG_CACHE_KEY, rooms, _CATALOG_CACHE_TTL)
 
         return rooms

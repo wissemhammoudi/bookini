@@ -41,10 +41,30 @@ async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
     except Exception as e:
         logger.error(f"Failed to initialize MinIO bucket: {e}")
 
+    # Warm up Redis connection pool
+    try:
+        from app.infrastructure.redis_client import get_redis_pool
+
+        redis = get_redis_pool()
+        await redis.ping()
+        logger.info("Redis connection established")
+    except Exception as e:
+        logger.error(f"Redis connection failed at startup: {e}")
+
     await seed_super_admin_account(get_session_factory(), settings)
     await seed_default_test_data(get_session_factory(), settings)
     logger.info("Application startup complete")
     yield
+
+    # Shutdown: close Redis pool gracefully
+    try:
+        from app.infrastructure.redis_client import close_redis_pool
+
+        await close_redis_pool()
+        logger.info("Redis pool closed")
+    except Exception as e:
+        logger.error(f"Error closing Redis pool: {e}")
+
     logger.info("Application shutdown complete")
 
 

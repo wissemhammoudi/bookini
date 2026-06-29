@@ -19,5 +19,5 @@ async def health() -> dict[str, object]:
 
 @router.get("/ready")
 async def ready() -> dict[str, object]:
-    snapshot = readiness_snapshot()
+    snapshot = await readiness_snapshot()
     return success_response(message="Readiness check successful", data=snapshot)

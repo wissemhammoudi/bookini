@@ -1,5 +1,8 @@
+import redis.asyncio as aioredis
+
 from app.core.exceptions import AppException, UnauthorizedException
 from app.core.security import (
+    blacklist_token,
     create_access_token,
     create_password_reset_token,
     create_refresh_token,
@@ -43,7 +46,11 @@ class AuthService:
 
         return self._build_token_pair(str(user.id))
 
-    async def refresh_token(self, refresh_token: str) -> dict[str, str]:
+    async def refresh_token(
+        self,
+        refresh_token: str,
+        redis: aioredis.Redis,
+    ) -> dict[str, str]:
         payload = decode_token(refresh_token)
         if payload.get("type") != "refresh":
             raise UnauthorizedException("Invalid token type")
@@ -56,12 +63,22 @@ class AuthService:
         if not user or not user.is_active:
             raise UnauthorizedException("User not authorized")
 
+        # Invalidate the consumed refresh token so it cannot be replayed.
+        await blacklist_token(redis, payload)
+
         return self._build_token_pair(str(user.id))
 
-    async def logout(self, refresh_token: str) -> None:
+    async def logout(
+        self,
+        refresh_token: str,
+        redis: aioredis.Redis,
+    ) -> None:
         payload = decode_token(refresh_token)
         if payload.get("type") != "refresh":
             raise UnauthorizedException("Invalid token type")
+
+        # Blacklist the refresh token — it is now permanently revoked.
+        await blacklist_token(redis, payload)
 
     async def request_password_reset(self, email: str) -> str:
         user = await self._user_repository.get_by_email(email)
@@ -69,7 +86,12 @@ class AuthService:
             return ""
         return create_password_reset_token(str(user.id))
 
-    async def confirm_password_reset(self, token: str, new_password: str) -> None:
+    async def confirm_password_reset(
+        self,
+        token: str,
+        new_password: str,
+        redis: aioredis.Redis,
+    ) -> None:
         payload = decode_token(token)
         if payload.get("type") != "password_reset":
             raise UnauthorizedException("Invalid token type")
@@ -84,6 +106,9 @@ class AuthService:
 
         hashed = hash_password(new_password)
         await self._user_repository.update_password(user=user, new_password_hash=hashed)
+
+        # One-time use: blacklist the reset token after successful use.
+        await blacklist_token(redis, payload)
 
     async def change_password(
         self,

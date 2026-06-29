@@ -1,8 +1,10 @@
+import redis.asyncio as aioredis
 from fastapi import APIRouter, Depends, File, Request, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.responses import success_response
 from app.dependencies.auth import get_current_user
+from app.infrastructure.redis_client import get_redis
 from app.infrastructure.session import get_db_session
 from app.models.user import User
 from app.repositories.audit_log_repository import AuditLogRepository
@@ -106,10 +108,22 @@ async def login(
 async def refresh_token(
     payload: RefreshTokenRequest,
     session: AsyncSession = Depends(get_db_session),
+    redis: aioredis.Redis = Depends(get_redis),
 ) -> dict[str, object]:
     service = _service_from_session(session)
-    tokens = await service.refresh_token(payload.refresh_token)
+    tokens = await service.refresh_token(payload.refresh_token, redis)
     return success_response(message="Token refresh successful", data=tokens)
+
+
+@router.post("/logout")
+async def logout(
+    payload: RefreshTokenRequest,
+    session: AsyncSession = Depends(get_db_session),
+    redis: aioredis.Redis = Depends(get_redis),
+) -> dict[str, object]:
+    service = _service_from_session(session)
+    await service.logout(payload.refresh_token, redis)
+    return success_response(message="Logged out successfully", data={})
 
 
 @router.post("/password-reset/request")
@@ -132,9 +146,10 @@ async def request_password_reset(
 async def confirm_password_reset(
     payload: ConfirmPasswordResetRequest,
     session: AsyncSession = Depends(get_db_session),
+    redis: aioredis.Redis = Depends(get_redis),
 ) -> dict[str, object]:
     service = _service_from_session(session)
-    await service.confirm_password_reset(payload.token, payload.new_password)
+    await service.confirm_password_reset(payload.token, payload.new_password, redis)
     return success_response(message="Password reset successful", data={})
 
 

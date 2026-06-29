@@ -18,3 +18,4 @@ email-validator==2.2.0
 prometheus-client==0.23.1
 boto3==1.34.162
 python-multipart==0.0.31
+redis[asyncio]==5.0.8

@@ -1,11 +1,14 @@
 import uuid
 from datetime import datetime
 
+import redis.asyncio as aioredis
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import ValidationException
 from app.core.responses import success_response
+from app.infrastructure.cache import invalidate
+from app.infrastructure.redis_client import get_redis
 from app.infrastructure.session import get_db_session
 from app.schemas.admin_workspace import ContactRequestRecord
 from app.schemas.public_booking import (
@@ -14,7 +17,7 @@ from app.schemas.public_booking import (
 )
 from app.services.admin_workspace_state_store import AdminWorkspaceStateStore
 from app.services.public_booking_service import PublicBookingService
-from app.services.public_catalog_service import PublicCatalogService
+from app.services.public_catalog_service import PublicCatalogService, _CATALOG_CACHE_KEY
 
 router = APIRouter(prefix="/public", tags=["public"])
 
@@ -30,9 +33,10 @@ def _catalog_service_from_session(session: AsyncSession) -> PublicCatalogService
 @router.get("/rooms")
 async def list_public_rooms(
     session: AsyncSession = Depends(get_db_session),
+    redis: aioredis.Redis = Depends(get_redis),
 ) -> dict[str, object]:
     """List public room/space catalog used by booking UI."""
-    service = _catalog_service_from_session(session)
+    service = PublicCatalogService(session, redis)
     rooms = await service.build_rooms_catalog()
     return success_response(message="Public rooms retrieved", data=rooms)
 
@@ -41,10 +45,13 @@ async def list_public_rooms(
 async def create_booking(
     request: PublicBookingCreateRequest,
     session: AsyncSession = Depends(get_db_session),
+    redis: aioredis.Redis = Depends(get_redis),
 ) -> dict[str, object]:
     """Create a new public booking (no auth required)."""
-    service = _booking_service_from_session(session)
+    service = PublicBookingService(session)
     booking_data = await service.create_booking(request)
+    # Invalidate catalog cache so availability reflects the new booking.
+    await invalidate(redis, _CATALOG_CACHE_KEY)
     return success_response(
         message="Booking created successfully",
         data=booking_data,
