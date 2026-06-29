@@ -26,8 +26,12 @@ async def set_cached(
     data: dict | list,
     ttl: int,
 ) -> None:
+<<<<<<< HEAD
     """Serialize *data* to JSON and store it under *key* with the given TTL
     (seconds)."""
+=======
+    """Serialize *data* to JSON and store it under *key* with the given TTL."""
+>>>>>>> bba63e92ae87d08572775707c5f19acb2a429738
     try:
         await redis.set(key, json.dumps(data, default=str), ex=ttl)
     except Exception:
