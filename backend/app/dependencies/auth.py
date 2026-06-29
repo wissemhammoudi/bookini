@@ -63,7 +63,11 @@ async def get_current_user(
                 user.avatar_url = cached.get("avatar_url")
                 return user
     except Exception:
-        logger.warning("Redis user cache read failed for user_id=%s", user_id, exc_info=True)
+        logger.warning(
+            "Redis user cache read failed for user_id=%s",
+            user_id,
+            exc_info=True,
+        )
 
     # ── DB fallback (cache miss or Redis error) ─────────────────────────────
     repository = UserRepository(session)
@@ -88,6 +92,10 @@ async def get_current_user(
             ex=ttl,
         )
     except Exception:
-        logger.warning("Redis user cache write failed for user_id=%s", user_id, exc_info=True)
+        logger.warning(
+            "Redis user cache write failed for user_id=%s",
+            user_id,
+            exc_info=True,
+        )
 
     return user
