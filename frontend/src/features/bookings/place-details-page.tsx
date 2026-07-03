@@ -138,7 +138,7 @@ export const PlaceDetailsPage = () => {
                 {room.name}
               </Typography>
               <Typography color="text.secondary" variant="h6">
-                Capacity {room.capacity} people • From €{room.price || (room.floors?.[0]?.price ?? 0)}/hour
+                Capacity {room.capacity} people • From {room.price || (room.floors?.[0]?.price ?? 0)} TND/hour
               </Typography>
               {room.description ? (
                 <Typography color="text.secondary" sx={{ maxWidth: 760 }}>
@@ -206,7 +206,7 @@ export const PlaceDetailsPage = () => {
                           <Divider />
                           <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
                             <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-                              €{floor.price ?? room.price}/hour
+                              {floor.price ?? room.price} TND/hour
                             </Typography>
                             <Typography variant="caption" color="text.secondary">
                               Capacity: {floor.capacity} people

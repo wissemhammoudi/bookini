@@ -152,7 +152,7 @@ export const RoomCard = ({
           <Stack direction="row" spacing={2} sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
             <Stack direction="row" spacing={0.5} sx={{ alignItems: 'baseline' }}>
               <Typography variant="h5" sx={{ fontWeight: 800 }}>
-                €{room.price}
+                {room.price} TND
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 per hour

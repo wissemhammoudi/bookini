@@ -118,6 +118,16 @@ class PublicCatalogService:
         return ""
 
     @staticmethod
+    def _estimate_hourly_price(capacity: int) -> float:
+        if capacity <= 10:
+            return 20.0
+        if capacity <= 25:
+            return 35.0
+        if capacity <= 50:
+            return 55.0
+        return 75.0
+
+    @staticmethod
     def _normalize_reservation_area_details(
         reservation_areas: object,
         fallback_price: float,
@@ -218,6 +228,7 @@ class PublicCatalogService:
             room_id = self._room_id_from_floor_id(floor.id)
             floor_name = f"{organization_name} - Floor {floor.floor_number}"
             media = self._resolve_media(floor.name, organization_name, floor_name)
+            estimated_price = self._estimate_hourly_price(floor.capacity)
 
             availability = {
                 "AVAILABLE": "Available",
@@ -232,7 +243,7 @@ class PublicCatalogService:
                     "name": floor.name,
                     "description": floor.description,
                     "capacity": floor.capacity,
-                    "price": 0,
+                    "price": estimated_price,
                     "address": floor.location,
                     "availability": availability,
                     "amenities": [],
@@ -254,7 +265,7 @@ class PublicCatalogService:
                             "floor_name": floor_name,
                             "floor_number": floor.floor_number,
                             "capacity": floor.capacity,
-                            "price": 0,
+                            "price": estimated_price,
                             "blueprint_image": None,
                             "description": floor.description,
                             "status": floor.status.value,

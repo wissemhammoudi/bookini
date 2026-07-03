@@ -60,7 +60,7 @@ export const PlanCard = ({ plan, isSelected, onSelect, isLight }: PlanCardProps)
           <Box>
             <Stack direction="row" spacing={0.5} sx={{ alignItems: 'baseline' }}>
               <Typography variant="h4" sx={{ fontWeight: 800 }}>
-                €{plan.price}
+                {plan.price} TND
               </Typography>
               <Typography color="text.secondary">{plan.period}</Typography>
             </Stack>

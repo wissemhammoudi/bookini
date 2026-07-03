@@ -135,7 +135,7 @@ export const BookingDetailsGrid = ({
                     <Typography sx={{ fontWeight: 700 }}>Total Amount</Typography>
                   </Stack>
                   <Typography variant="h4" sx={{ fontWeight: 800, color: 'primary.main' }}>
-                    €{formatPrice(booking.price)}
+                    {formatPrice(booking.price)} TND
                   </Typography>
                 </Stack>
               </Paper>

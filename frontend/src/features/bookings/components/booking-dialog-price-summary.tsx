@@ -46,7 +46,7 @@ export const PriceSummaryCard = ({
           </Typography>
           <Stack direction="row" spacing={1.5} sx={{ alignItems: 'baseline' }}>
             <Typography variant="h4" sx={{ fontWeight: 900, color: 'primary.main', lineHeight: 1 }}>
-              €{price.toFixed(2)}
+                {price.toFixed(2)} TND
             </Typography>
             {discount > 0 ? (
               <Typography
@@ -57,7 +57,7 @@ export const PriceSummaryCard = ({
                   fontWeight: 500,
                 }}
               >
-                €{originalPrice.toFixed(2)}
+                {originalPrice.toFixed(2)} TND
               </Typography>
             ) : null}
           </Stack>
@@ -72,7 +72,7 @@ export const PriceSummaryCard = ({
         </Box>
 
         <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', justifyContent: 'flex-end', alignItems: 'center' }}>
-          <Chip icon={<AttachMoneyIcon />} label={`€${hourlyRate}/hour`} variant="outlined" />
+          <Chip icon={<AttachMoneyIcon />} label={`${hourlyRate} TND/hour`} variant="outlined" />
           <Chip
             label={
               formData.startTime && formData.endTime

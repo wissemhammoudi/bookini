@@ -31,7 +31,7 @@ export const FloorAreaDetailsDialog = ({ area, bookingType, isLight, onClose, on
             Pricing
           </Typography>
           <Typography variant="body1" sx={{ fontWeight: 700 }}>
-            €{area?.price}/hour
+            {area?.price} TND/hour
           </Typography>
         </Box>
         {area?.includes && area.includes.length > 0 ? (

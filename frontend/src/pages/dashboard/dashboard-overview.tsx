@@ -150,7 +150,7 @@ export const DashboardOverview = ({
                 <Typography variant="subtitle2" color="text.secondary" sx={{ fontWeight: 600 }}>
                   Total Cost Spent
                 </Typography>
-                {isLoading ? <Skeleton width={100} height={36} /> : <Typography variant="h5" sx={{ fontWeight: 800 }}>€{totalSpent.toFixed(2)}</Typography>}
+                {isLoading ? <Skeleton width={100} height={36} /> : <Typography variant="h5" sx={{ fontWeight: 800 }}>{totalSpent.toFixed(2)} TND</Typography>}
               </Box>
             </Stack>
           </Paper>
@@ -233,7 +233,7 @@ export const DashboardOverview = ({
                     <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', mt: 0.5 }}>
                       <Chip label={booking.status} size="small" color={booking.status === 'CONFIRMED' ? 'success' : 'warning'} sx={{ fontWeight: 700, fontSize: '0.65rem', height: 20 }} />
                       <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary' }}>
-                        Cost: €{booking.price.toFixed(2)}
+                        Cost: {booking.price.toFixed(2)} TND
                       </Typography>
                     </Box>
                   </Stack>
@@ -297,7 +297,7 @@ export const DashboardOverview = ({
                         {formatDateOnly(booking.booking_date)}
                       </Typography>
                       <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary' }}>
-                        Cost: €{booking.price.toFixed(2)}
+                        Cost: {booking.price.toFixed(2)} TND
                       </Typography>
                     </Stack>
                   </Stack>
