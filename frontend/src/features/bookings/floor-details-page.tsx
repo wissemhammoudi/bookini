@@ -32,6 +32,7 @@ import {
   listFloorReviews,
   upsertMyFloorReview,
 } from '@/lib/api'
+import { resolveMediaUrl } from './media-utils'
 
 export const FloorDetailsPage = () => {
   const navigate = useNavigate()
@@ -97,16 +98,12 @@ export const FloorDetailsPage = () => {
 
   const images = useMemo(() => {
     if (!room) return []
-    const imageSeed = encodeURIComponent(room.name.toLowerCase().replace(/\s+/g, '-'))
-    const fallback = [
-      `https://picsum.photos/seed/${imageSeed}-1/1400/780`,
-      `https://picsum.photos/seed/${imageSeed}-2/1200/700`,
-      `https://picsum.photos/seed/${imageSeed}-3/1200/700`,
-    ]
     const list = [floor?.blueprint_image, room.cover_image, ...(room.gallery ?? [])]
       .filter((item): item is string => typeof item === 'string' && !item.startsWith('['))
+      .map((item) => resolveMediaUrl(item))
+      .filter(Boolean)
       .slice(0, 3)
-    return list.length > 0 ? list : fallback;
+    return list.length > 0 ? list : ['/navbar_logo.png']
   }, [room, floor])
 
   const createBookingMutation = useMutation({ mutationFn: createPublicBookingRequest })

@@ -13,7 +13,6 @@ import {
 } from './components'
 import { useAuth } from './hooks'
 import { useColorMode } from '@/app/use-color-mode'
-import { PublicFooter } from '@/features/public/components/public-footer'
 import { loginRequest } from '@/lib/api'
 
 export const LoginPage = () => {
@@ -127,7 +126,6 @@ export const LoginPage = () => {
           </Stack>
         </Paper>
       </Stack>
-      <PublicFooter isLight={isLight} />
     </Box>
   )
 }

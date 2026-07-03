@@ -12,6 +12,7 @@ import {
 } from '@mui/material'
 import PeopleIcon from '@mui/icons-material/People'
 import type { PublicRoom, PublicFloor } from '@/lib/api'
+import { resolveMediaUrl } from '@/features/bookings/media-utils'
 
 
 
@@ -32,7 +33,8 @@ export const RoomCard = ({
   onViewAdmin,
   actionLabel,
 }: RoomCardProps) => {
-  const hasImage = room.cover_image && room.cover_image.trim()
+  const coverImage = resolveMediaUrl(room.cover_image)
+  const hasImage = Boolean(coverImage)
 
   return (
     <Card
@@ -67,7 +69,7 @@ export const RoomCard = ({
         <CardMedia
           component="img"
           height="200"
-          image={room.cover_image ?? undefined}
+          image={coverImage}
           alt={room.name}
           sx={{
             objectFit: 'cover',

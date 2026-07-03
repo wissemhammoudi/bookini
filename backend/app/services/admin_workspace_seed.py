@@ -123,10 +123,10 @@ def build_workspace_state() -> WorkspaceState:
             AvailabilitySlot(day="THURSDAY", start_time="08:00", end_time="19:00"),
             AvailabilitySlot(day="FRIDAY", start_time="08:00", end_time="19:00"),
         ],
-        cover_image="https://picsum.photos/seed/marseille/1200/800",
+        cover_image="https://images.unsplash.com/photo-1497215842964-222b430dc094?auto=format&fit=crop&w=1400&q=80",
         gallery=[
-            "https://picsum.photos/seed/gallery1/800/600",
-            "https://picsum.photos/seed/gallery2/800/600",
+            "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1200&q=80",
+            "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&fit=crop&w=1200&q=80",
         ],
         features=["WiFi 6", "Coffee Machine", "Whiteboard", "Dual Monitors"],
         status="ACTIVE",

@@ -23,25 +23,20 @@ import { PublicFooter } from '@/features/public/components/public-footer'
 import { PublicNavbar } from '@/features/public/components/public-navbar'
 import type { PublicRoom } from '@/lib/api'
 import { listPublicRooms } from '@/lib/api'
+import { resolveMediaUrl, toEmbedVideoUrl } from './media-utils'
 
 const buildMedia = (room: PublicRoom) => {
-  const imageSeed = encodeURIComponent(room.name.toLowerCase().replace(/\s+/g, '-'))
-
-  const fallback = [
-    `https://picsum.photos/seed/${imageSeed}-1/1400/780`,
-    `https://picsum.photos/seed/${imageSeed}-2/1200/700`,
-    `https://picsum.photos/seed/${imageSeed}-3/1200/700`,
-  ]
-
   const images = [room.cover_image, ...(room.gallery ?? [])]
     .filter((item): item is string => Boolean(item))
+    .map((item) => resolveMediaUrl(item))
+    .filter(Boolean)
     .slice(0, 3)
 
+  const videos = room.video_url ? [toEmbedVideoUrl(room.video_url)].filter(Boolean) : []
+
   return {
-    images: images.length > 0 ? images : fallback,
-    videos: room.video_url
-      ? [room.video_url]
-      : ['https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=0&rel=0'],
+    images: images.length > 0 ? images : ['/navbar_logo.png'],
+    videos,
   }
 }
 
@@ -254,13 +249,13 @@ export const PlaceDetailsPage = () => {
                 <Stack spacing={1.5}>
                   <Box
                     component="img"
-                    src={media.images[1]}
+                    src={media.images[1] ?? media.images[0]}
                     alt={`${room.name} secondary 1`}
                     sx={{ width: '100%', height: { xs: 140, md: 172 }, objectFit: 'cover', borderRadius: 2 }}
                   />
                   <Box
                     component="img"
-                    src={media.images[2]}
+                    src={media.images[2] ?? media.images[0]}
                     alt={`${room.name} secondary 2`}
                     sx={{ width: '100%', height: { xs: 140, md: 172 }, objectFit: 'cover', borderRadius: 2 }}
                   />
@@ -269,24 +264,26 @@ export const PlaceDetailsPage = () => {
             </Stack>
           </Paper>
 
-          <Paper elevation={0} sx={{ p: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
-            <Stack spacing={2}>
-              <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-                <VideoLibraryOutlinedIcon color="primary" />
-                <Typography variant="h6" sx={{ fontWeight: 800 }}>
-                  Video Tour
-                </Typography>
+          {media.videos.length > 0 ? (
+            <Paper elevation={0} sx={{ p: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
+              <Stack spacing={2}>
+                <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+                  <VideoLibraryOutlinedIcon color="primary" />
+                  <Typography variant="h6" sx={{ fontWeight: 800 }}>
+                    Video Tour
+                  </Typography>
+                </Stack>
+                <Box
+                  component="iframe"
+                  src={media.videos[0]}
+                  title={`${room.name} video tour`}
+                  sx={{ width: '100%', height: { xs: 220, md: 420 }, border: 0, borderRadius: 2 }}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
               </Stack>
-              <Box
-                component="iframe"
-                src={media.videos[0]}
-                title={`${room.name} video tour`}
-                sx={{ width: '100%', height: { xs: 220, md: 420 }, border: 0, borderRadius: 2 }}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
-            </Stack>
-          </Paper>
+            </Paper>
+          ) : null}
         </Stack>
       </Container>
 

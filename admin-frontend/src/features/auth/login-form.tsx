@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Alert, Button, Stack, TextField, InputAdornment, IconButton, Typography } from '@mui/material'
+import { Alert, Button, Stack, TextField, InputAdornment, IconButton } from '@mui/material'
 import { Controller, useForm } from 'react-hook-form'
 import { z } from 'zod'
 import EmailIcon from '@mui/icons-material/Email'
@@ -38,11 +38,11 @@ export const LoginForm = ({ error, isLoading = false, onSubmit }: LoginFormProps
   return (
     <Stack
       component="form"
-      spacing={2.25}
+      spacing={2.5}
       onSubmit={handleSubmit((values) => onSubmit(values))}
       noValidate
     >
-      {error ? <Alert severity="error" sx={{ borderRadius: 2, border: '1px solid', borderColor: 'rgba(214,69,69,0.18)' }}>{error}</Alert> : null}
+      {error ? <Alert severity="error" sx={{ borderRadius: 2 }}>{error}</Alert> : null}
       <Controller
         name="email"
         control={control}
@@ -64,7 +64,6 @@ export const LoginForm = ({ error, isLoading = false, onSubmit }: LoginFormProps
                 ),
               },
             }}
-            sx={{ '& .MuiFormHelperText-root': { mx: 0.25 } }}
           />
         )}
       />
@@ -100,14 +99,9 @@ export const LoginForm = ({ error, isLoading = false, onSubmit }: LoginFormProps
                 ),
               },
             }}
-            sx={{ '& .MuiFormHelperText-root': { mx: 0.25 } }}
           />
         )}
       />
-
-      <Typography variant="caption" color="text.secondary" sx={{ mt: -0.5 }}>
-        Access is restricted to administrator accounts only.
-      </Typography>
 
       <Button
         type="submit"
@@ -117,13 +111,12 @@ export const LoginForm = ({ error, isLoading = false, onSubmit }: LoginFormProps
         sx={{
           py: 1.5,
           borderRadius: 2,
-          fontWeight: 800,
-          background: 'linear-gradient(135deg, #0059B3 0%, #00A88F 100%)',
-          boxShadow: '0 12px 24px rgba(0, 89, 179, 0.28)',
+          fontWeight: 700,
+          boxShadow: '0 4px 12px rgba(0, 89, 179, 0.2)',
           transition: 'all 0.2s',
           '&:hover': {
             transform: 'translateY(-1px)',
-            boxShadow: '0 16px 28px rgba(0, 89, 179, 0.34)',
+            boxShadow: '0 6px 20px rgba(0, 89, 179, 0.3)',
           },
         }}
       >

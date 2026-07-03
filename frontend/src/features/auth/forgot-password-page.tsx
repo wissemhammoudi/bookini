@@ -10,7 +10,6 @@ import {
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 
 import { useColorMode } from '@/app/use-color-mode'
-import { PublicFooter } from '@/features/public/components/public-footer'
 import { requestPasswordReset, confirmPasswordReset } from '@/lib/api'
 import {
   AuthBranding,
@@ -141,8 +140,6 @@ export const ForgotPasswordPage = () => {
           </Stack>
         </Paper>
       </Stack>
-
-      <PublicFooter isLight={isLight} />
     </Box>
   )
 }

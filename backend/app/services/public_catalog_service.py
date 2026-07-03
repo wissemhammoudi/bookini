@@ -14,6 +14,41 @@ from app.services.admin_workspace_state_store import AdminWorkspaceStateStore
 _CATALOG_CACHE_KEY = "bookini:catalog:rooms"
 _CATALOG_CACHE_TTL = 30  # seconds
 
+_MEDIA_PRESETS: dict[str, dict[str, object]] = {
+    "main-coworking-space": {
+        "cover_image": "https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1400&q=80",
+        "gallery": [
+            "https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1200&q=80",
+            "https://images.unsplash.com/photo-1524758631624-e2822e304c36?auto=format&fit=crop&w=1200&q=80",
+        ],
+        "video_url": "https://www.youtube.com/embed/ScMzIvxBSi4?autoplay=0&rel=0",
+    },
+    "silent-focus-room": {
+        "cover_image": "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1400&q=80",
+        "gallery": [
+            "https://images.unsplash.com/photo-1486946255434-2466348c2166?auto=format&fit=crop&w=1200&q=80",
+            "https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd?auto=format&fit=crop&w=1200&q=80",
+        ],
+        "video_url": "https://www.youtube.com/embed/jfKfPfyJRdk?autoplay=0&rel=0",
+    },
+    "creative-collab-studio": {
+        "cover_image": "https://images.unsplash.com/photo-1604328698692-f76ea9498e76?auto=format&fit=crop&w=1400&q=80",
+        "gallery": [
+            "https://images.unsplash.com/photo-1527192491265-7e15c55b1ed2?auto=format&fit=crop&w=1200&q=80",
+            "https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=1200&q=80",
+        ],
+        "video_url": "https://www.youtube.com/embed/aqz-KE-bpKQ?autoplay=0&rel=0",
+    },
+    "marseille-innovation-lab": {
+        "cover_image": "https://images.unsplash.com/photo-1497215842964-222b430dc094?auto=format&fit=crop&w=1400&q=80",
+        "gallery": [
+            "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1200&q=80",
+            "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&fit=crop&w=1200&q=80",
+        ],
+        "video_url": "https://www.youtube.com/embed/J---aiyznGQ?autoplay=0&rel=0",
+    },
+}
+
 
 class PublicCatalogService:
     def __init__(self, session: AsyncSession, redis: aioredis.Redis | None = None):
@@ -39,6 +74,24 @@ class PublicCatalogService:
     def _organization_id_from_building(building: str) -> str:
         normalized = "-".join(building.lower().split())
         return normalized or "unknown"
+
+    @staticmethod
+    def _slug(value: str | None) -> str:
+        if not value:
+            return ""
+        return "-".join(value.lower().split())
+
+    def _resolve_media(self, *candidates: str | None) -> dict[str, object]:
+        for candidate in candidates:
+            key = self._slug(candidate)
+            if key and key in _MEDIA_PRESETS:
+                return _MEDIA_PRESETS[key]
+
+        return {
+            "cover_image": None,
+            "gallery": [],
+            "video_url": None,
+        }
 
     @staticmethod
     def _format_availability(value: object) -> str:
@@ -164,6 +217,7 @@ class PublicCatalogService:
             organization_id = self._organization_id_from_building(organization_name)
             room_id = self._room_id_from_floor_id(floor.id)
             floor_name = f"{organization_name} - Floor {floor.floor_number}"
+            media = self._resolve_media(floor.name, organization_name, floor_name)
 
             availability = {
                 "AVAILABLE": "Available",
@@ -186,9 +240,9 @@ class PublicCatalogService:
                     "image": organization_name[:1].upper()
                     if organization_name
                     else "B",
-                    "cover_image": None,
-                    "gallery": [],
-                    "video_url": None,
+                    "cover_image": media["cover_image"],
+                    "gallery": media["gallery"],
+                    "video_url": media["video_url"],
                     "admin_id": str(floor.admin_id) if floor.admin_id else None,
                     "average_rating": float(avg_rating or 0.0),
                     "rating_count": int(rating_count or 0),
@@ -233,6 +287,9 @@ class PublicCatalogService:
                 ),
                 place.organization_id,
             )
+            media = self._resolve_media(place.name, organization_name, place.address)
+            cover_image = str(place.cover_image) if place.cover_image else media["cover_image"]
+            gallery = [str(item) for item in place.gallery] or media["gallery"]
 
             room_entry = {
                 "id": room_id,
@@ -246,9 +303,9 @@ class PublicCatalogService:
                 "amenities": place.features,
                 "features": place.features,
                 "image": organization_name[:1].upper() if organization_name else "B",
-                "cover_image": str(place.cover_image) if place.cover_image else None,
-                "gallery": [str(item) for item in place.gallery],
-                "video_url": None,
+                "cover_image": cover_image,
+                "gallery": gallery,
+                "video_url": media["video_url"],
                 "admin_id": None,
                 "average_rating": 0.0,
                 "rating_count": 0,
