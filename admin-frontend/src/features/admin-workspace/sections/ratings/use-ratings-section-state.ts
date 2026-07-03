@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useQueries, useQuery } from '@tanstack/react-query'
 
 import {
@@ -34,7 +34,7 @@ export function useRatingsSectionState() {
     enabled: isSuperAdmin,
   })
 
-  const admins = adminsQuery.data ?? []
+  const admins = useMemo(() => adminsQuery.data ?? [], [adminsQuery.data])
 
   const adminPreviewQueries = useQueries({
     queries: isSuperAdmin
@@ -99,26 +99,38 @@ export function useRatingsSectionState() {
     enabled: Boolean(adminId),
   })
 
+  const floorOptions = useMemo(() => profileQuery.data?.spaces ?? [], [profileQuery.data])
+
+  const effectiveSelectedFloorId = useMemo(() => {
+    if (!floorOptions.length) {
+      return ''
+    }
+
+    if (selectedFloorId && floorOptions.some((item) => item.id === selectedFloorId)) {
+      return selectedFloorId
+    }
+
+    return floorOptions[0].id
+  }, [selectedFloorId, floorOptions])
+
   const floorReviewsQuery = useQuery({
-    queryKey: ['workspace-floor-reviews', selectedFloorId, floorReviewsPage, floorReviewsMinFilter],
+    queryKey: [
+      'workspace-floor-reviews',
+      effectiveSelectedFloorId,
+      floorReviewsPage,
+      floorReviewsMinFilter,
+    ],
     queryFn: () =>
-      listFloorReviewsByFloor(selectedFloorId, {
+      listFloorReviewsByFloor(effectiveSelectedFloorId, {
         limit: floorReviewsLimit,
         offset: floorReviewsPage * floorReviewsLimit,
         min_rating: floorReviewsMinFilter > 0 ? floorReviewsMinFilter : undefined,
       }),
-    enabled: Boolean(selectedFloorId),
+    enabled: Boolean(effectiveSelectedFloorId),
   })
 
-  const floorOptions = useMemo(() => profileQuery.data?.spaces ?? [], [profileQuery.data])
   const adminRatings = adminRatingsQuery.data?.items ?? []
   const floorReviews = floorReviewsQuery.data?.reviews ?? []
-
-  useEffect(() => {
-    if (!selectedFloorId && floorOptions.length > 0) {
-      setSelectedFloorId(floorOptions[0].id)
-    }
-  }, [selectedFloorId, floorOptions])
 
   const topRatedFloor = useMemo(() => {
     if (!floorOptions.length) {
@@ -138,7 +150,7 @@ export function useRatingsSectionState() {
     inspectedAdminId: isSuperAdmin ? (inspectedAdminId || defaultSuperAdminTarget) : adminId,
     setInspectedAdminId,
     admins,
-    selectedFloorId,
+    selectedFloorId: effectiveSelectedFloorId,
     setSelectedFloorId,
     adminRatingsPage,
     setAdminRatingsPage,
