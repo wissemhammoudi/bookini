@@ -1,10 +1,16 @@
-from fastapi import APIRouter, Response
+import uuid
+
+from fastapi import APIRouter, Depends, Response
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.responses import success_response
+from app.domain.enums import FloorStatus
+from app.infrastructure.session import get_db_session
 from app.presentation.admin_workspace_common import (
     AdminAccessUser,
     SuperAdminAccessUser,
 )
+from app.repositories.floor_repository import FloorRepository
 from app.schemas.admin_workspace import (
     FloorUpsertRequest,
     OrganizationUpsertRequest,
@@ -22,6 +28,43 @@ from app.services.admin_workspace_reservation_service import (
 from app.services.admin_workspace_user_service import AdminWorkspaceUserService
 
 router = APIRouter(tags=["admin"])
+
+
+def _is_uuid(value: str) -> bool:
+    try:
+        uuid.UUID(value)
+        return True
+    except ValueError:
+        return False
+
+
+def _map_floor_to_place_payload(floor: object) -> dict[str, object]:
+    mapped_status = "SUSPENDED" if floor.status == FloorStatus.MAINTENANCE else "ACTIVE"
+    estimated_price = 20.0
+    if floor.capacity > 10:
+        estimated_price = 35.0
+    if floor.capacity > 25:
+        estimated_price = 55.0
+    if floor.capacity > 50:
+        estimated_price = 75.0
+
+    return {
+        "id": str(floor.id),
+        "organization_id": "-".join(str(floor.building).lower().split())
+        or "default-building",
+        "name": floor.name,
+        "description": floor.description or "",
+        "category": floor.building,
+        "capacity": floor.capacity,
+        "address": floor.location,
+        "pricing": estimated_price,
+        "availability": [],
+        "cover_image": None,
+        "gallery": [],
+        "features": [],
+        "status": mapped_status,
+        "created_date": floor.created_at,
+    }
 
 
 @router.post("/workspace/users")
@@ -130,7 +173,28 @@ async def update_place(
     place_id: str,
     payload: PlaceUpsertRequest,
     _: AdminAccessUser,
+    session: AsyncSession = Depends(get_db_session),
 ) -> dict[str, object]:
+    if _is_uuid(place_id):
+        floor_repository = FloorRepository(session)
+        floor = await floor_repository.get_by_id(place_id)
+        if floor and not floor.is_deleted:
+            floor.name = payload.name
+            floor.capacity = payload.capacity
+            floor.building = payload.category
+            floor.location = payload.address
+            floor.description = payload.description
+            floor.status = (
+                FloorStatus.MAINTENANCE
+                if payload.status == "SUSPENDED"
+                else FloorStatus.AVAILABLE
+            )
+            updated_floor = await floor_repository.update(floor)
+            return success_response(
+                message="Place updated",
+                data=_map_floor_to_place_payload(updated_floor),
+            )
+
     place = AdminWorkspaceOrganizationService.update_place(place_id, payload)
     return success_response(message="Place updated", data=place.model_dump(mode="json"))
 
@@ -139,7 +203,16 @@ async def update_place(
 async def delete_place(
     place_id: str,
     _: AdminAccessUser,
+    session: AsyncSession = Depends(get_db_session),
 ) -> Response:
+    if _is_uuid(place_id):
+        floor_repository = FloorRepository(session)
+        floor = await floor_repository.get_by_id(place_id)
+        if floor and not floor.is_deleted:
+            floor.is_deleted = True
+            await floor_repository.update(floor)
+            return Response(status_code=204)
+
     AdminWorkspaceOrganizationService.delete_place(place_id)
     return Response(status_code=204)
 
