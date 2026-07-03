@@ -1,4 +1,4 @@
-import { Box, Button, Paper, Stack, TextField, Typography } from '@mui/material'
+import { Box, Button, Paper, Stack, Typography } from '@mui/material'
 
 import { resolveImageUrl } from '@/features/admin-workspace/dialogs/shared'
 
@@ -11,10 +11,6 @@ type PlaceImagesEditorProps = {
   onGalleryUpload: (event: React.ChangeEvent<HTMLInputElement>) => Promise<void>
   onClearCover: () => void
   onRemoveGalleryItem: (targetIndex: number) => void
-  coverFieldProps: Record<string, unknown>
-  galleryFieldProps: Record<string, unknown>
-  coverError?: string
-  galleryError?: string
   hasPendingCover?: boolean
   pendingGalleryCount?: number
 }
@@ -28,21 +24,24 @@ export function PlaceImagesEditor({
   onGalleryUpload,
   onClearCover,
   onRemoveGalleryItem,
-  coverFieldProps,
-  galleryFieldProps,
-  coverError,
-  galleryError,
   hasPendingCover = false,
   pendingGalleryCount = 0,
 }: PlaceImagesEditorProps) {
   return (
     <>
-      <Stack direction="row" spacing={1.5} sx={{ alignItems: 'flex-start' }}>
-        <TextField label="Cover Image URL" error={Boolean(coverError)} helperText={coverError ?? 'Optional URL or upload an image'} fullWidth {...coverFieldProps} />
-        <Button variant="outlined" component="label" disabled={isUploadingCover} sx={{ height: 40, mt: 0.5, whiteSpace: 'nowrap' }}>
+      <Stack spacing={1}>
+        <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+          Cover Image
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Upload a cover image and preview it directly before saving.
+        </Typography>
+        <Stack direction="row" spacing={1.5} sx={{ alignItems: 'flex-start' }}>
+          <Button variant="outlined" component="label" disabled={isUploadingCover} sx={{ height: 40, whiteSpace: 'nowrap' }}>
           {isUploadingCover ? 'Uploading...' : coverValue ? 'Replace' : 'Choose Image'}
           <input type="file" accept="image/*" hidden onChange={(event) => void onCoverUpload(event)} />
         </Button>
+        </Stack>
       </Stack>
 
       {coverValue ? (
@@ -61,18 +60,19 @@ export function PlaceImagesEditor({
         </Paper>
       ) : null}
 
-      <Stack direction="row" spacing={1.5} sx={{ alignItems: 'flex-start' }}>
-        <TextField
-          label="Gallery URLs"
-          error={Boolean(galleryError)}
-          helperText={galleryError ?? 'Comma separated URLs or upload multiple images'}
-          fullWidth
-          {...galleryFieldProps}
-        />
-        <Button variant="outlined" component="label" disabled={isUploadingGallery} sx={{ height: 40, mt: 0.5, whiteSpace: 'nowrap' }}>
+      <Stack spacing={1}>
+        <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+          Gallery Images
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Upload one or many gallery images. They will be previewed here.
+        </Typography>
+        <Stack direction="row" spacing={1.5} sx={{ alignItems: 'flex-start' }}>
+          <Button variant="outlined" component="label" disabled={isUploadingGallery} sx={{ height: 40, whiteSpace: 'nowrap' }}>
           {isUploadingGallery ? 'Uploading...' : 'Choose Gallery'}
           <input type="file" accept="image/*" multiple hidden onChange={(event) => void onGalleryUpload(event)} />
         </Button>
+        </Stack>
       </Stack>
 
       {galleryItems.length > 0 ? (

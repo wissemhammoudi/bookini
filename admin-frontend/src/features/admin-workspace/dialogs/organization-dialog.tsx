@@ -136,13 +136,12 @@ export const OrganizationDialog = ({
             onCoverUpload={handleCoverUpload}
             onClearLogo={clearLogo}
             onClearCover={clearCover}
-            logoFieldProps={register('logo') as Record<string, unknown>}
-            coverFieldProps={register('cover_image') as Record<string, unknown>}
-            logoError={errors.logo?.message}
-            coverError={errors.cover_image?.message}
             hasPendingLogo={hasPendingLogo}
             hasPendingCover={hasPendingCover}
           />
+
+          <input type="hidden" {...register('logo')} />
+          <input type="hidden" {...register('cover_image')} />
 
           <TextField label="Social Links" {...register('social_links')} error={Boolean(errors.social_links)} helperText={errors.social_links?.message ?? 'Comma separated URLs'} />
         </Stack>

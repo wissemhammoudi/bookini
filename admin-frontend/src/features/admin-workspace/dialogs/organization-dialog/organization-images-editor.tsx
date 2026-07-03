@@ -1,4 +1,4 @@
-import { Box, Button, Paper, Stack, TextField } from '@mui/material'
+import { Box, Button, Paper, Stack, Typography } from '@mui/material'
 
 import { resolveImageUrl } from '@/features/admin-workspace/dialogs/shared'
 
@@ -11,10 +11,6 @@ type OrganizationImagesEditorProps = {
   onCoverUpload: (event: React.ChangeEvent<HTMLInputElement>) => Promise<void>
   onClearLogo: () => void
   onClearCover: () => void
-  logoFieldProps: Record<string, unknown>
-  coverFieldProps: Record<string, unknown>
-  logoError?: string
-  coverError?: string
   hasPendingLogo?: boolean
   hasPendingCover?: boolean
 }
@@ -28,21 +24,24 @@ export function OrganizationImagesEditor({
   onCoverUpload,
   onClearLogo,
   onClearCover,
-  logoFieldProps,
-  coverFieldProps,
-  logoError,
-  coverError,
   hasPendingLogo = false,
   hasPendingCover = false,
 }: OrganizationImagesEditorProps) {
   return (
     <>
-      <Stack direction="row" spacing={1.5} sx={{ alignItems: 'flex-start' }}>
-        <TextField label="Logo URL" error={Boolean(logoError)} helperText={logoError ?? 'Optional URL or upload an image'} fullWidth {...logoFieldProps} />
-        <Button variant="outlined" component="label" disabled={isUploadingLogo} sx={{ height: 40, mt: 0.5, whiteSpace: 'nowrap' }}>
+      <Stack spacing={1}>
+        <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+          Organization Logo
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Upload your logo image and it will be saved when you submit this form.
+        </Typography>
+        <Stack direction="row" spacing={1.5} sx={{ alignItems: 'flex-start' }}>
+          <Button variant="outlined" component="label" disabled={isUploadingLogo} sx={{ height: 40, whiteSpace: 'nowrap' }}>
           {isUploadingLogo ? 'Uploading...' : logoValue ? 'Replace' : 'Choose Image'}
           <input type="file" accept="image/*" hidden onChange={(event) => void onLogoUpload(event)} />
         </Button>
+        </Stack>
       </Stack>
 
       {logoValue ? (
@@ -63,12 +62,19 @@ export function OrganizationImagesEditor({
         </Paper>
       ) : null}
 
-      <Stack direction="row" spacing={1.5} sx={{ alignItems: 'flex-start' }}>
-        <TextField label="Cover Image URL" error={Boolean(coverError)} helperText={coverError ?? 'Optional URL or upload an image'} fullWidth {...coverFieldProps} />
-        <Button variant="outlined" component="label" disabled={isUploadingCover} sx={{ height: 40, mt: 0.5, whiteSpace: 'nowrap' }}>
+      <Stack spacing={1}>
+        <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+          Cover Image
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Upload a cover image. You will see a preview instead of a URL field.
+        </Typography>
+        <Stack direction="row" spacing={1.5} sx={{ alignItems: 'flex-start' }}>
+          <Button variant="outlined" component="label" disabled={isUploadingCover} sx={{ height: 40, whiteSpace: 'nowrap' }}>
           {isUploadingCover ? 'Uploading...' : coverValue ? 'Replace' : 'Choose Image'}
           <input type="file" accept="image/*" hidden onChange={(event) => void onCoverUpload(event)} />
         </Button>
+        </Stack>
       </Stack>
 
       {coverValue ? (

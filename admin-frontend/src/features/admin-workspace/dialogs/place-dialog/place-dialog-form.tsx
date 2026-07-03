@@ -102,13 +102,12 @@ export function PlaceDialogForm({
         onGalleryUpload={onGalleryUpload}
         onClearCover={onClearCover}
         onRemoveGalleryItem={onRemoveGalleryItem}
-        coverFieldProps={register('cover_image') as Record<string, unknown>}
-        galleryFieldProps={register('gallery') as Record<string, unknown>}
-        coverError={errors.cover_image?.message}
-        galleryError={errors.gallery?.message}
         hasPendingCover={hasPendingCover}
         pendingGalleryCount={pendingGalleryCount}
       />
+
+      <input type="hidden" {...register('cover_image')} />
+      <input type="hidden" {...register('gallery')} />
 
       <TextField label="Feature Tags" {...register('features')} error={Boolean(errors.features)} helperText={errors.features?.message ?? 'Comma separated values'} />
       <TextField select label="Status" defaultValue="ACTIVE" {...register('status')} error={Boolean(errors.status)} helperText={errors.status?.message}>
