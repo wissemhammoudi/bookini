@@ -28,7 +28,11 @@ export const LogsSection = () => {
   }
 
   if (logsQuery.isError) {
-    return <Alert severity="error">Could not load audit logs from the platform.</Alert>
+    return (
+      <Alert severity="error">
+        Could not load audit logs from the platform. Please refresh this page or sign in again if the issue persists.
+      </Alert>
+    )
   }
 
   return (

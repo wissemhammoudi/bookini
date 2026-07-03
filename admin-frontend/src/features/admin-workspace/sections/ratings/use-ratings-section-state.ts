@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useEffect, useMemo, useState } from 'react'
+import { useQueries, useQuery } from '@tanstack/react-query'
 
 import {
   getAdminPublicProfile,
@@ -34,14 +34,49 @@ export function useRatingsSectionState() {
     enabled: isSuperAdmin,
   })
 
+  const admins = adminsQuery.data ?? []
+
+  const adminPreviewQueries = useQueries({
+    queries: isSuperAdmin
+      ? admins.map((admin) => ({
+          queryKey: ['workspace-admin-preview-profile', admin.id],
+          queryFn: () => getAdminPublicProfile(admin.id),
+          staleTime: 60_000,
+        }))
+      : [],
+  })
+
   const defaultSuperAdminTarget = useMemo(() => {
     if (!isSuperAdmin) return ''
-    const admins = adminsQuery.data ?? []
+
+    const profilesByAdminId = new Map(
+      admins.map((admin, index) => [admin.id, adminPreviewQueries[index]?.data]),
+    )
+
+    const ratedAdmin = admins.find((item) => {
+      if (item.role !== 'ADMIN') {
+        return false
+      }
+      const profile = profilesByAdminId.get(item.id)
+      return (profile?.rating_count ?? 0) > 0
+    })
+    if (ratedAdmin) return ratedAdmin.id
+
+    const adminWithSpaces = admins.find((item) => {
+      if (item.role !== 'ADMIN') {
+        return false
+      }
+      const profile = profilesByAdminId.get(item.id)
+      return (profile?.spaces.length ?? 0) > 0
+    })
+    if (adminWithSpaces) return adminWithSpaces.id
+
     const firstOrgAdmin = admins.find((item) => item.role === 'ADMIN')
     if (firstOrgAdmin) return firstOrgAdmin.id
+
     const firstOtherAdmin = admins.find((item) => item.id !== currentAdminId)
     return firstOtherAdmin?.id ?? currentAdminId
-  }, [isSuperAdmin, adminsQuery.data, currentAdminId])
+  }, [isSuperAdmin, admins, adminPreviewQueries, currentAdminId])
 
   const adminId = isSuperAdmin
     ? (inspectedAdminId || defaultSuperAdminTarget)
@@ -79,6 +114,12 @@ export function useRatingsSectionState() {
   const adminRatings = adminRatingsQuery.data?.items ?? []
   const floorReviews = floorReviewsQuery.data?.reviews ?? []
 
+  useEffect(() => {
+    if (!selectedFloorId && floorOptions.length > 0) {
+      setSelectedFloorId(floorOptions[0].id)
+    }
+  }, [selectedFloorId, floorOptions])
+
   const topRatedFloor = useMemo(() => {
     if (!floorOptions.length) {
       return null
@@ -96,7 +137,7 @@ export function useRatingsSectionState() {
     isSuperAdmin,
     inspectedAdminId: isSuperAdmin ? (inspectedAdminId || defaultSuperAdminTarget) : adminId,
     setInspectedAdminId,
-    admins: adminsQuery.data ?? [],
+    admins,
     selectedFloorId,
     setSelectedFloorId,
     adminRatingsPage,

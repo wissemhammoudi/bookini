@@ -65,13 +65,11 @@ export const RatingsSection = () => {
           }}
           helperText="Super Admin view: choose which admin account to inspect."
         >
-          {admins
-            .filter((item) => item.role === 'ADMIN' || item.id === inspectedAdminId)
-            .map((item) => (
-              <MenuItem key={item.id} value={item.id}>
-                {item.full_name} ({item.email})
-              </MenuItem>
-            ))}
+          {admins.map((item) => (
+            <MenuItem key={item.id} value={item.id}>
+              {item.full_name} ({item.email})
+            </MenuItem>
+          ))}
         </TextField>
       ) : null}
 
