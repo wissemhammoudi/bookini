@@ -13,7 +13,8 @@ describe('Protected routes', () => {
   it('redirects unauthenticated users to login page', async () => {
     renderApp()
 
-    expect(await screen.findByText(/sign in to access your workspace/i)).toBeInTheDocument()
+    expect(await screen.findByText(/welcome back/i)).toBeInTheDocument()
+    expect(screen.getByText(/sign in to manage organizations, places, floors, and reservations/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument()
   })
 })

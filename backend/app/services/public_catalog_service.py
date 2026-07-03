@@ -288,7 +288,11 @@ class PublicCatalogService:
                 place.organization_id,
             )
             media = self._resolve_media(place.name, organization_name, place.address)
-            cover_image = str(place.cover_image) if place.cover_image else media["cover_image"]
+            cover_image = (
+                str(place.cover_image)
+                if place.cover_image
+                else media["cover_image"]
+            )
             gallery = [str(item) for item in place.gallery] or media["gallery"]
 
             room_entry = {
