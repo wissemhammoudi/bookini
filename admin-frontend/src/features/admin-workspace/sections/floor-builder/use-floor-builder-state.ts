@@ -116,7 +116,7 @@ export function useFloorBuilderState({ floor, desksState, onDesksStateChange }: 
     if (targetImageUrl && pendingImageFilesByUrl[targetImageUrl]) {
       URL.revokeObjectURL(targetImageUrl)
       setPendingImageFilesByUrl((previous) => {
-        const { [targetImageUrl]: _ignored, ...rest } = previous
+        const { [targetImageUrl]: _removed, ...rest } = previous
         return rest
       })
     }
@@ -150,7 +150,7 @@ export function useFloorBuilderState({ floor, desksState, onDesksStateChange }: 
       if (!pendingImageFilesByUrl[url]) return
       URL.revokeObjectURL(url)
       setPendingImageFilesByUrl((previous) => {
-        const { [url]: _ignored, ...rest } = previous
+        const { [url]: _removed, ...rest } = previous
         return rest
       })
     })
@@ -193,7 +193,7 @@ export function useFloorBuilderState({ floor, desksState, onDesksStateChange }: 
     } catch (error) {
       const uploadError = error as { response?: { data?: { message?: string } }; message?: string }
       setRoomImageError(uploadError.response?.data?.message || uploadError.message || 'Failed to upload room images')
-      throw new Error('Room images upload failed')
+      throw new Error('Room images upload failed', { cause: error })
     } finally {
       setIsUploadingRoomImages(false)
     }

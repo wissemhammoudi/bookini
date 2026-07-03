@@ -1,12 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { ChangeEvent } from 'react'
-import type { UseFormGetValues, UseFormReset, UseFormSetValue, UseFormWatch } from 'react-hook-form'
+import type { UseFormReset, UseFormSetValue, UseFormWatch } from 'react-hook-form'
 
 import { uploadImageRequest } from '@/lib/api'
 import type { PlaceFormValues, AvailabilitySlot } from '@/features/admin-workspace/dialogs/shared'
 
 type UsePlaceDialogStateParams = {
-  getValues: UseFormGetValues<PlaceFormValues>
   setValue: UseFormSetValue<PlaceFormValues>
   watch: UseFormWatch<PlaceFormValues>
   reset: UseFormReset<PlaceFormValues>
@@ -19,7 +18,7 @@ const defaultAvailabilitySlot: AvailabilitySlot = {
   end_time: '17:00',
 }
 
-export function usePlaceDialogState({ getValues, setValue, watch, reset, onClose }: UsePlaceDialogStateParams) {
+export function usePlaceDialogState({ setValue, watch, reset, onClose }: UsePlaceDialogStateParams) {
   const [isUploadingCover, setIsUploadingCover] = useState(false)
   const [isUploadingGallery, setIsUploadingGallery] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)

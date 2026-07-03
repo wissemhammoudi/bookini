@@ -22,7 +22,6 @@ export const PlaceDialog = ({
     register,
     reset,
     setValue,
-    getValues,
     watch,
     formState: { errors },
   } = useForm<PlaceFormValues>({
@@ -63,7 +62,6 @@ export const PlaceDialog = ({
     removeAvailabilitySlot,
     handleClose,
   } = usePlaceDialogState({
-    getValues,
     setValue,
     watch,
     reset,

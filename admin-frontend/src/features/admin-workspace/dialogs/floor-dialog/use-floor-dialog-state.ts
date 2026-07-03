@@ -119,7 +119,7 @@ export function useFloorDialogState({ value, places, title, getValues, setValue,
     } catch (err) {
       const typedError = err as { response?: { data?: { message?: string } }; message?: string }
       setUploadError(typedError.response?.data?.message || typedError.message || 'Failed to upload blueprint')
-      throw new Error('Blueprint upload failed')
+      throw new Error('Blueprint upload failed', { cause: err })
     } finally {
       setIsUploadingBlueprint(false)
     }
