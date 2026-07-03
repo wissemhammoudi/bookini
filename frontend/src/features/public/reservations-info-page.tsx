@@ -57,7 +57,7 @@ export const ReservationsInfoPage = () => {
           >
             <Box
               component="img"
-              src="/how-it-works.webp"
+              src="/how-it-works.svg"
               alt="Booking process visualization"
               sx={{
                 position: 'absolute',

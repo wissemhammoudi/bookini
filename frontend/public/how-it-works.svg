@@ -1,0 +1,46 @@
+<svg width="1200" height="900" viewBox="0 0 1200 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="900" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#E8F2FF"/>
+      <stop offset="1" stop-color="#E7FFF6"/>
+    </linearGradient>
+    <linearGradient id="card" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#F8FAFC"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="900" rx="32" fill="url(#bg)"/>
+
+  <rect x="110" y="220" width="260" height="210" rx="22" fill="url(#card)" stroke="#BFD5FF" stroke-width="2"/>
+  <rect x="470" y="220" width="260" height="210" rx="22" fill="url(#card)" stroke="#BFD5FF" stroke-width="2"/>
+  <rect x="830" y="220" width="260" height="210" rx="22" fill="url(#card)" stroke="#BFD5FF" stroke-width="2"/>
+
+  <circle cx="240" cy="280" r="26" fill="#0059B3"/>
+  <circle cx="600" cy="280" r="26" fill="#009C7A"/>
+  <circle cx="960" cy="280" r="26" fill="#FF8A00"/>
+
+  <text x="240" y="288" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="22" font-weight="700" fill="#FFFFFF">1</text>
+  <text x="600" y="288" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="22" font-weight="700" fill="#FFFFFF">2</text>
+  <text x="960" y="288" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="22" font-weight="700" fill="#FFFFFF">3</text>
+
+  <text x="240" y="333" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="700" fill="#0F172A">Pick Space</text>
+  <text x="600" y="333" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="700" fill="#0F172A">Choose Slot</text>
+  <text x="960" y="333" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="700" fill="#0F172A">Confirm</text>
+
+  <text x="240" y="367" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" fill="#334155">Browse available spaces</text>
+  <text x="600" y="367" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" fill="#334155">Set date and time</text>
+  <text x="960" y="367" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" fill="#334155">Submit reservation</text>
+
+  <path d="M376 325H438" stroke="#7AA6E5" stroke-width="8" stroke-linecap="round"/>
+  <path d="M736 325H798" stroke="#7AA6E5" stroke-width="8" stroke-linecap="round"/>
+
+  <rect x="270" y="520" width="660" height="240" rx="24" fill="#FFFFFF" stroke="#CDE1FF" stroke-width="2"/>
+  <rect x="310" y="565" width="220" height="16" rx="8" fill="#E2E8F0"/>
+  <rect x="310" y="600" width="420" height="16" rx="8" fill="#E2E8F0"/>
+  <rect x="310" y="635" width="360" height="16" rx="8" fill="#E2E8F0"/>
+  <rect x="750" y="570" width="140" height="64" rx="12" fill="#0059B3"/>
+  <text x="820" y="609" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="22" font-weight="700" fill="#FFFFFF">Book</text>
+
+  <text x="600" y="120" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="48" font-weight="800" fill="#0F172A">Booking Process</text>
+</svg>
