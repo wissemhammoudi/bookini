@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
+import logging
 
 from app.core.responses import success_response
 from app.infrastructure.session import get_db_session
@@ -10,16 +11,126 @@ from app.services.admin_workspace_dashboard_service import (
 from app.services.admin_workspace_state_store import AdminWorkspaceStateStore
 
 router = APIRouter(tags=["admin"])
+logger = logging.getLogger(__name__)
+
+
+def _build_workspace_fallback(current_user_role: object) -> dict[str, object]:
+    state = AdminWorkspaceStateStore.copy_state()
+    role_value = (
+        current_user_role.value
+        if hasattr(current_user_role, "value")
+        else str(current_user_role)
+    )
+
+    users = [item.model_dump(mode="json") for item in state.users]
+    organizations = [item.model_dump(mode="json") for item in state.organizations]
+    places = [item.model_dump(mode="json") for item in state.places]
+    floors = [item.model_dump(mode="json") for item in state.floors]
+    reservations = [item.model_dump(mode="json") for item in state.reservations]
+    contact_requests = [item.model_dump(mode="json") for item in state.contact_requests]
+    settings = (
+        state.settings.model_dump(mode="json")
+        if state.settings
+        else {
+            "profile": {
+                "full_name": "Admin",
+                "email": "support@bookini.com",
+                "phone": "",
+                "title": "Admin",
+            },
+            "notifications": {
+                "email_notifications": True,
+                "sms_notifications": False,
+                "weekly_report": True,
+                "incident_alerts": True,
+            },
+            "platform": {
+                "platform_name": "Bookini Admin",
+                "support_email": "support@bookini.com",
+                "timezone": "Africa/Tunis",
+                "default_language": "en",
+            },
+            "security": {
+                "session_timeout_minutes": 45,
+                "require_mfa_for_admins": True,
+                "password_rotation_days": 90,
+            },
+        }
+    )
+
+    dashboard = {
+        "stats": [
+            {
+                "key": "organizations",
+                "label": "Total Organizations",
+                "value": len(organizations),
+                "trend": "Fallback data",
+            },
+            {
+                "key": "places",
+                "label": "Total Places",
+                "value": len(places),
+                "trend": "Fallback data",
+            },
+            {
+                "key": "floors",
+                "label": "Total Floors",
+                "value": len(floors),
+                "trend": "Fallback data",
+            },
+            {
+                "key": "reservations",
+                "label": "Total Reservations",
+                "value": len(reservations),
+                "trend": "Fallback data",
+            },
+            {
+                "key": "contacts",
+                "label": "Contact Requests",
+                "value": len(contact_requests),
+                "trend": "Fallback data",
+            },
+        ],
+        "reservations_by_month": [],
+        "most_reserved_places": [],
+        "organization_activity": [],
+        "recent_activity": [
+            item.model_dump(mode="json")
+            for item in state.recent_activity[:6]
+        ],
+    }
+
+    return {
+        "role": role_value,
+        "dashboard": dashboard,
+        "collections": {
+            "users": users,
+            "organizations": organizations,
+            "places": places,
+            "floors": floors,
+            "reservations": reservations,
+            "contact_requests": contact_requests,
+            "settings": settings,
+        },
+    }
 
 
 @router.get("/workspace")
 async def get_workspace(
     current_user: AdminAccessUser,
 ) -> dict[str, object]:
-    workspace = AdminWorkspaceDashboardService.get_workspace(current_user.role)
+    try:
+        workspace = AdminWorkspaceDashboardService.get_workspace(current_user.role)
+        payload = workspace.model_dump(mode="json")
+        message = "Admin workspace retrieved"
+    except Exception as workspace_error:  # pragma: no cover - defensive fallback
+        logger.exception("Workspace retrieval failed", exc_info=workspace_error)
+        payload = _build_workspace_fallback(current_user.role)
+        message = "Admin workspace retrieved (fallback mode)"
+
     return success_response(
-        message="Admin workspace retrieved",
-        data=workspace.model_dump(mode="json"),
+        message=message,
+        data=payload,
     )
 
 
