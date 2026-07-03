@@ -116,8 +116,9 @@ export function useFloorBuilderState({ floor, desksState, onDesksStateChange }: 
     if (targetImageUrl && pendingImageFilesByUrl[targetImageUrl]) {
       URL.revokeObjectURL(targetImageUrl)
       setPendingImageFilesByUrl((previous) => {
-        const { [targetImageUrl]: _removed, ...rest } = previous
-        return rest
+        const next = { ...previous }
+        delete next[targetImageUrl]
+        return next
       })
     }
 
@@ -150,8 +151,9 @@ export function useFloorBuilderState({ floor, desksState, onDesksStateChange }: 
       if (!pendingImageFilesByUrl[url]) return
       URL.revokeObjectURL(url)
       setPendingImageFilesByUrl((previous) => {
-        const { [url]: _removed, ...rest } = previous
-        return rest
+        const next = { ...previous }
+        delete next[url]
+        return next
       })
     })
 
