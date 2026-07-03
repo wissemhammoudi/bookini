@@ -1,4 +1,4 @@
-import { Alert, Stack } from '@mui/material'
+import { Alert, MenuItem, Stack, TextField } from '@mui/material'
 
 import { SectionHeader } from '@/features/admin-workspace/admin-workspace-utils'
 import { AdminOverviewCard } from '@/features/admin-workspace/sections/ratings/admin-overview-card'
@@ -8,6 +8,10 @@ import { useRatingsSectionState } from '@/features/admin-workspace/sections/rati
 
 export const RatingsSection = () => {
   const {
+    isSuperAdmin,
+    inspectedAdminId,
+    setInspectedAdminId,
+    admins,
     selectedFloorId,
     setSelectedFloorId,
     adminRatingsPage,
@@ -44,6 +48,32 @@ export const RatingsSection = () => {
         title="Ratings & Reviews"
         description="Monitor your admin reputation and customer feedback for each space."
       />
+
+      {isSuperAdmin ? (
+        <TextField
+          select
+          fullWidth
+          label="Inspect Admin"
+          value={inspectedAdminId}
+          onChange={(event) => {
+            setInspectedAdminId(event.target.value)
+            setSelectedFloorId('')
+            setAdminRatingsPage(0)
+            setAdminRatingsMinFilter(0)
+            setFloorReviewsPage(0)
+            setFloorReviewsMinFilter(0)
+          }}
+          helperText="Super Admin view: choose which admin account to inspect."
+        >
+          {admins
+            .filter((item) => item.role === 'ADMIN' || item.id === inspectedAdminId)
+            .map((item) => (
+              <MenuItem key={item.id} value={item.id}>
+                {item.full_name} ({item.email})
+              </MenuItem>
+            ))}
+        </TextField>
+      ) : null}
 
       <AdminOverviewCard
         adminName={profileQuery.data.admin.full_name}

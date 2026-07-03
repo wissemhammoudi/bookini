@@ -4,11 +4,13 @@ import { useQuery } from '@tanstack/react-query'
 import {
   getAdminPublicProfile,
   getCurrentUserProfile,
+  listAdmins,
   listAdminRatingsByAdmin,
   listFloorReviewsByFloor,
 } from '@/lib/api'
 
 export function useRatingsSectionState() {
+  const [inspectedAdminId, setInspectedAdminId] = useState<string>('')
   const [selectedFloorId, setSelectedFloorId] = useState<string>('')
   const [adminRatingsPage, setAdminRatingsPage] = useState(0)
   const [adminRatingsMinFilter, setAdminRatingsMinFilter] = useState(0)
@@ -23,7 +25,27 @@ export function useRatingsSectionState() {
     queryFn: getCurrentUserProfile,
   })
 
-  const adminId = currentUserQuery.data?.id ?? ''
+  const isSuperAdmin = currentUserQuery.data?.role === 'SUPER_ADMIN'
+  const currentAdminId = currentUserQuery.data?.id ?? ''
+
+  const adminsQuery = useQuery({
+    queryKey: ['workspace-admins-list'],
+    queryFn: listAdmins,
+    enabled: isSuperAdmin,
+  })
+
+  const defaultSuperAdminTarget = useMemo(() => {
+    if (!isSuperAdmin) return ''
+    const admins = adminsQuery.data ?? []
+    const firstOrgAdmin = admins.find((item) => item.role === 'ADMIN')
+    if (firstOrgAdmin) return firstOrgAdmin.id
+    const firstOtherAdmin = admins.find((item) => item.id !== currentAdminId)
+    return firstOtherAdmin?.id ?? currentAdminId
+  }, [isSuperAdmin, adminsQuery.data, currentAdminId])
+
+  const adminId = isSuperAdmin
+    ? (inspectedAdminId || defaultSuperAdminTarget)
+    : currentAdminId
 
   const profileQuery = useQuery({
     queryKey: ['workspace-admin-profile', adminId],
@@ -71,6 +93,10 @@ export function useRatingsSectionState() {
   }, [floorOptions])
 
   return {
+    isSuperAdmin,
+    inspectedAdminId: isSuperAdmin ? (inspectedAdminId || defaultSuperAdminTarget) : adminId,
+    setInspectedAdminId,
+    admins: adminsQuery.data ?? [],
     selectedFloorId,
     setSelectedFloorId,
     adminRatingsPage,
