@@ -175,7 +175,7 @@ export function useFloorDialogState({ value, places, title, getValues, setValue,
   return {
     isUploadingBlueprint,
     uploadError,
-    blueprintValue: blueprintPreviewUrl ?? getValues('blueprint_image'),
+    blueprintValue: blueprintPreviewUrl ?? getValues('blueprint_image') ?? '',
     hasPendingBlueprint: Boolean(pendingBlueprintFile),
     buildFloorOpen,
     builderDesks,
