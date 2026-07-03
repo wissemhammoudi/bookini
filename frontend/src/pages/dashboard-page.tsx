@@ -66,7 +66,10 @@ export const DashboardPage = () => {
   const availableFloors =
     floorsQuery.data?.filter((item) => item.status === 'AVAILABLE').length ?? 0
 
-  const publicBookings = publicBookingsQuery.data ?? []
+  const publicBookings = useMemo(
+    () => publicBookingsQuery.data ?? [],
+    [publicBookingsQuery.data],
+  )
   const activePublicBookings = publicBookings.filter(
     (item) => item.status === 'PENDING' || item.status === 'CONFIRMED',
   )

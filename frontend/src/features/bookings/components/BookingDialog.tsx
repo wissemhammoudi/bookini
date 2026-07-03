@@ -109,11 +109,10 @@ export const BookingDialog = ({
     ? `Participant count must be between 1 and ${roomCapacity}.`
     : null
 
-  useEffect(() => {
-    if (!open) {
-      setStep('details')
-    }
-  }, [open])
+  const handleDialogClose = () => {
+    setStep('details')
+    onClose()
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -149,7 +148,7 @@ export const BookingDialog = ({
   return (
     <Dialog
       open={open}
-      onClose={onClose}
+      onClose={handleDialogClose}
       maxWidth="sm"
       fullWidth
       sx={{
@@ -237,7 +236,7 @@ export const BookingDialog = ({
         <DialogActions sx={{ px: 3, pb: 3, pt: 0 }}>
           {step === 'details' ? (
             <>
-              <Button onClick={onClose} disabled={isLoading} variant="outlined">
+              <Button onClick={handleDialogClose} disabled={isLoading} variant="outlined">
                 Cancel
               </Button>
               <Button
