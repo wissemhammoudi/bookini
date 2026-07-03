@@ -1,10 +1,13 @@
 import logging
+from collections.abc import Iterable
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.responses import success_response
+from app.domain.enums import FloorStatus
 from app.infrastructure.session import get_db_session
+from app.repositories.floor_repository import FloorRepository
 from app.presentation.admin_workspace_common import AdminAccessUser
 from app.services.admin_workspace_dashboard_service import (
     AdminWorkspaceDashboardService,
@@ -13,6 +16,87 @@ from app.services.admin_workspace_state_store import AdminWorkspaceStateStore
 
 router = APIRouter(tags=["admin"])
 logger = logging.getLogger(__name__)
+
+
+def _estimate_place_price(capacity: int) -> float:
+    if capacity <= 10:
+        return 20.0
+    if capacity <= 25:
+        return 35.0
+    if capacity <= 50:
+        return 55.0
+    return 75.0
+
+
+def _map_floor_status_to_workspace_status(status: FloorStatus) -> str:
+    if status == FloorStatus.MAINTENANCE:
+        return "SUSPENDED"
+    return "ACTIVE"
+
+
+def _normalize_building_id(building: str) -> str:
+    normalized = "-".join(building.lower().split())
+    return normalized or "default-building"
+
+
+def _normalize_role_value(role: object) -> str:
+    raw_role = getattr(role, "value", role)
+    return str(raw_role).upper()
+
+
+def _hydrate_places_from_floors(payload: dict[str, object], floors: Iterable[object]) -> None:
+    collections = payload.get("collections")
+    if not isinstance(collections, dict):
+        return
+
+    mapped_places: list[dict[str, object]] = []
+    mapped_floors: list[dict[str, object]] = []
+
+    for floor in floors:
+        status = _map_floor_status_to_workspace_status(floor.status)
+        organization_id = _normalize_building_id(floor.building)
+        place_id = str(floor.id)
+
+        mapped_places.append(
+            {
+                "id": place_id,
+                "organization_id": organization_id,
+                "name": floor.name,
+                "description": floor.description or f"Space in {floor.building}",
+                "category": floor.building,
+                "capacity": floor.capacity,
+                "address": floor.location,
+                "pricing": _estimate_place_price(floor.capacity),
+                "availability": [],
+                "cover_image": None,
+                "gallery": [],
+                "features": [],
+                "status": status,
+                "created_date": floor.created_at.isoformat(),
+            }
+        )
+
+        mapped_floors.append(
+            {
+                "id": place_id,
+                "place_id": place_id,
+                "floor_name": floor.name,
+                "floor_number": floor.floor_number,
+                "floor_size_sqm": 100.0,
+                "floor_shape": "RECTANGLE",
+                "capacity": floor.capacity,
+                "pricing": _estimate_place_price(floor.capacity),
+                "description": floor.description or "",
+                "blueprint_image": None,
+                "reservation_areas": [],
+                "status": status,
+                "created_date": floor.created_at.isoformat(),
+            }
+        )
+
+    if mapped_places:
+        collections["places"] = mapped_places
+        collections["floors"] = mapped_floors
 
 
 def _build_workspace_fallback(current_user_role: object) -> dict[str, object]:
@@ -119,14 +203,42 @@ def _build_workspace_fallback(current_user_role: object) -> dict[str, object]:
 @router.get("/workspace")
 async def get_workspace(
     current_user: AdminAccessUser,
+    session: AsyncSession = Depends(get_db_session),
 ) -> dict[str, object]:
+    role_value = _normalize_role_value(current_user.role)
+
+    async def _load_relevant_floors() -> list[object]:
+        floor_repository = FloorRepository(session)
+        if role_value == "SUPER_ADMIN":
+            return await floor_repository.list_floors(
+                search=None,
+                status=None,
+                building=None,
+                floor_number=None,
+                include_deleted=False,
+            )
+        return await floor_repository.list_floors_by_admin(
+            admin_id=str(current_user.id),
+            include_deleted=False,
+        )
+
     try:
         workspace = AdminWorkspaceDashboardService.get_workspace(current_user.role)
         payload = workspace.model_dump(mode="json")
+        real_floors = await _load_relevant_floors()
+        _hydrate_places_from_floors(payload, real_floors)
         message = "Admin workspace retrieved"
     except Exception as workspace_error:  # pragma: no cover - defensive fallback
         logger.exception("Workspace retrieval failed", exc_info=workspace_error)
         payload = _build_workspace_fallback(current_user.role)
+        try:
+            real_floors = await _load_relevant_floors()
+            _hydrate_places_from_floors(payload, real_floors)
+        except Exception as hydration_error:  # pragma: no cover
+            logger.exception(
+                "Workspace place hydration failed",
+                exc_info=hydration_error,
+            )
         message = "Admin workspace retrieved (fallback mode)"
 
     return success_response(
