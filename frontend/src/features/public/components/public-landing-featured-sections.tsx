@@ -63,7 +63,7 @@ export const PublicLandingFeaturedSections = ({
                     }}
                   />
                   <Chip
-                    label={`${space.price}/hr`}
+                    label={`${space.price} TND/hour`}
                     sx={{
                       position: 'absolute',
                       top: 16,

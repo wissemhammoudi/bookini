@@ -9,6 +9,7 @@ export const PriceSummaryCard = ({
   originalPrice,
   discount,
   days,
+  durationHours,
   hourlyRate,
   formData,
 }: {
@@ -17,14 +18,13 @@ export const PriceSummaryCard = ({
   originalPrice: number
   discount: number
   days: number
+  durationHours: number
   hourlyRate: number
   formData: BookingFormData
 }) => {
-  const startHour = Number.parseInt(formData.startTime.split(':')[0] ?? '0', 10)
-  const endHour = Number.parseInt(formData.endTime.split(':')[0] ?? '0', 10)
-  const durationHours = Number.isFinite(startHour) && Number.isFinite(endHour)
-    ? Math.max(0, endHour - startHour)
-    : 0
+  const durationLabel = durationHours % 1 === 0
+    ? `${durationHours.toFixed(0)}h`
+    : `${durationHours.toFixed(1)}h`
 
   return (
     <Paper
@@ -76,7 +76,7 @@ export const PriceSummaryCard = ({
           <Chip
             label={
               formData.startTime && formData.endTime
-                ? `${durationHours}h${days > 1 ? ` x ${days} days` : ''} selected`
+                ? `${durationLabel}${days > 1 ? ` x ${days} days` : ''} selected`
                 : 'Pick time range'
             }
             variant="outlined"

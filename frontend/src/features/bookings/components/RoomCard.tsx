@@ -155,7 +155,7 @@ export const RoomCard = ({
                 {room.price} TND
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                per hour
+                TND/hour
               </Typography>
             </Stack>
             <Stack direction="row" spacing={1}>

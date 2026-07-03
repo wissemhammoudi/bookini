@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { useMemo, useState } from 'react'
 import {
   Alert,
   Button,
@@ -55,6 +56,7 @@ export const BookingDialog = ({
   error,
   initialBookingDate,
 }: BookingDialogProps) => {
+  const [step, setStep] = useState<'details' | 'review'>('details')
   const { formData, handleInputChange, resetForm } = useBookingForm()
   const { calculatePrice } = usePriceCalculation()
 
@@ -72,14 +74,52 @@ export const BookingDialog = ({
     }
   }, [open, initialBookingDate, handleInputChange])
 
-  const { price, originalPrice, discount, days } = room
+  const { price, originalPrice, discount, days, durationHours } = room
     ? calculatePrice(hourlyRate, formData.startTime, formData.endTime, selectedPlan, formData.bookingDate, formData.endDate)
-    : { price: 0, originalPrice: 0, discount: 0, days: 1 }
+    : { price: 0, originalPrice: 0, discount: 0, days: 1, durationHours: 0 }
+
+  const hasValidDateRange = useMemo(() => {
+    if (!formData.bookingDate) return false
+    if (!formData.endDate) return true
+    return formData.endDate >= formData.bookingDate
+  }, [formData.bookingDate, formData.endDate])
+
+  const hasValidTimeRange = durationHours > 0
+
+  const isParticipantCountValid = useMemo(() => {
+    if (!formData.participants) return true
+    const participants = Number.parseInt(formData.participants, 10)
+    if (!Number.isFinite(participants) || participants <= 0) return false
+    return roomCapacity <= 0 || participants <= roomCapacity
+  }, [formData.participants, roomCapacity])
+
+  const isDetailsStepValid = Boolean(
+    formData.bookingDate
+      && formData.startTime
+      && formData.endTime
+      && formData.guestName.trim()
+      && formData.guestEmail.trim()
+      && formData.guestPhone.trim()
+      && hasValidDateRange
+      && hasValidTimeRange
+      && isParticipantCountValid,
+  )
+
+  const participantRangeMessage = !isParticipantCountValid
+    ? `Participant count must be between 1 and ${roomCapacity}.`
+    : null
+
+  useEffect(() => {
+    if (!open) {
+      setStep('details')
+    }
+  }, [open])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (!room) return
+    if (!isDetailsStepValid) return
 
     const payload = {
       ...formData,
@@ -101,6 +141,7 @@ export const BookingDialog = ({
     const result = await onSubmit(payload)
     if (result !== false) {
       resetForm()
+      setStep('details')
       onClose()
     }
   }
@@ -138,6 +179,25 @@ export const BookingDialog = ({
                 {error}
               </Alert>
             ) : null}
+
+            {!hasValidDateRange ? (
+              <Alert severity="warning" sx={{ borderRadius: 2 }}>
+                End date must be greater than or equal to start date.
+              </Alert>
+            ) : null}
+
+            {formData.startTime && formData.endTime && !hasValidTimeRange ? (
+              <Alert severity="warning" sx={{ borderRadius: 2 }}>
+                End time must be after start time.
+              </Alert>
+            ) : null}
+
+            {participantRangeMessage ? (
+              <Alert severity="warning" sx={{ borderRadius: 2 }}>
+                {participantRangeMessage}
+              </Alert>
+            ) : null}
+
             <SelectedSpaceCard
               room={room}
               resolvedFloor={resolvedFloor}
@@ -149,11 +209,17 @@ export const BookingDialog = ({
               isLight={isLight}
             />
 
-            <BookingFormFields
-              formData={formData}
-              handleInputChange={handleInputChange}
-              roomCapacity={roomCapacity}
-            />
+            {step === 'details' ? (
+              <BookingFormFields
+                formData={formData}
+                handleInputChange={handleInputChange}
+                roomCapacity={roomCapacity}
+              />
+            ) : (
+              <Alert severity="info" sx={{ borderRadius: 2 }}>
+                Review your reservation details below, then confirm your booking.
+              </Alert>
+            )}
 
             <PriceSummaryCard
               isLight={isLight}
@@ -161,6 +227,7 @@ export const BookingDialog = ({
               originalPrice={originalPrice}
               discount={discount}
               days={days}
+              durationHours={durationHours}
               hourlyRate={hourlyRate}
               formData={formData}
             />
@@ -168,17 +235,36 @@ export const BookingDialog = ({
         </DialogContent>
 
         <DialogActions sx={{ px: 3, pb: 3, pt: 0 }}>
-          <Button onClick={onClose} disabled={isLoading} variant="outlined">
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            variant="contained"
-            sx={{ fontWeight: 800, px: 3 }}
-            disabled={isLoading}
-          >
-            {isLoading ? 'Confirming...' : 'Confirm Booking'}
-          </Button>
+          {step === 'details' ? (
+            <>
+              <Button onClick={onClose} disabled={isLoading} variant="outlined">
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                variant="contained"
+                sx={{ fontWeight: 800, px: 3 }}
+                disabled={!isDetailsStepValid || isLoading}
+                onClick={() => setStep('review')}
+              >
+                Continue
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button onClick={() => setStep('details')} disabled={isLoading} variant="outlined">
+                Back
+              </Button>
+              <Button
+                type="submit"
+                variant="contained"
+                sx={{ fontWeight: 800, px: 3 }}
+                disabled={!isDetailsStepValid || isLoading}
+              >
+                {isLoading ? 'Confirming...' : 'Confirm Booking'}
+              </Button>
+            </>
+          )}
         </DialogActions>
       </form>
     </Dialog>

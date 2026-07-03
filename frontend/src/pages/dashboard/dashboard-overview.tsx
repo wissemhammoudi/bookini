@@ -5,7 +5,7 @@ import HistoryIcon from '@mui/icons-material/History'
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined'
 import LocationOnIcon from '@mui/icons-material/LocationOn'
 import InfoIcon from '@mui/icons-material/Info'
-import EuroIcon from '@mui/icons-material/Euro'
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney'
 
 import type { FloorItem } from '@/lib/api'
 import type { PublicBookingListItem } from '@/lib/api'
@@ -144,7 +144,7 @@ export const DashboardOverview = ({
           <Paper elevation={0} sx={{ p: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider', background: (theme) => alpha(theme.palette.warning.main, 0.03) }}>
             <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
               <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: 'warning.main', color: 'white', display: 'flex' }}>
-                <EuroIcon />
+                <AttachMoneyIcon />
               </Box>
               <Box>
                 <Typography variant="subtitle2" color="text.secondary" sx={{ fontWeight: 600 }}>

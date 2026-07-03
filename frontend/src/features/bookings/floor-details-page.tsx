@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import {
   Box,
 } from '@mui/material'
@@ -8,24 +8,20 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useColorMode } from '@/app/use-color-mode'
 import { PublicFooter } from '@/features/public/components/public-footer'
 import { PublicNavbar } from '@/features/public/components/public-navbar'
-import { BookingDialog } from './components/BookingDialog'
 import { FloorDetailsMainContent } from './components/floor-details-main-content'
 import { FloorAreaDetailsDialog } from './components/floor-area-details-dialog'
 import {
   FloorDetailsPageLoading,
   FloorDetailsPageNotFound,
 } from './components/floor-details-page-states'
-import type { BookingFormData } from './types'
 import {
   buildCalendarDayCells,
   groupReservedByDate,
-  overlaps,
   parseFloorRoomPreviews,
   toIsoDate,
 } from './floor-details-utils'
 import type { BookingType, FloorRoomPreview } from './floor-details-utils'
 import {
-  createPublicBookingRequest,
   listPublicBookingCalendarSlots,
   listPublicRooms,
   deleteMyFloorReview,
@@ -40,8 +36,6 @@ export const FloorDetailsPage = () => {
   const { mode } = useColorMode()
   const isLight = mode === 'light'
 
-  const [selectedPlan] = useState('pay-as-you-go')
-  const [bookingDialogOpen, setBookingDialogOpen] = useState(false)
   const [bookingError, setBookingError] = useState<string | null>(null)
   const [bookingType, setBookingType] = useState<BookingType>('WHOLE_FLOOR')
   const [selectedAreaKeys, setSelectedAreaKeys] = useState<string[]>([])
@@ -106,7 +100,6 @@ export const FloorDetailsPage = () => {
     return list.length > 0 ? list : ['/navbar_logo.png']
   }, [room, floor])
 
-  const createBookingMutation = useMutation({ mutationFn: createPublicBookingRequest })
   const floorReviewsLimit = 5
 
   const floorReviewsQuery = useQuery({
@@ -166,7 +159,7 @@ export const FloorDetailsPage = () => {
   const dayCells = buildCalendarDayCells(calendarMonth, calendarStart, calendarEnd)
 
   const handleCalendarDateClick = (date: Date) => {
-    if (!room) return
+    if (!room || !floor) return
 
     const iso = toIsoDate(date)
     const hasReservations = (reservedByDate[iso] ?? []).length > 0
@@ -182,71 +175,15 @@ export const FloorDetailsPage = () => {
 
     setSelectedCalendarDate(iso)
     setBookingError(null)
-    setBookingDialogOpen(true)
-  }
 
-  const handleBookingSubmit = async (
-    data: BookingFormData & {
-      roomId: number
-      floorId?: string
-      roomKey?: string
-      bookingType?: BookingType
-      selectedAreaKeys?: string[]
-      roomName: string
-      planId: string
-      price: number
-    },
-  ) => {
-    setBookingError(null)
-
-    try {
-      const latestSlots = await listPublicBookingCalendarSlots({
-        room_id: data.roomId,
-        start_date: data.bookingDate,
-        end_date: data.endDate || data.bookingDate,
-      })
-
-      const conflictingSlot = latestSlots.find((slot) =>
-        overlaps(data.startTime, data.endTime, slot.start_time, slot.end_time),
-      )
-      if (conflictingSlot) {
-        setBookingError(
-          `This time is already reserved (${conflictingSlot.start_time} - ${conflictingSlot.end_time}). Please choose another slot.`,
-        )
-        return false
-      }
-
-      const created = await createBookingMutation.mutateAsync({
-        room_id: data.roomId,
-        floor_id: data.floorId,
-        room_key: data.roomKey,
-        booking_type: data.bookingType,
-        selected_area_keys: data.selectedAreaKeys,
-        room_name: data.roomName,
-        plan_id: data.planId,
-        guest_name: data.guestName,
-        guest_email: data.guestEmail,
-        guest_phone: data.guestPhone,
-        booking_date: data.bookingDate,
-        end_date: data.endDate || undefined,
-        start_time: data.startTime,
-        end_time: data.endTime,
-        participants: Number.parseInt(data.participants, 10) || 1,
-        notes: data.notes || undefined,
-        price: data.price,
-      })
-
-      if (!created?.booking_reference || typeof created.booking_reference !== 'string') {
-        setBookingError('Booking was created but no reference was returned. Please contact support with your booking details.')
-        return false
-      }
-
-      navigate(`/booking-confirmation/${created.booking_reference}`)
-      return true
-    } catch {
-      setBookingError('Could not complete your booking. Please verify your details and try again.')
-      return false
+    const params = new URLSearchParams()
+    params.set('date', iso)
+    params.set('type', bookingType)
+    if (bookingType === 'SELECTED_AREAS' && resolvedSelectedAreaKeys.length > 0) {
+      params.set('areas', resolvedSelectedAreaKeys.join(','))
     }
+
+    navigate(`/book/place/${room.id}/floor/${floor.id}/reserve?${params.toString()}`)
   }
 
   if (roomsQuery.isLoading) {
@@ -295,25 +232,6 @@ export const FloorDetailsPage = () => {
         onDeleteRating={() => deleteFloorReviewMutation.mutate()}
         onFloorReviewsPageChange={setFloorReviewsPage}
         onFloorReviewsMinFilterChange={setFloorReviewsMinFilter}
-      />
-
-      <BookingDialog
-        open={bookingDialogOpen}
-        room={room}
-        selectedFloorId={floor.id}
-        bookingType={bookingType}
-        selectedAreaKeys={resolvedSelectedAreaKeys}
-        areaOptions={areaOptions}
-        selectedPlan={selectedPlan}
-        isLight={isLight}
-        onClose={() => {
-          setBookingDialogOpen(false)
-          setBookingError(null)
-        }}
-        onSubmit={handleBookingSubmit}
-        isLoading={createBookingMutation.isPending}
-        error={bookingError}
-        initialBookingDate={selectedCalendarDate}
       />
 
       <FloorAreaDetailsDialog

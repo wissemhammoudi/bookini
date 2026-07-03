@@ -57,7 +57,7 @@ export const FloorDetailsHeroSection = ({
           {floor.floor_name}
         </Typography>
         <Typography color="text.secondary" variant="h6">
-          Capacity {floor.capacity} people • ${effectiveDisplayPrice}/hour
+          Capacity {floor.capacity} people • {effectiveDisplayPrice} TND/hour
         </Typography>
 
         <Grid container spacing={2} sx={{ mt: 1 }}>

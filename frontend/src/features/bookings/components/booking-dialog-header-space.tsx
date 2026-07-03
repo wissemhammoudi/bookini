@@ -118,7 +118,7 @@ export const SelectedSpaceCard = ({
         </Box>
         <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', justifyContent: 'flex-end' }}>
           <Chip size="small" label={`${roomCapacity} seats`} variant="outlined" />
-          <Chip size="small" label={`${hourlyRate} TND/hr`} color="primary" variant="outlined" />
+          <Chip size="small" label={`${hourlyRate} TND/hour`} color="primary" variant="outlined" />
         </Stack>
       </Stack>
 
@@ -142,7 +142,7 @@ export const SelectedSpaceCard = ({
         >
           {room.floors.map((floor) => (
             <MenuItem key={floor.id} value={floor.id}>
-              {floor.floor_name} • {floor.price ?? room.price} TND/hr • {floor.capacity} seats
+              {floor.floor_name} • {floor.price ?? room.price} TND/hour • {floor.capacity} seats
             </MenuItem>
           ))}
         </TextField>
@@ -159,7 +159,7 @@ export const SelectedSpaceCard = ({
                 <Chip
                   key={area.key}
                   size="small"
-                  label={`${area.label} • ${area.price} TND/hr${area.includes?.length ? ` • ${area.includes.join(' / ')}` : ''}`}
+                  label={`${area.label} • ${area.price} TND/hour${area.includes?.length ? ` • ${area.includes.join(' / ')}` : ''}`}
                   variant="outlined"
                 />
               ))}
