@@ -62,7 +62,6 @@ export const LoginPage = () => {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        alignItems: 'center',
         justifyContent: 'center',
         background: isLight
           ? 'linear-gradient(135deg, #f5f7fb 0%, #e4ecfa 100%)'
