@@ -43,7 +43,7 @@ export const useBookingForm = () => {
  * Hook for calculating booking price based on time and room rate
  */
 export const usePriceCalculation = () => {
-  const parseTimeToMinutes = (value: string): number | null => {
+  const parseTimeToHour = (value: string): number | null => {
     if (!value || !value.includes(':')) return null
     const [hoursRaw, minutesRaw] = value.split(':')
     const hours = Number.parseInt(hoursRaw, 10)
@@ -52,7 +52,7 @@ export const usePriceCalculation = () => {
     if (!Number.isFinite(hours) || !Number.isFinite(minutes)) return null
     if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) return null
 
-    return (hours * 60) + minutes
+    return hours
   }
 
   const calculatePrice = useCallback((
@@ -69,13 +69,14 @@ export const usePriceCalculation = () => {
       return { price: 0, originalPrice: 0, discount: 0, days: 1, durationHours: 0 }
     }
 
-    const startMinutes = parseTimeToMinutes(startTime)
-    const endMinutes = parseTimeToMinutes(endTime)
-    if (startMinutes === null || endMinutes === null || endMinutes <= startMinutes) {
+    const startHour = parseTimeToHour(startTime)
+    const endHour = parseTimeToHour(endTime)
+    if (startHour === null || endHour === null || endHour <= startHour) {
       return { price: 0, originalPrice: 0, discount: 0, days: 1, durationHours: 0 }
     }
 
-    const hours = (endMinutes - startMinutes) / 60
+    // Keep this aligned with backend public booking pricing rules (hour granularity).
+    const hours = Math.max(0, endHour - startHour)
 
     let days = 1
     if (bookingDate && endDate && endDate !== bookingDate) {

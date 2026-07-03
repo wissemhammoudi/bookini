@@ -76,7 +76,7 @@ export const PriceSummaryCard = ({
           <Chip
             label={
               formData.startTime && formData.endTime
-                ? `${durationLabel}${days > 1 ? ` x ${days} days` : ''} selected`
+                ? `${durationLabel}${days > 1 ? ` x ${days} days` : ''} billed`
                 : 'Pick time range'
             }
             variant="outlined"

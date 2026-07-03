@@ -78,7 +78,7 @@ export const BookingFormFields = ({
 
         <Box sx={{ flex: 1 }}>
           <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 1 }}>
-            Guest Details
+            Contact Details
           </Typography>
           <Stack spacing={1.5}>
             <TextField
