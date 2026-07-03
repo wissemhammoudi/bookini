@@ -1,6 +1,7 @@
+import logging
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
-import logging
 
 from app.core.responses import success_response
 from app.infrastructure.session import get_db_session
