@@ -7,8 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.responses import success_response
 from app.domain.enums import FloorStatus
 from app.infrastructure.session import get_db_session
-from app.repositories.floor_repository import FloorRepository
 from app.presentation.admin_workspace_common import AdminAccessUser
+from app.repositories.floor_repository import FloorRepository
 from app.services.admin_workspace_dashboard_service import (
     AdminWorkspaceDashboardService,
 )
@@ -44,7 +44,10 @@ def _normalize_role_value(role: object) -> str:
     return str(raw_role).upper()
 
 
-def _hydrate_places_from_floors(payload: dict[str, object], floors: Iterable[object]) -> None:
+def _hydrate_places_from_floors(
+    payload: dict[str, object],
+    floors: Iterable[object],
+) -> None:
     collections = payload.get("collections")
     if not isinstance(collections, dict):
         return
