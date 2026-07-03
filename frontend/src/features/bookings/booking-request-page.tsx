@@ -12,6 +12,7 @@ import {
   Typography,
   alpha,
 } from '@mui/material'
+import axios from 'axios'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 
 import { useColorMode } from '@/app/use-color-mode'
@@ -35,6 +36,37 @@ type BookingType = 'WHOLE_FLOOR' | 'SELECTED_AREAS'
 
 const isValidBookingType = (value: string | null): value is BookingType => {
   return value === 'WHOLE_FLOOR' || value === 'SELECTED_AREAS'
+}
+
+const parseBookingApiError = (error: unknown): string => {
+  if (!axios.isAxiosError(error)) {
+    return 'Could not complete your booking. Please verify your details and try again.'
+  }
+
+  const responseData = error.response?.data as {
+    message?: string
+    detail?: string | Array<{ msg?: string; message?: string }>
+  } | undefined
+
+  if (typeof responseData?.message === 'string' && responseData.message.trim().length > 0) {
+    return responseData.message
+  }
+
+  if (typeof responseData?.detail === 'string' && responseData.detail.trim().length > 0) {
+    return responseData.detail
+  }
+
+  if (Array.isArray(responseData?.detail) && responseData.detail.length > 0) {
+    const [firstError] = responseData.detail
+    if (typeof firstError?.msg === 'string' && firstError.msg.trim().length > 0) {
+      return firstError.msg
+    }
+    if (typeof firstError?.message === 'string' && firstError.message.trim().length > 0) {
+      return firstError.message
+    }
+  }
+
+  return 'Could not complete your booking. Please verify your details and try again.'
 }
 
 export const BookingRequestPage = () => {
@@ -114,6 +146,7 @@ export const BookingRequestPage = () => {
 
   const hasValidTimeRange = durationHours > 0
   const hasValidScope = bookingType !== 'SELECTED_AREAS' || selectedAreaKeys.length > 0
+  const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(formData.guestEmail.trim())
 
   const isParticipantCountValid = useMemo(() => {
     if (!formData.participants) return true
@@ -128,6 +161,7 @@ export const BookingRequestPage = () => {
       && formData.endTime
       && formData.guestName.trim()
       && formData.guestEmail.trim()
+      && isEmailValid
       && formData.guestPhone.trim()
       && hasValidDateRange
       && hasValidTimeRange
@@ -203,8 +237,8 @@ export const BookingRequestPage = () => {
       resetForm()
       setStep('details')
       navigate(`/booking-confirmation/${created.booking_reference}`)
-    } catch {
-      setBookingError('Could not complete your booking. Please verify your details and try again.')
+    } catch (error) {
+      setBookingError(parseBookingApiError(error))
     }
   }
 
@@ -343,6 +377,12 @@ export const BookingRequestPage = () => {
                     {participantRangeMessage ? (
                       <Alert severity="warning" sx={{ borderRadius: 2 }}>
                         {participantRangeMessage}
+                      </Alert>
+                    ) : null}
+
+                    {formData.guestEmail.trim() && !isEmailValid ? (
+                      <Alert severity="warning" sx={{ borderRadius: 2 }}>
+                        Please enter a valid email address.
                       </Alert>
                     ) : null}
 

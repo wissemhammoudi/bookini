@@ -10,6 +10,7 @@ import {
   Stack,
   alpha,
 } from '@mui/material'
+import axios from 'axios'
 
 import type { PublicRoom } from '@/lib/api'
 import type { BookingFormData } from '../types'
@@ -22,6 +23,37 @@ import {
 } from './booking-dialog-sections'
 
 type BookingType = 'WHOLE_FLOOR' | 'SELECTED_AREAS'
+
+const parseBookingSubmitError = (error: unknown): string => {
+  if (!axios.isAxiosError(error)) {
+    return 'Could not complete your booking. Please verify your details and try again.'
+  }
+
+  const responseData = error.response?.data as {
+    message?: string
+    detail?: string | Array<{ msg?: string; message?: string }>
+  } | undefined
+
+  if (typeof responseData?.message === 'string' && responseData.message.trim().length > 0) {
+    return responseData.message
+  }
+
+  if (typeof responseData?.detail === 'string' && responseData.detail.trim().length > 0) {
+    return responseData.detail
+  }
+
+  if (Array.isArray(responseData?.detail) && responseData.detail.length > 0) {
+    const [firstError] = responseData.detail
+    if (typeof firstError?.msg === 'string' && firstError.msg.trim().length > 0) {
+      return firstError.msg
+    }
+    if (typeof firstError?.message === 'string' && firstError.message.trim().length > 0) {
+      return firstError.message
+    }
+  }
+
+  return 'Could not complete your booking. Please verify your details and try again.'
+}
 
 interface BookingDialogProps {
   open: boolean
@@ -57,6 +89,7 @@ export const BookingDialog = ({
   initialBookingDate,
 }: BookingDialogProps) => {
   const [step, setStep] = useState<'details' | 'review'>('details')
+  const [submitError, setSubmitError] = useState<string | null>(null)
   const { formData, handleInputChange, resetForm } = useBookingForm()
   const { calculatePrice } = usePriceCalculation()
 
@@ -85,6 +118,7 @@ export const BookingDialog = ({
   }, [formData.bookingDate, formData.endDate])
 
   const hasValidTimeRange = durationHours > 0
+  const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(formData.guestEmail.trim())
 
   const isParticipantCountValid = useMemo(() => {
     if (!formData.participants) return true
@@ -99,6 +133,7 @@ export const BookingDialog = ({
       && formData.endTime
       && formData.guestName.trim()
       && formData.guestEmail.trim()
+      && isEmailValid
       && formData.guestPhone.trim()
       && hasValidDateRange
       && hasValidTimeRange
@@ -108,9 +143,11 @@ export const BookingDialog = ({
   const participantRangeMessage = !isParticipantCountValid
     ? `Participant count must be between 1 and ${roomCapacity}.`
     : null
+  const visibleError = submitError ?? error
 
   const handleDialogClose = () => {
     setStep('details')
+    setSubmitError(null)
     onClose()
   }
 
@@ -119,6 +156,7 @@ export const BookingDialog = ({
 
     if (!room) return
     if (!isDetailsStepValid) return
+    setSubmitError(null)
 
     const payload = {
       ...formData,
@@ -137,11 +175,16 @@ export const BookingDialog = ({
       price,
     }
 
-    const result = await onSubmit(payload)
-    if (result !== false) {
-      resetForm()
-      setStep('details')
-      onClose()
+    try {
+      const result = await onSubmit(payload)
+      if (result !== false) {
+        resetForm()
+        setStep('details')
+        setSubmitError(null)
+        onClose()
+      }
+    } catch (submitException) {
+      setSubmitError(parseBookingSubmitError(submitException))
     }
   }
 
@@ -173,9 +216,9 @@ export const BookingDialog = ({
       <form onSubmit={handleSubmit}>
         <DialogContent sx={{ px: 3, py: 3 }}>
           <Stack spacing={3}>
-            {error ? (
+            {visibleError ? (
               <Alert severity="error" sx={{ borderRadius: 2 }}>
-                {error}
+                {visibleError}
               </Alert>
             ) : null}
 
@@ -194,6 +237,12 @@ export const BookingDialog = ({
             {participantRangeMessage ? (
               <Alert severity="warning" sx={{ borderRadius: 2 }}>
                 {participantRangeMessage}
+              </Alert>
+            ) : null}
+
+            {formData.guestEmail.trim() && !isEmailValid ? (
+              <Alert severity="warning" sx={{ borderRadius: 2 }}>
+                Please enter a valid email address.
               </Alert>
             ) : null}
 
