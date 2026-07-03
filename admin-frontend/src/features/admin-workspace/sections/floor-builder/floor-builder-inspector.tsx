@@ -12,6 +12,7 @@ import {
   Typography,
 } from '@mui/material'
 
+import { resolveImageUrl } from '@/features/admin-workspace/dialogs/shared'
 import type { DeskZone, ElementType } from '@/features/admin-workspace/sections/floor-builder/floor-layout-utils'
 
 type FloorBuilderInspectorProps = {
@@ -19,6 +20,7 @@ type FloorBuilderInspectorProps = {
   selectedIndex: number | null
   isUploadingRoomImages: boolean
   roomImageError: string | null
+  pendingSelectedRoomImagesCount?: number
   onUploadRoomImages: (event: React.ChangeEvent<HTMLInputElement>) => Promise<void>
   onUpdateSelected: <K extends keyof DeskZone>(field: K, val: DeskZone[K]) => void
   onRemoveRoomImage: (targetIndex: number) => void
@@ -30,6 +32,7 @@ export function FloorBuilderInspector({
   selectedIndex,
   isUploadingRoomImages,
   roomImageError,
+  pendingSelectedRoomImagesCount = 0,
   onUploadRoomImages,
   onUpdateSelected,
   onRemoveRoomImage,
@@ -125,10 +128,16 @@ export function FloorBuilderInspector({
             fullWidth
           />
           <Button variant="outlined" component="label" disabled={isUploadingRoomImages} sx={{ height: 40, whiteSpace: 'nowrap', mt: 0.25 }}>
-            {isUploadingRoomImages ? 'Uploading...' : 'Upload'}
+            {isUploadingRoomImages ? 'Uploading...' : 'Choose Images'}
             <input type="file" accept="image/*" multiple hidden onChange={(event) => void onUploadRoomImages(event)} />
           </Button>
         </Stack>
+
+        {pendingSelectedRoomImagesCount > 0 ? (
+          <Box sx={{ color: 'warning.main', fontSize: 12 }}>
+            {pendingSelectedRoomImagesCount} new image(s) selected. They will upload when you save floor layout.
+          </Box>
+        ) : null}
 
         {(selectedDesk.image_urls ?? []).length > 0 ? (
           <Stack spacing={1}>
@@ -139,7 +148,7 @@ export function FloorBuilderInspector({
               {(selectedDesk.image_urls ?? []).map((imageUrl, imageIndex) => (
                 <Paper key={`${imageUrl}-${imageIndex}`} variant="outlined" sx={{ p: 0.5, borderRadius: 1.5 }}>
                   <Stack spacing={0.5}>
-                    <Box component="img" src={imageUrl} alt={`Room image ${imageIndex + 1}`} sx={{ width: '100%', height: 56, objectFit: 'cover', borderRadius: 1 }} />
+                    <Box component="img" src={resolveImageUrl(imageUrl)} alt={`Room image ${imageIndex + 1}`} sx={{ width: '100%', height: 56, objectFit: 'cover', borderRadius: 1 }} />
                     <Button size="small" color="error" onClick={() => onRemoveRoomImage(imageIndex)}>
                       Remove
                     </Button>

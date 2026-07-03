@@ -34,6 +34,7 @@ export const AdminWorkspacePage = () => {
 
   const currentSection = useMemo<SectionKey>(() => (location.pathname.split('/')[2] as SectionKey | undefined) ?? 'dashboard', [location.pathname])
   const deferredSearch = useDeferredValue(search.trim().toLowerCase())
+  const toSafeLower = (value: unknown) => (typeof value === 'string' ? value.toLowerCase() : '')
 
   const { data, isLoading, isError, error, refetch } = useQuery({ queryKey: workspaceQueryKey, queryFn: getAdminWorkspace })
   const allowedSections = useMemo(() => (data ? sections.filter((section) => section.roles.includes(data.role)) : []), [data])
@@ -70,18 +71,19 @@ export const AdminWorkspacePage = () => {
   const sectionConfig = allowedSections.find((section) => section.key === currentSection) ?? allowedSections[0]
 
   const users = useMemo(() => workspace?.users.filter((user) => {
-    const matchesSearch = !deferredSearch || [user.full_name, user.email, user.phone].some((value) => value.toLowerCase().includes(deferredSearch))
+    const matchesSearch = !deferredSearch || [user.full_name, user.email, user.phone].some((value) => toSafeLower(value).includes(deferredSearch))
     const matchesRole = roleFilter === 'ALL' || user.role === roleFilter
     return matchesSearch && matchesRole
   }) ?? [], [deferredSearch, roleFilter, workspace])
 
-  const organizations = useMemo(() => workspace?.organizations.filter((organization) => !deferredSearch || [organization.name, organization.contact_email, organization.address].some((value) => value.toLowerCase().includes(deferredSearch))) ?? [], [deferredSearch, workspace])
-  const places = useMemo(() => workspace?.places.filter((place) => !deferredSearch || [place.name, place.category, place.address].some((value) => value.toLowerCase().includes(deferredSearch))) ?? [], [deferredSearch, workspace])
-  const floors = useMemo(() => workspace?.floors.filter((floor) => !deferredSearch || [floor.floor_name, floor.description].some((value) => value.toLowerCase().includes(deferredSearch))) ?? [], [deferredSearch, workspace])
+  const organizations = useMemo(() => workspace?.organizations.filter((organization) => !deferredSearch || [organization.name, organization.contact_email, organization.address].some((value) => toSafeLower(value).includes(deferredSearch))) ?? [], [deferredSearch, workspace])
+  const places = useMemo(() => workspace?.places.filter((place) => !deferredSearch || [place.name, place.category, place.address].some((value) => toSafeLower(value).includes(deferredSearch))) ?? [], [deferredSearch, workspace])
+  const floors = useMemo(() => workspace?.floors.filter((floor) => !deferredSearch || [floor.floor_name, floor.description].some((value) => toSafeLower(value).includes(deferredSearch))) ?? [], [deferredSearch, workspace])
 
   const reservations = useMemo(() => workspace?.reservations.filter((reservation) => {
-    const matchesSearch = !deferredSearch || [reservation.id, reservation.user_name, reservation.place_name, reservation.floor_name].some((value) => value.toLowerCase().includes(deferredSearch))
-    const matchesStatus = reservationFilter === 'ALL' || reservation.status === reservationFilter
+    const matchesSearch = !deferredSearch || [reservation.id, reservation.user_name, reservation.place_name, reservation.floor_name].some((value) => toSafeLower(value).includes(deferredSearch))
+    const normalizedStatus = reservation.status === 'CONFIRMED' ? 'APPROVED' : reservation.status
+    const matchesStatus = reservationFilter === 'ALL' || reservation.status === reservationFilter || normalizedStatus === reservationFilter
     return matchesSearch && matchesStatus
   }) ?? [], [deferredSearch, reservationFilter, workspace])
 

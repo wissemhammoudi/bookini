@@ -36,15 +36,16 @@ export const SectionHeader = ({
   </Stack>
 )
 
-export const StatusChip = ({ value }: { value: string }) => {
+export const StatusChip = ({ value }: { value?: string | null }) => {
+  const safeValue = value ?? 'UNKNOWN'
   const color =
-    value === 'ACTIVE' || value === 'APPROVED' || value === 'PROCESSED'
+    safeValue === 'ACTIVE' || safeValue === 'APPROVED' || safeValue === 'CONFIRMED' || safeValue === 'PROCESSED'
       ? 'success'
-      : value === 'PENDING'
+      : safeValue === 'PENDING'
         ? 'warning'
         : 'default'
 
-  return <Chip size="small" label={value.replace('_', ' ')} color={color} sx={{ fontWeight: 700 }} />
+  return <Chip size="small" label={safeValue.replace('_', ' ')} color={color} sx={{ fontWeight: 700 }} />
 }
 
 export const EmptyState = ({

@@ -11,6 +11,7 @@ export type ActiveState = 'ACTIVE' | 'SUSPENDED'
 export type ReservationWorkflowState =
   | 'PENDING'
   | 'APPROVED'
+  | 'CONFIRMED'
   | 'REJECTED'
   | 'CANCELLED'
 

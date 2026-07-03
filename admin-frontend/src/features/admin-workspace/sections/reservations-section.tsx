@@ -39,6 +39,7 @@ export const ReservationsSection = ({
             <MenuItem value="ALL">All statuses</MenuItem>
             <MenuItem value="PENDING">Pending</MenuItem>
             <MenuItem value="APPROVED">Approved</MenuItem>
+            <MenuItem value="CONFIRMED">Confirmed</MenuItem>
             <MenuItem value="REJECTED">Rejected</MenuItem>
             <MenuItem value="CANCELLED">Cancelled</MenuItem>
           </TextField>

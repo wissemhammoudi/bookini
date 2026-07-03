@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { uploadImageRequest } from '@/lib/api'
 import { TOOLBOX_TEMPLATES } from '@/features/admin-workspace/sections/floor-builder/floor-layout-visuals'
@@ -15,6 +15,7 @@ type UseFloorBuilderStateParams = {
 export function useFloorBuilderState({ floor, desksState, onDesksStateChange }: UseFloorBuilderStateParams) {
   const [isUploadingRoomImages, setIsUploadingRoomImages] = useState(false)
   const [roomImageError, setRoomImageError] = useState<string | null>(null)
+  const [pendingImageFilesByUrl, setPendingImageFilesByUrl] = useState<Record<string, File>>({})
 
   const [internalDesks, setInternalDesks] = useState<DeskZone[]>(() => {
     const parsedLayout = parseBlueprintLayout(floor.blueprint_image)
@@ -39,6 +40,26 @@ export function useFloorBuilderState({ floor, desksState, onDesksStateChange }: 
   const desks = desksState ?? internalDesks
   const selectedDesk = selectedIndex !== null ? desks[selectedIndex] : null
 
+  useEffect(
+    () => () => {
+      Object.keys(pendingImageFilesByUrl).forEach((url) => URL.revokeObjectURL(url))
+    },
+    [pendingImageFilesByUrl],
+  )
+
+  const validateImageFile = (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      return 'Only image files are allowed'
+    }
+
+    const maxBytes = 8 * 1024 * 1024
+    if (file.size > maxBytes) {
+      return 'Image size must be under 8MB'
+    }
+
+    return null
+  }
+
   const setDesks = (updater: DeskZone[] | ((prev: DeskZone[]) => DeskZone[])) => {
     const next = typeof updater === 'function' ? (updater as (prev: DeskZone[]) => DeskZone[])(desks) : updater
     if (onDesksStateChange) {
@@ -61,29 +82,45 @@ export function useFloorBuilderState({ floor, desksState, onDesksStateChange }: 
     const files = event.target.files
     if (selectedIndex === null || !files || files.length === 0) return
 
-    setIsUploadingRoomImages(true)
-    setRoomImageError(null)
-    try {
-      const uploadedUrls = await Promise.all(
-        Array.from(files).map(async (file) => {
-          const response = await uploadImageRequest(file)
-          return response.url
-        }),
-      )
-      const existing = selectedDesk?.image_urls ?? []
-      const merged = Array.from(new Set([...existing, ...uploadedUrls]))
-      handleUpdateSelected('image_urls', merged)
-    } catch (error) {
-      const uploadError = error as { response?: { data?: { message?: string } }; message?: string }
-      setRoomImageError(uploadError.response?.data?.message || uploadError.message || 'Failed to upload room images')
-    } finally {
-      setIsUploadingRoomImages(false)
-      event.target.value = ''
+    const nextPendingUrls: string[] = []
+    const nextPendingEntries: Record<string, File> = {}
+
+    for (const file of Array.from(files)) {
+      const validationError = validateImageFile(file)
+      if (validationError) {
+        nextPendingUrls.forEach((url) => URL.revokeObjectURL(url))
+        setRoomImageError(validationError)
+        event.target.value = ''
+        return
+      }
+
+      const previewUrl = URL.createObjectURL(file)
+      nextPendingUrls.push(previewUrl)
+      nextPendingEntries[previewUrl] = file
     }
+
+    setRoomImageError(null)
+    setPendingImageFilesByUrl((previous) => ({ ...previous, ...nextPendingEntries }))
+
+    const existing = selectedDesk?.image_urls ?? []
+    const merged = Array.from(new Set([...existing, ...nextPendingUrls]))
+    handleUpdateSelected('image_urls', merged)
+
+    event.target.value = ''
   }
 
   const handleRemoveRoomImage = (targetIndex: number) => {
     if (!selectedDesk) return
+
+    const targetImageUrl = (selectedDesk.image_urls ?? [])[targetIndex]
+    if (targetImageUrl && pendingImageFilesByUrl[targetImageUrl]) {
+      URL.revokeObjectURL(targetImageUrl)
+      setPendingImageFilesByUrl((previous) => {
+        const { [targetImageUrl]: _ignored, ...rest } = previous
+        return rest
+      })
+    }
+
     const nextImages = (selectedDesk.image_urls ?? []).filter((_, index) => index !== targetIndex)
     handleUpdateSelected('image_urls', nextImages)
   }
@@ -108,8 +145,58 @@ export function useFloorBuilderState({ floor, desksState, onDesksStateChange }: 
   }
 
   const handleDeleteDesk = (index: number) => {
+    const imageUrls = desks[index]?.image_urls ?? []
+    imageUrls.forEach((url) => {
+      if (!pendingImageFilesByUrl[url]) return
+      URL.revokeObjectURL(url)
+      setPendingImageFilesByUrl((previous) => {
+        const { [url]: _ignored, ...rest } = previous
+        return rest
+      })
+    })
+
     setDesks((prev) => prev.filter((_, itemIndex) => itemIndex !== index))
     setSelectedIndex(null)
+  }
+
+  const resolvePendingRoomImageUploads = async (): Promise<DeskZone[]> => {
+    const pendingEntries = Object.entries(pendingImageFilesByUrl)
+    if (pendingEntries.length === 0) {
+      return desks
+    }
+
+    setIsUploadingRoomImages(true)
+    setRoomImageError(null)
+    try {
+      const uploadedPairs = await Promise.all(
+        pendingEntries.map(async ([previewUrl, file]) => {
+          const response = await uploadImageRequest(file)
+          return [previewUrl, response.url] as const
+        }),
+      )
+
+      const uploadedByPreviewUrl = Object.fromEntries(uploadedPairs)
+      const nextDesks = desks.map((desk) => {
+        if (!desk.image_urls || desk.image_urls.length === 0) {
+          return desk
+        }
+
+        return {
+          ...desk,
+          image_urls: desk.image_urls.map((url) => uploadedByPreviewUrl[url] ?? url),
+        }
+      })
+
+      pendingEntries.forEach(([previewUrl]) => URL.revokeObjectURL(previewUrl))
+      setPendingImageFilesByUrl({})
+      return nextDesks
+    } catch (error) {
+      const uploadError = error as { response?: { data?: { message?: string } }; message?: string }
+      setRoomImageError(uploadError.response?.data?.message || uploadError.message || 'Failed to upload room images')
+      throw new Error('Room images upload failed')
+    } finally {
+      setIsUploadingRoomImages(false)
+    }
   }
 
   const handleRotateSelected = () => {
@@ -188,6 +275,7 @@ export function useFloorBuilderState({ floor, desksState, onDesksStateChange }: 
     selectedIndex,
     isUploadingRoomImages,
     roomImageError,
+    pendingSelectedRoomImagesCount: (selectedDesk?.image_urls ?? []).filter((url) => Boolean(pendingImageFilesByUrl[url])).length,
     handleAddTemplate,
     handleDeleteDesk,
     handleRemoveRoomImage,
@@ -196,5 +284,6 @@ export function useFloorBuilderState({ floor, desksState, onDesksStateChange }: 
     handleSelectDesk,
     handleUpdateSelected,
     handleUploadSelectedRoomImages,
+    resolvePendingRoomImageUploads,
   }
 }

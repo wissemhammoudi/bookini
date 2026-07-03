@@ -15,6 +15,8 @@ type OrganizationImagesEditorProps = {
   coverFieldProps: Record<string, unknown>
   logoError?: string
   coverError?: string
+  hasPendingLogo?: boolean
+  hasPendingCover?: boolean
 }
 
 export function OrganizationImagesEditor({
@@ -30,13 +32,15 @@ export function OrganizationImagesEditor({
   coverFieldProps,
   logoError,
   coverError,
+  hasPendingLogo = false,
+  hasPendingCover = false,
 }: OrganizationImagesEditorProps) {
   return (
     <>
       <Stack direction="row" spacing={1.5} sx={{ alignItems: 'flex-start' }}>
         <TextField label="Logo URL" error={Boolean(logoError)} helperText={logoError ?? 'Optional URL or upload an image'} fullWidth {...logoFieldProps} />
         <Button variant="outlined" component="label" disabled={isUploadingLogo} sx={{ height: 40, mt: 0.5, whiteSpace: 'nowrap' }}>
-          {isUploadingLogo ? 'Uploading...' : logoValue ? 'Replace' : 'Upload File'}
+          {isUploadingLogo ? 'Uploading...' : logoValue ? 'Replace' : 'Choose Image'}
           <input type="file" accept="image/*" hidden onChange={(event) => void onLogoUpload(event)} />
         </Button>
       </Stack>
@@ -45,12 +49,15 @@ export function OrganizationImagesEditor({
         <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 2.5 }}>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ alignItems: { xs: 'flex-start', sm: 'center' }, justifyContent: 'space-between' }}>
             <Box component="img" src={resolveImageUrl(logoValue)} alt="Organization logo" sx={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 2, border: '1px solid', borderColor: 'divider', backgroundColor: 'background.default' }} />
-            <Stack direction="row" spacing={1}>
+            <Stack spacing={1} sx={{ width: { xs: '100%', sm: 'auto' } }}>
+              {hasPendingLogo ? <Box sx={{ color: 'warning.main', fontSize: 12 }}>New logo selected. It will upload when you save.</Box> : null}
+              <Stack direction="row" spacing={1}>
               <Button size="small" variant="outlined" component="label" disabled={isUploadingLogo}>
                 {isUploadingLogo ? 'Uploading...' : 'Change'}
                 <input type="file" accept="image/*" hidden onChange={(event) => void onLogoUpload(event)} />
               </Button>
               <Button size="small" color="error" onClick={onClearLogo}>Delete</Button>
+            </Stack>
             </Stack>
           </Stack>
         </Paper>
@@ -59,7 +66,7 @@ export function OrganizationImagesEditor({
       <Stack direction="row" spacing={1.5} sx={{ alignItems: 'flex-start' }}>
         <TextField label="Cover Image URL" error={Boolean(coverError)} helperText={coverError ?? 'Optional URL or upload an image'} fullWidth {...coverFieldProps} />
         <Button variant="outlined" component="label" disabled={isUploadingCover} sx={{ height: 40, mt: 0.5, whiteSpace: 'nowrap' }}>
-          {isUploadingCover ? 'Uploading...' : coverValue ? 'Replace' : 'Upload File'}
+          {isUploadingCover ? 'Uploading...' : coverValue ? 'Replace' : 'Choose Image'}
           <input type="file" accept="image/*" hidden onChange={(event) => void onCoverUpload(event)} />
         </Button>
       </Stack>
@@ -68,6 +75,7 @@ export function OrganizationImagesEditor({
         <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 2.5 }}>
           <Stack spacing={1.25}>
             <Box component="img" src={resolveImageUrl(coverValue)} alt="Organization cover" sx={{ width: '100%', maxHeight: 180, objectFit: 'cover', borderRadius: 2, border: '1px solid', borderColor: 'divider', backgroundColor: 'background.default' }} />
+            {hasPendingCover ? <Box sx={{ color: 'warning.main', fontSize: 12 }}>New cover selected. It will upload when you save.</Box> : null}
             <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
               <Button size="small" variant="outlined" component="label" disabled={isUploadingCover}>
                 {isUploadingCover ? 'Uploading...' : 'Change'}

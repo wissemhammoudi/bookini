@@ -61,8 +61,13 @@ export const OrganizationDialog = ({
     uploadError,
     logoValue,
     coverValue,
+    hasPendingLogo,
+    hasPendingCover,
     handleLogoUpload,
     handleCoverUpload,
+    clearLogo,
+    clearCover,
+    handleSubmitWithImageUploads,
     handleClose,
   } = useOrganizationDialogState({
     setValue,
@@ -86,12 +91,14 @@ export const OrganizationDialog = ({
           component="form"
           id="organization-form"
           onSubmit={handleSubmit(async (formValues) => {
+            const nextValues = await handleSubmitWithImageUploads(formValues)
+
             await onSubmit({
-              ...formValues,
-              website: formValues.website || undefined,
-              logo: formValues.logo || undefined,
-              cover_image: formValues.cover_image || undefined,
-              social_links: formValues.social_links
+              ...nextValues,
+              website: nextValues.website || undefined,
+              logo: nextValues.logo || undefined,
+              cover_image: nextValues.cover_image || undefined,
+              social_links: nextValues.social_links
                 .split(',')
                 .map((item: string) => item.trim())
                 .filter(Boolean),
@@ -127,12 +134,14 @@ export const OrganizationDialog = ({
             isUploadingCover={isUploadingCover}
             onLogoUpload={handleLogoUpload}
             onCoverUpload={handleCoverUpload}
-            onClearLogo={() => setValue('logo', '')}
-            onClearCover={() => setValue('cover_image', '')}
+            onClearLogo={clearLogo}
+            onClearCover={clearCover}
             logoFieldProps={register('logo') as Record<string, unknown>}
             coverFieldProps={register('cover_image') as Record<string, unknown>}
             logoError={errors.logo?.message}
             coverError={errors.cover_image?.message}
+            hasPendingLogo={hasPendingLogo}
+            hasPendingCover={hasPendingCover}
           />
 
           <TextField label="Social Links" {...register('social_links')} error={Boolean(errors.social_links)} helperText={errors.social_links?.message ?? 'Comma separated URLs'} />

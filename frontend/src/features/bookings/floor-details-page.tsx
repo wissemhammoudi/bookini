@@ -239,6 +239,11 @@ export const FloorDetailsPage = () => {
         price: data.price,
       })
 
+      if (!created?.booking_reference || typeof created.booking_reference !== 'string') {
+        setBookingError('Booking was created but no reference was returned. Please contact support with your booking details.')
+        return false
+      }
+
       navigate(`/booking-confirmation/${created.booking_reference}`)
       return true
     } catch {

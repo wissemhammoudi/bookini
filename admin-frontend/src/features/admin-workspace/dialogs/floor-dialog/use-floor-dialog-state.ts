@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { ChangeEvent } from 'react'
 import type { UseFormGetValues, UseFormReset, UseFormSetValue } from 'react-hook-form'
 
@@ -27,6 +27,8 @@ type UseFloorDialogStateParams = {
 export function useFloorDialogState({ value, places, title, getValues, setValue, reset, onClose }: UseFloorDialogStateParams) {
   const [isUploadingBlueprint, setIsUploadingBlueprint] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
+  const [pendingBlueprintFile, setPendingBlueprintFile] = useState<File | null>(null)
+  const [blueprintPreviewUrl, setBlueprintPreviewUrl] = useState<string | null>(null)
   const [buildFloorOpen, setBuildFloorOpen] = useState(true)
   const [builderDesks, setBuilderDesks] = useState<DeskZone[]>(() => buildDesksFromFloor(value, value?.pricing ?? 0))
   const initialAreas = buildInitialReservationAreas(value?.reservation_areas, value?.pricing ?? 0)
@@ -46,26 +48,87 @@ export function useFloorDialogState({ value, places, title, getValues, setValue,
     setValue,
   })
 
+  useEffect(
+    () => () => {
+      if (blueprintPreviewUrl) {
+        URL.revokeObjectURL(blueprintPreviewUrl)
+      }
+    },
+    [blueprintPreviewUrl],
+  )
+
+  const validateImageFile = (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      return 'Only image files are allowed'
+    }
+
+    const maxBytes = 8 * 1024 * 1024
+    if (file.size > maxBytes) {
+      return 'Image size must be under 8MB'
+    }
+
+    return null
+  }
+
+  const clearPendingBlueprint = () => {
+    setPendingBlueprintFile(null)
+    if (blueprintPreviewUrl) {
+      URL.revokeObjectURL(blueprintPreviewUrl)
+      setBlueprintPreviewUrl(null)
+    }
+  }
+
   const handleBlueprintUpload = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (!file) return
 
-    setIsUploadingBlueprint(true)
+    const validationError = validateImageFile(file)
+    if (validationError) {
+      setUploadError(validationError)
+      event.target.value = ''
+      return
+    }
+
+    clearPendingBlueprint()
     setUploadError(null)
+
+    setPendingBlueprintFile(file)
+    setBlueprintPreviewUrl(URL.createObjectURL(file))
+    event.target.value = ''
+  }
+
+  const clearBlueprint = () => {
+    clearPendingBlueprint()
+    setValue('blueprint_image', '')
+  }
+
+  const handleSubmitWithBlueprintUpload = async (formValues: FloorFormValues): Promise<FloorFormValues> => {
+    setUploadError(null)
+    if (!pendingBlueprintFile) {
+      return formValues
+    }
+
+    setIsUploadingBlueprint(true)
     try {
-      const response = await uploadImageRequest(file)
-      setValue('blueprint_image', response.url)
+      const response = await uploadImageRequest(pendingBlueprintFile)
+      clearPendingBlueprint()
+      return {
+        ...formValues,
+        blueprint_image: response.url,
+      }
     } catch (err) {
       const typedError = err as { response?: { data?: { message?: string } }; message?: string }
       setUploadError(typedError.response?.data?.message || typedError.message || 'Failed to upload blueprint')
+      throw new Error('Blueprint upload failed')
     } finally {
       setIsUploadingBlueprint(false)
-      event.target.value = ''
     }
   }
 
   const handleClose = () => {
     reset()
+    clearPendingBlueprint()
+    setUploadError(null)
     setExtractedReservationAreas([])
     setBuildFloorOpen(false)
     onClose()
@@ -112,12 +175,16 @@ export function useFloorDialogState({ value, places, title, getValues, setValue,
   return {
     isUploadingBlueprint,
     uploadError,
+    blueprintValue: blueprintPreviewUrl ?? getValues('blueprint_image'),
+    hasPendingBlueprint: Boolean(pendingBlueprintFile),
     buildFloorOpen,
     builderDesks,
     extractedReservationAreas,
     draftFloor,
     setBuildFloorOpen,
     handleBlueprintUpload,
+    clearBlueprint,
+    handleSubmitWithBlueprintUpload,
     handleClose,
     handleReservationAreasInputChange,
     updateReservationArea,

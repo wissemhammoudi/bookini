@@ -36,6 +36,13 @@ export const BookingConfirmationPage = () => {
   const isLight = mode === 'light'
   const [searchReference, setSearchReference] = useState(reference)
 
+  const toSafeString = (value: unknown, fallback = ''): string => (typeof value === 'string' ? value : fallback)
+  const toSafeNumber = (value: unknown, fallback = 0): number => {
+    if (typeof value === 'number') return Number.isFinite(value) ? value : fallback
+    const parsed = Number(value)
+    return Number.isFinite(parsed) ? parsed : fallback
+  }
+
   const bookingQuery = useQuery({
     queryKey: ['public-booking', reference],
     queryFn: () => getPublicBookingByReference(reference),
@@ -51,6 +58,22 @@ export const BookingConfirmationPage = () => {
       ? metadata.number_of_days
       : Number(metadata.number_of_days) || undefined
 
+  const bookingView = booking
+    ? {
+      ...booking,
+      booking_reference: toSafeString(booking.booking_reference, reference || 'N/A'),
+      room_name: toSafeString(booking.room_name, 'Reserved Space'),
+      booking_date: toSafeString(booking.booking_date),
+      start_time: toSafeString(booking.start_time, '--:--'),
+      end_time: toSafeString(booking.end_time, '--:--'),
+      guest_name: toSafeString(booking.guest_name, 'Guest'),
+      guest_email: toSafeString(booking.guest_email, 'N/A'),
+      guest_phone: toSafeString(booking.guest_phone, 'N/A'),
+      participants: toSafeNumber(booking.participants, 0),
+      price: toSafeNumber(booking.price, 0),
+    }
+    : undefined
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     if (searchReference) {
@@ -59,29 +82,37 @@ export const BookingConfirmationPage = () => {
   }
 
   const downloadICalendar = () => {
-    if (!booking) return
+    if (!bookingView) return
 
-    const endDateRaw = endDate || booking.booking_date
-    const dtstart = `${booking.booking_date.replace(/-/g, '')}T${booking.start_time.replace(/:/g, '')}00`
-    const dtend = `${endDateRaw.replace(/-/g, '')}T${booking.end_time.replace(/:/g, '')}00`
+    const bookingDate = toSafeString(bookingView.booking_date)
+    const startTime = toSafeString(bookingView.start_time)
+    const endTime = toSafeString(bookingView.end_time)
+    const endDateRaw = toSafeString(endDate || bookingDate)
+
+    if (!bookingDate || !startTime || !endTime || !endDateRaw) {
+      return
+    }
+
+    const dtstart = `${bookingDate.replace(/-/g, '')}T${startTime.replace(/:/g, '')}00`
+    const dtend = `${endDateRaw.replace(/-/g, '')}T${endTime.replace(/:/g, '')}00`
 
     const event = `BEGIN:VCALENDAR
 VERSION:2.0
 PRODID:-//bookiwa7dek//EN
 BEGIN:VEVENT
-UID:${booking.booking_reference}@bookiwa7dek.com
+UID:${bookingView.booking_reference}@bookiwa7dek.com
 DTSTAMP:20240622T143000Z
 DTSTART:${dtstart}
 DTEND:${dtend}
-SUMMARY:${booking.room_name} - bookiwa7dek Booking
-DESCRIPTION:Booking Reference: ${booking.booking_reference}\\nGuest: ${booking.guest_name}\\nParticipants: ${booking.participants}
-LOCATION:${booking.room_name}
+SUMMARY:${bookingView.room_name} - bookiwa7dek Booking
+DESCRIPTION:Booking Reference: ${bookingView.booking_reference}\\nGuest: ${bookingView.guest_name}\\nParticipants: ${bookingView.participants}
+LOCATION:${bookingView.room_name}
 END:VEVENT
 END:VCALENDAR`
 
     const element = document.createElement('a')
     element.setAttribute('href', 'data:text/calendar;charset=utf-8,' + encodeURIComponent(event))
-    element.setAttribute('download', `${booking.booking_reference}.ics`)
+    element.setAttribute('download', `${bookingView.booking_reference}.ics`)
     element.style.display = 'none'
     document.body.appendChild(element)
     element.click()
@@ -115,7 +146,7 @@ END:VCALENDAR`
           ) : null}
 
           <BookingConfirmationHero
-            booking={booking}
+            booking={bookingView}
             endDate={endDate}
             numberOfDays={numberOfDays}
             isLight={isLight}
@@ -128,9 +159,9 @@ END:VCALENDAR`
             onSubmit={handleSearch}
           />
 
-          {booking ? (
+          {bookingView ? (
             <BookingDetailsGrid
-              booking={booking}
+              booking={bookingView}
               endDate={endDate}
               numberOfDays={numberOfDays}
               isLight={isLight}

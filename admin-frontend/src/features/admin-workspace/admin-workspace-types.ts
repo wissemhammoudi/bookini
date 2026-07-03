@@ -54,7 +54,7 @@ export type SectionConfig = {
   roles: Array<'SUPER_ADMIN' | 'ADMIN'>
 }
 
-export type ReservationFilter = 'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED'
+export type ReservationFilter = 'ALL' | 'PENDING' | 'APPROVED' | 'CONFIRMED' | 'REJECTED' | 'CANCELLED'
 export type RoleFilter = 'ALL' | 'SUPER_ADMIN' | 'ADMIN' | 'USER'
 
 export type UserActionHandler = (user: UserRecord) => void

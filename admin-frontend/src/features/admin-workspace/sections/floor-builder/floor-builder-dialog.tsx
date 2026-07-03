@@ -33,6 +33,7 @@ export function FloorBuilderDialog({
     selectedIndex,
     isUploadingRoomImages,
     roomImageError,
+    pendingSelectedRoomImagesCount,
     handleAddTemplate,
     handleDeleteDesk,
     handleRemoveRoomImage,
@@ -41,11 +42,17 @@ export function FloorBuilderDialog({
     handleSelectDesk,
     handleUpdateSelected,
     handleUploadSelectedRoomImages,
+    resolvePendingRoomImageUploads,
   } = useFloorBuilderState({
     floor,
     desksState,
     onDesksStateChange,
   })
+
+  const handleSaveFloorLayout = async () => {
+    const nextDesks = await resolvePendingRoomImageUploads()
+    await onSave(nextDesks)
+  }
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
@@ -83,6 +90,7 @@ export function FloorBuilderDialog({
                 selectedIndex={selectedIndex}
                 isUploadingRoomImages={isUploadingRoomImages}
                 roomImageError={roomImageError}
+                pendingSelectedRoomImagesCount={pendingSelectedRoomImagesCount}
                 onUploadRoomImages={handleUploadSelectedRoomImages}
                 onUpdateSelected={handleUpdateSelected}
                 onRemoveRoomImage={handleRemoveRoomImage}
@@ -94,11 +102,11 @@ export function FloorBuilderDialog({
       </DialogContent>
 
       <DialogActions sx={{ p: 2 }}>
-        <Button onClick={onClose} disabled={isSaving}>
+        <Button onClick={onClose} disabled={isSaving || isUploadingRoomImages}>
           Cancel
         </Button>
-        <Button variant="contained" onClick={() => void onSave(desks)} disabled={isSaving}>
-          {isSaving ? 'Saving floor layout...' : 'Save Floor Layout'}
+        <Button variant="contained" onClick={() => void handleSaveFloorLayout()} disabled={isSaving || isUploadingRoomImages}>
+          {isSaving || isUploadingRoomImages ? 'Saving floor layout...' : 'Save Floor Layout'}
         </Button>
       </DialogActions>
     </Dialog>

@@ -1,8 +1,9 @@
-import { Alert, Button, Grid, MenuItem, Stack, TextField } from '@mui/material'
+import { Alert, Box, Button, Grid, MenuItem, Paper, Stack, TextField } from '@mui/material'
 import type { FieldErrors, UseFormRegister } from 'react-hook-form'
 
 import { ReservationAreasEditor } from '@/features/admin-workspace/dialogs/floor-dialog/reservation-areas-editor'
 import type { UpdateReservationArea } from '@/features/admin-workspace/dialogs/floor-dialog/area-utils'
+import { resolveImageUrl } from '@/features/admin-workspace/dialogs/shared'
 import type { FloorFormValues } from '@/features/admin-workspace/dialogs/shared'
 import type { FloorRecord, PlaceRecord, ReservationAreaRecord } from '@/lib/api-types'
 
@@ -14,8 +15,11 @@ type FloorDialogFormProps = {
   error?: string
   uploadError?: string | null
   isUploadingBlueprint: boolean
+  blueprintValue: string
+  hasPendingBlueprint?: boolean
   extractedReservationAreas: ReservationAreaRecord[]
   onBlueprintUpload: (event: React.ChangeEvent<HTMLInputElement>) => Promise<void>
+  onClearBlueprint: () => void
   onOpenBuilder: () => void
   onReservationAreasInputChange: (value: string) => void
   onExtractReservationAreasFromBlueprint: () => void
@@ -32,8 +36,11 @@ export function FloorDialogForm({
   error,
   uploadError,
   isUploadingBlueprint,
+  blueprintValue,
+  hasPendingBlueprint = false,
   extractedReservationAreas,
   onBlueprintUpload,
+  onClearBlueprint,
   onOpenBuilder,
   onReservationAreasInputChange,
   onExtractReservationAreasFromBlueprint,
@@ -80,11 +87,27 @@ export function FloorDialogForm({
       <Stack direction="row" spacing={1.5} sx={{ alignItems: 'flex-start' }}>
         <TextField label="Build Floor" {...register('blueprint_image')} error={Boolean(errors.blueprint_image)} helperText={errors.blueprint_image?.message ?? 'Optional floor image URL, upload, or paste floor layout JSON array'} fullWidth />
         <Button variant="outlined" component="label" disabled={isUploadingBlueprint} sx={{ height: 40, mt: 0.5, whiteSpace: 'nowrap' }}>
-          {isUploadingBlueprint ? 'Uploading...' : 'Build Floor'}
+          {isUploadingBlueprint ? 'Uploading...' : blueprintValue ? 'Replace' : 'Choose Image'}
           <input type="file" accept="image/*" hidden onChange={(event) => void onBlueprintUpload(event)} />
         </Button>
         <Button variant="contained" onClick={onOpenBuilder} sx={{ height: 40, mt: 0.5, whiteSpace: 'nowrap' }}>Open Builder</Button>
       </Stack>
+
+      {blueprintValue ? (
+        <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 2.5 }}>
+          <Stack spacing={1.25}>
+            <Box component="img" src={resolveImageUrl(blueprintValue)} alt="Floor blueprint" sx={{ width: '100%', maxHeight: 190, objectFit: 'cover', borderRadius: 2, border: '1px solid', borderColor: 'divider', backgroundColor: 'background.default' }} />
+            {hasPendingBlueprint ? <Box sx={{ color: 'warning.main', fontSize: 12 }}>New blueprint selected. It will upload when you save.</Box> : null}
+            <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
+              <Button size="small" variant="outlined" component="label" disabled={isUploadingBlueprint}>
+                {isUploadingBlueprint ? 'Uploading...' : 'Change'}
+                <input type="file" accept="image/*" hidden onChange={(event) => void onBlueprintUpload(event)} />
+              </Button>
+              <Button size="small" color="error" onClick={onClearBlueprint}>Delete</Button>
+            </Stack>
+          </Stack>
+        </Paper>
+      ) : null}
 
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ alignItems: { sm: 'flex-start' } }}>
         <TextField

@@ -1,5 +1,5 @@
 import { Alert, Grid, MenuItem, Stack, TextField } from '@mui/material'
-import type { FieldErrors, UseFormRegister, UseFormSetValue } from 'react-hook-form'
+import type { FieldErrors, UseFormRegister } from 'react-hook-form'
 
 import { PlaceAvailabilityEditor } from '@/features/admin-workspace/dialogs/place-dialog/place-availability-editor'
 import { PlaceImagesEditor } from '@/features/admin-workspace/dialogs/place-dialog/place-images-editor'
@@ -9,7 +9,6 @@ import type { OrganizationRecord } from '@/lib/api-types'
 type PlaceDialogFormProps = {
   register: UseFormRegister<PlaceFormValues>
   errors: FieldErrors<PlaceFormValues>
-  setValue: UseFormSetValue<PlaceFormValues>
   organizations: OrganizationRecord[]
   organizationId?: string
   error?: string
@@ -21,7 +20,10 @@ type PlaceDialogFormProps = {
   availabilityValue: PlaceFormValues['availability']
   onCoverUpload: (event: React.ChangeEvent<HTMLInputElement>) => Promise<void>
   onGalleryUpload: (event: React.ChangeEvent<HTMLInputElement>) => Promise<void>
+  onClearCover: () => void
   onRemoveGalleryItem: (targetIndex: number) => void
+  hasPendingCover?: boolean
+  pendingGalleryCount?: number
   onAddAvailabilitySlot: () => void
   onRemoveAvailabilitySlot: (index: number) => void
 }
@@ -29,7 +31,6 @@ type PlaceDialogFormProps = {
 export function PlaceDialogForm({
   register,
   errors,
-  setValue,
   organizations,
   organizationId,
   error,
@@ -41,7 +42,10 @@ export function PlaceDialogForm({
   availabilityValue,
   onCoverUpload,
   onGalleryUpload,
+  onClearCover,
   onRemoveGalleryItem,
+  hasPendingCover = false,
+  pendingGalleryCount = 0,
   onAddAvailabilitySlot,
   onRemoveAvailabilitySlot,
 }: PlaceDialogFormProps) {
@@ -96,12 +100,14 @@ export function PlaceDialogForm({
         isUploadingGallery={isUploadingGallery}
         onCoverUpload={onCoverUpload}
         onGalleryUpload={onGalleryUpload}
-        onClearCover={() => setValue('cover_image', '')}
+        onClearCover={onClearCover}
         onRemoveGalleryItem={onRemoveGalleryItem}
         coverFieldProps={register('cover_image') as Record<string, unknown>}
         galleryFieldProps={register('gallery') as Record<string, unknown>}
         coverError={errors.cover_image?.message}
         galleryError={errors.gallery?.message}
+        hasPendingCover={hasPendingCover}
+        pendingGalleryCount={pendingGalleryCount}
       />
 
       <TextField label="Feature Tags" {...register('features')} error={Boolean(errors.features)} helperText={errors.features?.message ?? 'Comma separated values'} />

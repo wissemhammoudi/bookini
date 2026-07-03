@@ -13,7 +13,7 @@ const isUploadPath = (value: string) => value.startsWith('/api/v1/auth/uploads/'
 
 export const resolveImageUrl = (value: string) => {
   if (!value) return ''
-  if (value.startsWith('http://') || value.startsWith('https://') || value.startsWith('data:')) {
+  if (value.startsWith('http://') || value.startsWith('https://') || value.startsWith('data:') || value.startsWith('blob:')) {
     return value
   }
 

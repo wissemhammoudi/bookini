@@ -51,10 +51,14 @@ export const PlaceDialog = ({
     isUploadingGallery,
     coverValue,
     galleryItems,
+    hasPendingCover,
+    pendingGalleryCount,
     availabilityValue,
     handleCoverImageUpload,
     handleGalleryUpload,
     removeGalleryItem,
+    clearCover,
+    handleSubmitWithImageUploads,
     addAvailabilitySlot,
     removeAvailabilitySlot,
     handleClose,
@@ -82,18 +86,19 @@ export const PlaceDialog = ({
           component="form"
           id="place-form"
           onSubmit={handleSubmit(async (formValues) => {
+            const nextValues = await handleSubmitWithImageUploads(formValues)
+
             await onSubmit({
-              ...formValues,
-              cover_image: formValues.cover_image || undefined,
-              gallery: formValues.gallery.split(',').map((item: string) => item.trim()).filter(Boolean),
-              features: formValues.features.split(',').map((item: string) => item.trim()).filter(Boolean),
+              ...nextValues,
+              cover_image: nextValues.cover_image || undefined,
+              gallery: nextValues.gallery.split(',').map((item: string) => item.trim()).filter(Boolean),
+              features: nextValues.features.split(',').map((item: string) => item.trim()).filter(Boolean),
             })
           })}
         >
           <PlaceDialogForm
             register={register}
             errors={errors}
-            setValue={setValue}
             organizations={organizations}
             organizationId={value?.organization_id}
             error={error}
@@ -105,7 +110,10 @@ export const PlaceDialog = ({
             availabilityValue={availabilityValue}
             onCoverUpload={handleCoverImageUpload}
             onGalleryUpload={handleGalleryUpload}
+            onClearCover={clearCover}
             onRemoveGalleryItem={removeGalleryItem}
+            hasPendingCover={hasPendingCover}
+            pendingGalleryCount={pendingGalleryCount}
             onAddAvailabilitySlot={addAvailabilitySlot}
             onRemoveAvailabilitySlot={removeAvailabilitySlot}
           />

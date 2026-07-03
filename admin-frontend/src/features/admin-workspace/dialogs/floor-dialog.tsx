@@ -54,12 +54,16 @@ export const FloorDialog = ({
   const {
     isUploadingBlueprint,
     uploadError,
+    blueprintValue,
+    hasPendingBlueprint,
     buildFloorOpen,
     builderDesks,
     extractedReservationAreas,
     draftFloor,
     setBuildFloorOpen,
     handleBlueprintUpload,
+    clearBlueprint,
+    handleSubmitWithBlueprintUpload,
     handleClose,
     handleReservationAreasInputChange,
     updateReservationArea,
@@ -89,23 +93,25 @@ export const FloorDialog = ({
           <form
             id="floor-form"
             onSubmit={handleSubmit(async (formValues) => {
+              const nextValues = await handleSubmitWithBlueprintUpload(formValues)
+
               const areaMap = new Map(extractedReservationAreas.map((area) => [area.name, area]))
-              const reservationAreas = formValues.reservation_areas
+              const reservationAreas = nextValues.reservation_areas
                 .split(',')
                 .map((item: string) => item.trim())
                 .filter(Boolean)
                 .map((name) =>
                   areaMap.get(name) ?? {
                     name,
-                    price: formValues.pricing,
+                    price: nextValues.pricing,
                     includes: [],
                     is_reservable: true,
                   },
                 )
 
               await onSubmit({
-                ...formValues,
-                blueprint_image: formValues.blueprint_image || undefined,
+                ...nextValues,
+                blueprint_image: nextValues.blueprint_image || undefined,
                 reservation_areas: reservationAreas,
               })
             })}
@@ -118,8 +124,11 @@ export const FloorDialog = ({
               error={error}
               uploadError={uploadError}
               isUploadingBlueprint={isUploadingBlueprint}
+              blueprintValue={blueprintValue}
+              hasPendingBlueprint={hasPendingBlueprint}
               extractedReservationAreas={extractedReservationAreas}
               onBlueprintUpload={handleBlueprintUpload}
+              onClearBlueprint={clearBlueprint}
               onOpenBuilder={() => setBuildFloorOpen(true)}
               onReservationAreasInputChange={handleReservationAreasInputChange}
               onExtractReservationAreasFromBlueprint={extractReservationAreasFromBlueprint}
