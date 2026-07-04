@@ -102,6 +102,64 @@ def _hydrate_places_from_floors(
         collections["floors"] = mapped_floors
 
 
+def _hydrate_organizations_from_floors(
+    payload: dict[str, object],
+    floors: Iterable[object],
+) -> None:
+    collections = payload.get("collections")
+    if not isinstance(collections, dict):
+        return
+
+    by_building: dict[str, dict[str, object]] = {}
+    for floor in floors:
+        building_name = str(floor.building).strip() or "Uncategorized"
+        organization_id = _normalize_building_id(building_name)
+
+        existing = by_building.get(organization_id)
+        if existing is None or floor.created_at < existing["created_date"]:
+            by_building[organization_id] = {
+                "id": organization_id,
+                "logo": None,
+                "cover_image": None,
+                "name": building_name,
+                "description": f"Organization derived from {building_name} spaces.",
+                "address": floor.location,
+                "contact_email": "support@bookini.com",
+                "contact_phone": "",
+                "website": None,
+                "social_links": [],
+                "status": "ACTIVE",
+                "created_date": floor.created_at.isoformat(),
+            }
+
+    if by_building:
+        collections["organizations"] = list(by_building.values())
+
+
+def _refresh_dashboard_stats(payload: dict[str, object]) -> None:
+    dashboard = payload.get("dashboard")
+    collections = payload.get("collections")
+    if not isinstance(dashboard, dict) or not isinstance(collections, dict):
+        return
+
+    stats = dashboard.get("stats")
+    if not isinstance(stats, list):
+        return
+
+    values_by_key = {
+        "organizations": len(collections.get("organizations", [])),
+        "places": len(collections.get("places", [])),
+        "floors": len(collections.get("floors", [])),
+    }
+
+    for item in stats:
+        if not isinstance(item, dict):
+            continue
+        key = item.get("key")
+        if key in values_by_key:
+            item["value"] = values_by_key[key]
+
+
 def _build_workspace_fallback(current_user_role: object) -> dict[str, object]:
     state = AdminWorkspaceStateStore.copy_state()
     role_value = (
@@ -229,14 +287,18 @@ async def get_workspace(
         workspace = AdminWorkspaceDashboardService.get_workspace(current_user.role)
         payload = workspace.model_dump(mode="json")
         real_floors = await _load_relevant_floors()
+        _hydrate_organizations_from_floors(payload, real_floors)
         _hydrate_places_from_floors(payload, real_floors)
+        _refresh_dashboard_stats(payload)
         message = "Admin workspace retrieved"
     except Exception as workspace_error:  # pragma: no cover - defensive fallback
         logger.exception("Workspace retrieval failed", exc_info=workspace_error)
         payload = _build_workspace_fallback(current_user.role)
         try:
             real_floors = await _load_relevant_floors()
+            _hydrate_organizations_from_floors(payload, real_floors)
             _hydrate_places_from_floors(payload, real_floors)
+            _refresh_dashboard_stats(payload)
         except Exception as hydration_error:  # pragma: no cover
             logger.exception(
                 "Workspace place hydration failed",
