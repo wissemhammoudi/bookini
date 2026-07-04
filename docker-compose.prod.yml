@@ -1,8 +1,11 @@
 services:
   traefik:
-    image: traefik:v3.1
+    image: traefik:v2.11
     command:
       - --configFile=/etc/traefik/traefik.yml
+      - --providers.docker.endpoint=unix:///var/run/docker.sock
+    environment:
+      DOCKER_API_VERSION: "1.40"
     restart: unless-stopped
     ports:
       - "80:80"
@@ -12,21 +15,24 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
       - ./traefik/dynamic.yml:/etc/traefik/dynamic.yml:ro
+      - traefik_letsencrypt:/letsencrypt
     depends_on:
       - frontend
+      - admin-frontend
       - backend
+      - grafana
 
   postgres:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_DB: bookini
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB is required}
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER is required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d bookini"]
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -34,44 +40,63 @@ services:
   redis:
     image: redis:7-alpine
     restart: unless-stopped
-    command: ["redis-server", "--appendonly", "yes"]
+    command: [ "redis-server", "--appendonly", "yes" ]
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio:RELEASE.2024-08-03T04-33-23Z
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:?MINIO_ACCESS_KEY is required}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:?MINIO_SECRET_KEY is required}
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
       interval: 10s
       timeout: 5s
       retries: 5
 
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    image: ${BACKEND_IMAGE:?BACKEND_IMAGE is required}
     restart: unless-stopped
     environment:
-      APP_ENV: production
-      LOG_LEVEL: INFO
+      APP_ENV: ${APP_ENV:-production}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
       API_HOST: 0.0.0.0
-      API_PORT: 8000
-      SECRET_KEY: change-me-in-prod-please-very-long-secret
-      JWT_ALGORITHM: HS256
-      ACCESS_TOKEN_EXPIRE_MINUTES: 15
-      REFRESH_TOKEN_EXPIRE_DAYS: 7
-      DATABASE_URL: postgresql+psycopg://postgres:postgres@postgres:5432/bookini
-      REDIS_URL: redis://redis:6379/0
-      SEED_DEFAULT_USERS: "true"
-      SEED_USER_EMAIL: user@bookini.local
-      SEED_USER_PASSWORD: User123456!
-      SEED_ADMIN_EMAIL: admin@bookini.local
-      SEED_ADMIN_PASSWORD: Admin123456!
-      SEED_SUPER_ADMIN_EMAIL: superadmin@bookini.local
-      SEED_SUPER_ADMIN_PASSWORD: SuperAdmin123456!
-    command: ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
+      API_PORT: ${API_PORT:-8000}
+      SECRET_KEY: ${SECRET_KEY:?SECRET_KEY is required}
+      JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-15}
+      REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS:-7}
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      SEED_DEFAULT_USERS: ${SEED_DEFAULT_USERS:-false}
+      SEED_USER_EMAIL: ${SEED_USER_EMAIL:-}
+      SEED_USER_PASSWORD: ${SEED_USER_PASSWORD:-}
+      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-}
+      SEED_SUPER_ADMIN_EMAIL: ${SEED_SUPER_ADMIN_EMAIL:-}
+      SEED_SUPER_ADMIN_PASSWORD: ${SEED_SUPER_ADMIN_PASSWORD:-}
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT:-}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-}
+      MINIO_BUCKET: ${MINIO_BUCKET:-}
+      MINIO_SECURE: ${MINIO_SECURE:-false}
+    command: [ "sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000" ]
     labels:
       - traefik.enable=true
-      - traefik.http.routers.backend.rule=PathPrefix(`/api`) || PathPrefix(`/metrics`)
+      - traefik.http.routers.backend.rule=(Host(`${DOMAIN_NAME}`) && (PathPrefix(`/api`) || PathPrefix(`/metrics`))) || (Host(`admin.${DOMAIN_NAME}`) && PathPrefix(`/api`))
       - traefik.http.routers.backend.entrypoints=websecure
       - traefik.http.routers.backend.tls=true
+      - traefik.http.routers.backend.tls.certresolver=letsencrypt
       - traefik.http.routers.backend.priority=100
       - traefik.http.services.backend.loadbalancer.server.port=8000
     depends_on:
@@ -79,31 +104,54 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      minio:
+        condition: service_healthy
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health', timeout=5)"]
+      test: [ "CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health', timeout=5)" ]
       interval: 20s
       timeout: 5s
       retries: 5
 
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
+    image: ${FRONTEND_IMAGE:?FRONTEND_IMAGE is required}
     restart: unless-stopped
     environment:
       NODE_ENV: production
     labels:
       - traefik.enable=true
-      - traefik.http.routers.frontend.rule=PathPrefix(`/`)
+      - traefik.http.routers.frontend.rule=Host(`${DOMAIN_NAME}`)
       - traefik.http.routers.frontend.entrypoints=websecure
       - traefik.http.routers.frontend.tls=true
+      - traefik.http.routers.frontend.tls.certresolver=letsencrypt
       - traefik.http.routers.frontend.priority=1
       - traefik.http.services.frontend.loadbalancer.server.port=80
     depends_on:
       backend:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost/health"]
+      test: [ "CMD", "wget", "--spider", "-q", "http://127.0.0.1/health" ]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+
+  admin-frontend:
+    image: ${ADMIN_FRONTEND_IMAGE:?ADMIN_FRONTEND_IMAGE is required}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.admin-frontend.rule=Host(`admin.${DOMAIN_NAME}`)
+      - traefik.http.routers.admin-frontend.entrypoints=websecure
+      - traefik.http.routers.admin-frontend.tls=true
+      - traefik.http.routers.admin-frontend.tls.certresolver=letsencrypt
+      - traefik.http.routers.admin-frontend.priority=1
+      - traefik.http.services.admin-frontend.loadbalancer.server.port=80
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "-q", "http://127.0.0.1/health" ]
       interval: 20s
       timeout: 5s
       retries: 5
@@ -116,7 +164,7 @@ services:
       - --storage.tsdb.path=/prometheus
       - --web.enable-lifecycle
     volumes:
-      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/prometheus:/etc/prometheus:ro
       - prometheus_data:/prometheus
     ports:
       - "9090:9090"
@@ -129,8 +177,8 @@ services:
     image: grafana/grafana:11.2.0
     restart: unless-stopped
     environment:
-      GF_SECURITY_ADMIN_USER: admin
-      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:?GRAFANA_ADMIN_USER is required}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?GRAFANA_ADMIN_PASSWORD is required}
       GF_USERS_ALLOW_SIGN_UP: "false"
     volumes:
       - grafana_data:/var/lib/grafana
@@ -138,6 +186,14 @@ services:
       - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
     ports:
       - "3000:3000"
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.grafana.rule=Host(`grafana.${DOMAIN_NAME}`)
+      - traefik.http.routers.grafana.entrypoints=websecure
+      - traefik.http.routers.grafana.tls=true
+      - traefik.http.routers.grafana.tls.certresolver=letsencrypt
+      - traefik.http.routers.grafana.priority=1
+      - traefik.http.services.grafana.loadbalancer.server.port=3000
     depends_on:
       - prometheus
       - loki
@@ -145,7 +201,7 @@ services:
   loki:
     image: grafana/loki:3.2.0
     restart: unless-stopped
-    command: ["-config.file=/etc/loki/loki-config.yml"]
+    command: [ "-config.file=/etc/loki/loki-config.yml" ]
     volumes:
       - ./monitoring/loki/loki-config.yml:/etc/loki/loki-config.yml:ro
       - loki_data:/loki
@@ -155,7 +211,7 @@ services:
   promtail:
     image: grafana/promtail:3.2.0
     restart: unless-stopped
-    command: ["-config.file=/etc/promtail/promtail-config.yml"]
+    command: [ "-config.file=/etc/promtail/promtail-config.yml" ]
     volumes:
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
@@ -187,6 +243,8 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  minio_data:
   prometheus_data:
   grafana_data:
   loki_data:
+  traefik_letsencrypt:

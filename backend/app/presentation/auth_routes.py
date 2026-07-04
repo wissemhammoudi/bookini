@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends, Request
+import redis.asyncio as aioredis
+from fastapi import APIRouter, Depends, File, Request, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.responses import success_response
-from app.core.security import decode_token
 from app.dependencies.auth import get_current_user
+from app.infrastructure.redis_client import get_redis
 from app.infrastructure.session import get_db_session
 from app.models.user import User
 from app.repositories.audit_log_repository import AuditLogRepository
@@ -12,10 +13,10 @@ from app.schemas.auth import (
     ChangePasswordRequest,
     ConfirmPasswordResetRequest,
     LoginRequest,
-    LogoutRequest,
     RefreshTokenRequest,
     RegisterRequest,
     RequestPasswordResetRequest,
+    UpdateProfileRequest,
 )
 from app.services.audit_log_service import AuditLogService
 from app.services.auth_service import AuthService
@@ -36,6 +37,19 @@ def _client_ip(request: Request) -> str:
     if request.client and request.client.host:
         return request.client.host
     return "unknown"
+
+
+def _user_profile_response(user: User) -> dict[str, object]:
+    avatar_url = user.avatar_url
+    if avatar_url and getattr(user, "updated_at", None):
+        avatar_url = f"{avatar_url}?t={int(user.updated_at.timestamp())}"
+    return {
+        "id": str(user.id),
+        "full_name": user.full_name,
+        "email": user.email,
+        "role": user.role,
+        "avatar_url": avatar_url,
+    }
 
 
 @router.post("/register")
@@ -94,34 +108,22 @@ async def login(
 async def refresh_token(
     payload: RefreshTokenRequest,
     session: AsyncSession = Depends(get_db_session),
+    redis: aioredis.Redis = Depends(get_redis),
 ) -> dict[str, object]:
     service = _service_from_session(session)
-    tokens = await service.refresh_token(payload.refresh_token)
+    tokens = await service.refresh_token(payload.refresh_token, redis)
     return success_response(message="Token refresh successful", data=tokens)
 
 
 @router.post("/logout")
 async def logout(
-    payload: LogoutRequest,
-    request: Request,
+    payload: RefreshTokenRequest,
     session: AsyncSession = Depends(get_db_session),
+    redis: aioredis.Redis = Depends(get_redis),
 ) -> dict[str, object]:
     service = _service_from_session(session)
-    audit_service = _audit_service_from_session(session)
-
-    await service.logout(payload.refresh_token)
-
-    decoded = decode_token(payload.refresh_token)
-    user_id = decoded.get("sub")
-    if user_id:
-        await audit_service.record(
-            user_id=user_id,
-            action="LOGOUT",
-            ip_address=_client_ip(request),
-            metadata={},
-        )
-
-    return success_response(message="Logout successful", data={})
+    await service.logout(payload.refresh_token, redis)
+    return success_response(message="Logged out successfully", data={})
 
 
 @router.post("/password-reset/request")
@@ -144,9 +146,10 @@ async def request_password_reset(
 async def confirm_password_reset(
     payload: ConfirmPasswordResetRequest,
     session: AsyncSession = Depends(get_db_session),
+    redis: aioredis.Redis = Depends(get_redis),
 ) -> dict[str, object]:
     service = _service_from_session(session)
-    await service.confirm_password_reset(payload.token, payload.new_password)
+    await service.confirm_password_reset(payload.token, payload.new_password, redis)
     return success_response(message="Password reset successful", data={})
 
 
@@ -163,3 +166,150 @@ async def change_password(
         new_password=payload.new_password,
     )
     return success_response(message="Password changed successfully", data={})
+
+
+@router.get("/me")
+async def get_me(
+    current_user: User = Depends(get_current_user),
+) -> dict[str, object]:
+    return success_response(
+        message="Profile retrieved successfully",
+        data=_user_profile_response(current_user),
+    )
+
+
+@router.put("/profile")
+async def update_profile(
+    payload: UpdateProfileRequest,
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+) -> dict[str, object]:
+    service = _service_from_session(session)
+    updated_user = await service.update_profile(
+        user=current_user,
+        full_name=payload.full_name,
+        email=payload.email,
+    )
+    return success_response(
+        message="Profile updated successfully",
+        data=_user_profile_response(updated_user),
+    )
+
+
+@router.post("/me/avatar")
+async def upload_avatar(
+    file: UploadFile | None = File(default=None),
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+) -> dict[str, object]:
+    if file is None:
+        from fastapi import HTTPException
+
+        raise HTTPException(
+            status_code=400,
+            detail="No file provided. Use multipart/form-data with field name 'file'.",
+        )
+
+    if not file.content_type or not file.content_type.startswith("image/"):
+        from fastapi import HTTPException
+
+        raise HTTPException(status_code=400, detail="Uploaded file must be an image")
+
+    import os
+
+    file_ext = os.path.splitext(file.filename)[1] if file.filename else ".jpg"
+    if not file_ext:
+        file_ext = ".jpg"
+    object_name = f"avatars/{current_user.id}{file_ext}"
+
+    file_data = await file.read()
+    from app.infrastructure.minio_client import MinioClient
+
+    minio_client = MinioClient()
+    minio_client.upload_file(
+        file_data=file_data, object_name=object_name, content_type=file.content_type
+    )
+
+    avatar_url = f"/api/v1/auth/uploads/{object_name}"
+    service = _service_from_session(session)
+    updated_user = await service.update_avatar(user=current_user, avatar_url=avatar_url)
+
+    return success_response(
+        message="Avatar uploaded successfully",
+        data=_user_profile_response(updated_user),
+    )
+
+
+@router.post("/upload")
+async def upload_file(
+    file: UploadFile | None = File(default=None),
+    current_user: User = Depends(get_current_user),
+) -> dict[str, object]:
+    if file is None:
+        from fastapi import HTTPException
+
+        raise HTTPException(
+            status_code=400,
+            detail="No file provided. Use multipart/form-data with field name 'file'.",
+        )
+
+    if not file.content_type or not file.content_type.startswith("image/"):
+        from fastapi import HTTPException
+
+        raise HTTPException(status_code=400, detail="Uploaded file must be an image")
+
+    import os
+    import uuid
+
+    file_ext = os.path.splitext(file.filename)[1] if file.filename else ".jpg"
+    if not file_ext:
+        file_ext = ".jpg"
+    object_name = f"{uuid.uuid4()}{file_ext}"
+
+    file_data = await file.read()
+    from app.infrastructure.minio_client import MinioClient
+
+    minio_client = MinioClient()
+    minio_client.upload_file(
+        file_data=file_data, object_name=object_name, content_type=file.content_type
+    )
+
+    file_url = f"/api/v1/auth/uploads/{object_name}"
+    return success_response(
+        message="File uploaded successfully",
+        data={"url": file_url},
+    )
+
+
+@router.get("/uploads/{filename:path}")
+async def get_upload(filename: str):
+    import io
+
+    from fastapi.responses import StreamingResponse
+
+    from app.infrastructure.minio_client import MinioClient
+
+    # Strip duplicate uploads/ prefix if present
+    if filename.startswith("uploads/"):
+        filename = filename[len("uploads/") :]
+
+    minio_client = MinioClient()
+    try:
+        file_bytes = minio_client.get_file(filename)
+        content_type = "image/jpeg"
+        if filename.endswith(".png"):
+            content_type = "image/png"
+        elif filename.endswith(".gif"):
+            content_type = "image/gif"
+        elif filename.endswith(".webp"):
+            content_type = "image/webp"
+        elif filename.endswith(".svg"):
+            content_type = "image/svg+xml"
+        elif filename.endswith(".mp4"):
+            content_type = "video/mp4"
+
+        return StreamingResponse(io.BytesIO(file_bytes), media_type=content_type)
+    except Exception:
+        from fastapi import HTTPException
+
+        raise HTTPException(status_code=404, detail="File not found")

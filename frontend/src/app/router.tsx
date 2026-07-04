@@ -1,63 +1,49 @@
+
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 
-import { AppLayout } from './app-layout'
-import { ProtectedRoute } from '../features/auth/protected-route'
-import { DashboardPage } from '../pages/dashboard-page'
-import { LoginPage } from '../pages/login-page'
-import { NotFoundPage } from '../pages/not-found-page'
-import { ReservationsPage } from '../pages/reservations-page'
-import { RegisterPage } from '../pages/register-page'
-import { AvailableRoomsPage } from '../pages/available-rooms-page'
-import { CreateReservationPage } from '../pages/create-reservation-page'
-import { ActivitiesPage } from '../pages/activities-page'
-import { ProfilePage } from '../pages/profile-page'
-import { AdminDashboardPage } from '../pages/admin-dashboard-page'
-import { FloorManagementPage } from '../pages/floor-management-page'
-import { ReservationManagementPage } from '../pages/reservation-management-page'
-import { OccupancyMonitoringPage } from '../pages/occupancy-monitoring-page'
-import { StatisticsPage } from '../pages/statistics-page'
-import { SuperAdminDashboardPage } from '../pages/super-admin-dashboard-page'
-import { AuditLogsPage } from '../pages/audit-logs-page'
-import { AdminManagementPage } from '../pages/admin-management-page'
+import { AppLayout } from '@/app/app-layout'
+import {
+  LoginPage,
+  RegisterPage,
+  ForgotPasswordPage,
+  ProfilePage,
+  ProtectedRoute,
+} from '@/features/auth'
+import { DashboardPage } from '@/pages/dashboard-page'
+import { NotFoundPage } from '@/pages/not-found-page'
+import { LandingPage, AboutPage, ContactPage, ReservationsInfoPage, AdminProfilePage } from '@/features/public'
+import { PublicBookingPage, PlaceDetailsPage, FloorDetailsPage, BookingRequestPage, BookingConfirmationPage } from '@/features/bookings'
 
 export const AppRouter = () => {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Public Pages */}
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="/reservations-info" element={<ReservationsInfoPage />} />
+        <Route path="/admins/:adminId" element={<AdminProfilePage />} />
+        <Route path="/book" element={<PublicBookingPage />} />
+        <Route path="/book/place/:roomId" element={<PlaceDetailsPage />} />
+        <Route path="/book/place/:roomId/floor/:floorId" element={<FloorDetailsPage />} />
+        <Route path="/book/place/:roomId/floor/:floorId/reserve" element={<BookingRequestPage />} />
+        <Route path="/booking-confirmation/:reference" element={<BookingConfirmationPage />} />
+
+        {/* Auth Pages */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
+        {/* Protected Pages */}
         <Route element={<ProtectedRoute />}>
           <Route element={<AppLayout />}>
-            <Route path="/" element={<DashboardPage />} />
-            <Route path="/rooms" element={<AvailableRoomsPage />} />
-            <Route path="/reservations/new" element={<CreateReservationPage />} />
-            <Route path="/reservations" element={<ReservationsPage />} />
-            <Route path="/activities" element={<ActivitiesPage />} />
+            <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
-            <Route path="/admin/floors" element={<FloorManagementPage />} />
-            <Route
-              path="/admin/reservations"
-              element={<ReservationManagementPage />}
-            />
-            <Route
-              path="/admin/occupancy"
-              element={<OccupancyMonitoringPage />}
-            />
-            <Route path="/admin/statistics" element={<StatisticsPage />} />
-            <Route
-              path="/super-admin/dashboard"
-              element={<SuperAdminDashboardPage />}
-            />
-            <Route path="/super-admin/audit-logs" element={<AuditLogsPage />} />
-            <Route
-              path="/super-admin/admins"
-              element={<AdminManagementPage />}
-            />
           </Route>
         </Route>
 
+        {/* 404 */}
         <Route path="/404" element={<NotFoundPage />} />
         <Route path="*" element={<Navigate to="/404" replace />} />
       </Routes>

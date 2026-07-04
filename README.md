@@ -1,101 +1,82 @@
-# Bookini
+# bookini
 
-Smart Floor Reservation System delivered incrementally across 12 weeks.
+Smart Floor Reservation System.
 
-## Stack
+## Production Setup
 
-- Backend: FastAPI, SQLAlchemy async, Alembic, Pytest, Ruff
-- Frontend: React, TypeScript, Vite, MUI, React Query, React Hook Form, Zod
-- Infra: Docker Compose, Traefik v3, Postgres, Redis
-- Observability: Prometheus, Grafana, Loki, Promtail, cAdvisor, node-exporter
-
-## Local Development
-
-### Backend
+### 1. Clone the repository
 
 ```bash
-cd backend
-python -m venv .venv
-.venv\Scripts\activate
-pip install -r requirements.txt
-python -m ruff check .
-python -m pytest
-uvicorn app.main:app --reload
+git clone https://github.com/wissemhammoudi/bookini.git
+cd bookini
 ```
 
-### Frontend
+### 2. Create the `.env` file
 
-```bash
-cd frontend
-npm ci
-npm run lint
-npm run test
-npm run build
-npm run dev
+Create a `.env` file at the root of the project:
+
+```env
+SEED_DEFAULT_USERS=true
+SEED_SUPER_ADMIN_EMAIL=superadmin@bookiwa7dek.com
+SEED_SUPER_ADMIN_PASSWORD=SuperAdmin123456!
+SEED_ADMIN_EMAIL=admin@bookiwa7dek.com
+SEED_ADMIN_PASSWORD=Admin123456!
+SEED_USER_EMAIL=user@bookiwa7dek.com
+SEED_USER_PASSWORD=User123456!
+
+MINIO_ENDPOINT=minio:9000
+MINIO_ACCESS_KEY=minioadmin
+MINIO_SECRET_KEY=minioadmin
+MINIO_BUCKET=bookini
+MINIO_SECURE=false
+
+MINIO_ROOT_USER=minioadmin
+MINIO_ROOT_PASSWORD=minioadmin
+
+GF_SECURITY_ADMIN_USER=admin
+GF_SECURITY_ADMIN_PASSWORD=admin
+
+# Production image tags
+BACKEND_IMAGE=wissem020/bookini-backend:latest
+FRONTEND_IMAGE=wissem020/bookini-frontend:latest
+ADMIN_FRONTEND_IMAGE=wissem020/bookini-admin-frontend:latest
+
+GRAFANA_ADMIN_USER=admin
+GRAFANA_ADMIN_PASSWORD=admin
 ```
 
-## Full Container Stack
+> **Note:** Replace all default credentials with strong values before going live.
 
-```bash
-docker compose up -d --build
-```
+### 3. Configure GitHub Actions secrets
 
-Main endpoints:
+The CI/CD pipeline requires the following secrets to be set in your GitHub repository (under **Settings → Secrets and variables → Actions**):
 
-- App via Traefik: <https://localhost>
-- Backend API: <https://localhost/api/v1>
-- Backend metrics: <https://localhost/metrics>
-- Traefik dashboard: <http://localhost:8080>
-- Prometheus: <http://localhost:9090>
-- Grafana: <http://localhost:3000>
-- Loki: <http://localhost:3100>
+| Secret | Description |
+|---|---|
+| `DOCKERHUB_USERNAME` | Docker Hub username |
+| `DOCKERHUB_TOKEN` | Docker Hub access token |
+| `SSH_HOST` | VPS hostname or IP |
+| `SSH_USER` | SSH login user |
+| `SSH_PRIVATE_KEY` | SSH private key |
+| `SSH_PASSPHRASE` | SSH key passphrase |
+| `SSH_PORT` | SSH port (default: 22) |
+| `SSH_TARGET_DIR` | Deployment directory on the VPS |
+| `DOMAIN_NAME` | Production domain name |
+| `POSTGRES_DB` | PostgreSQL database name |
+| `POSTGRES_USER` | PostgreSQL username |
+| `POSTGRES_PASSWORD` | PostgreSQL password |
+| `SECRET_KEY` | Application secret key |
+| `GRAFANA_ADMIN_USER` | Grafana admin username |
+| `GRAFANA_ADMIN_PASSWORD` | Grafana admin password |
+| `FRONTEND_URL` | Public URL of the user frontend |
+| `ADMIN_FRONTEND_URL` | Public URL of the admin frontend |
 
-Default dev credentials:
+### 4. Deploy
 
-- Grafana user: admin
-- Grafana password: admin
+The CI/CD pipeline (`.github/workflows/ci.yml`) handles deployment automatically:
 
-## Testing Strategy
+- **Pull Request → `master`**: runs lint, tests, and dependency audits.
+- **Push → `master`**: quality gates → Docker image build & push to Docker Hub → vulnerability scan → staging deploy → smoke tests.
+- **Production deploy**: runs only after staging succeeds and requires GitHub Environment approval.
 
-### Backend
-
-- Unit tests for services, security, and RBAC
-- Integration tests for admin/statistics route authorization envelopes
-
-Run:
-
-```bash
-cd backend
-python -m pytest
-```
-
-### Frontend
-
-- Unit tests for auth provider behavior
-- Critical UI flow test for protected-route redirect
-- Form validation tests for login
-
-Run:
-
-```bash
-cd frontend
-npm run test
-```
-
-## CI/CD
-
-GitHub Actions workflow:
-
-- Backend lint + test + pip-audit
-- Frontend lint + vitest + build + npm audit
-
-See:
-
-- .github/workflows/ci.yml
-
-## Operational Notes
-
-- Set a strong production `SECRET_KEY` before deployment.
-- Replace default database/redis credentials outside local dev.
-- Configure real TLS certificates in Traefik for production.
-- Review `npm audit` and `pip-audit` findings before release.
+To trigger a manual production deploy, approve the pending environment gate in the **Actions** tab of your repository.

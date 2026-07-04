@@ -1,13 +1,13 @@
 import { render, screen } from '@testing-library/react'
 
-import App from '../App'
+import App from '@/App'
 
 const renderApp = () => render(<App />)
 
 describe('Protected routes', () => {
   beforeEach(() => {
     window.localStorage.clear()
-    window.history.pushState({}, 'Test', '/admin/dashboard')
+    window.history.pushState({}, 'Test', '/dashboard')
   })
 
   it('redirects unauthenticated users to login page', async () => {

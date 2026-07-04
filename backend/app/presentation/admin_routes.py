@@ -7,11 +7,23 @@ from app.dependencies.rbac import require_roles
 from app.domain.enums import UserRole
 from app.infrastructure.session import get_db_session
 from app.models.user import User
+from app.presentation.admin_workspace_dashboard_routes import (
+    router as admin_workspace_dashboard_router,
+)
+from app.presentation.admin_workspace_management_routes import (
+    router as admin_workspace_management_router,
+)
+from app.presentation.admin_workspace_request_routes import (
+    router as admin_workspace_request_router,
+)
 from app.repositories.audit_log_repository import AuditLogRepository
 from app.repositories.user_repository import UserRepository
 from app.schemas.admin import AdminRoleUpdateRequest
 
 router = APIRouter(prefix="/admin", tags=["admin"])
+router.include_router(admin_workspace_dashboard_router)
+router.include_router(admin_workspace_management_router)
+router.include_router(admin_workspace_request_router)
 
 
 @router.get("/dashboard")
@@ -24,20 +36,6 @@ async def admin_dashboard(
             "role": current_user.role.value,
             "permissions_scope": "admin",
             "total_admin_users": 0,
-        },
-    )
-
-
-@router.post("/floors/{floor_id}/archive")
-async def archive_floor(
-    floor_id: str,
-    current_user: User = Depends(require_roles(["ADMIN", "SUPER_ADMIN"])),
-) -> dict[str, object]:
-    return success_response(
-        message="Sensitive floor operation authorized",
-        data={
-            "floor_id": floor_id,
-            "performed_by": str(current_user.id),
         },
     )
 

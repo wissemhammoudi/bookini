@@ -1,7 +1,7 @@
 import { renderHook, act } from '@testing-library/react'
 
 import { AuthProvider } from './auth-context'
-import { useAuth } from './use-auth'
+import { useAuth } from './hooks'
 
 describe('AuthProvider', () => {
   beforeEach(() => {
@@ -25,15 +25,15 @@ describe('AuthProvider', () => {
     })
 
     expect(result.current.isAuthenticated).toBe(true)
-    expect(window.localStorage.getItem('bookini_access_token')).toBe('access-token')
-    expect(window.localStorage.getItem('bookini_refresh_token')).toBe('refresh-token')
+    expect(window.localStorage.getItem('bookiwa7dek_access_token')).toBe('access-token')
+    expect(window.localStorage.getItem('bookiwa7dek_refresh_token')).toBe('refresh-token')
 
     act(() => {
       result.current.signOut()
     })
 
     expect(result.current.isAuthenticated).toBe(false)
-    expect(window.localStorage.getItem('bookini_access_token')).toBeNull()
-    expect(window.localStorage.getItem('bookini_refresh_token')).toBeNull()
+    expect(window.localStorage.getItem('bookiwa7dek_access_token')).toBeNull()
+    expect(window.localStorage.getItem('bookiwa7dek_refresh_token')).toBeNull()
   })
 })

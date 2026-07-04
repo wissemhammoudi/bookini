@@ -1,9 +1,9 @@
 import type { PropsWithChildren } from 'react'
 import { QueryClientProvider } from '@tanstack/react-query'
 
-import { ColorModeProvider } from './color-mode'
-import { queryClient } from './query-client'
-import { AuthProvider } from '../features/auth/auth-context'
+import { ColorModeProvider } from '@/app/color-mode'
+import { queryClient } from '@/app/query-client'
+import { AuthProvider } from '@/features/auth'
 
 export const AppProviders = ({ children }: PropsWithChildren) => (
   <ColorModeProvider>

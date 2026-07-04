@@ -1,74 +1,117 @@
-import { useQuery } from '@tanstack/react-query'
-import { Grid, Paper, Skeleton, Stack, Typography } from '@mui/material'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMemo, useState } from 'react'
 
 import {
   listCurrentReservations,
   listFloors,
   listReservationHistory,
-} from '../lib/api'
+  cancelReservationRequest,
+  getProfileRequest,
+  listPublicBookingsByEmail,
+} from '@/lib/api'
+import { DashboardOverview } from './dashboard/dashboard-overview'
 
 export const DashboardPage = () => {
+  const queryClient = useQueryClient()
+  const [cancelingId, setCancelingId] = useState<string | null>(null)
+
   const floorsQuery = useQuery({
     queryKey: ['floors-all'],
     queryFn: () => listFloors(),
   })
+
   const currentQuery = useQuery({
     queryKey: ['reservations-current'],
     queryFn: listCurrentReservations,
   })
+
   const historyQuery = useQuery({
     queryKey: ['reservations-history'],
     queryFn: listReservationHistory,
   })
 
-  const isLoading =
-    floorsQuery.isLoading || currentQuery.isLoading || historyQuery.isLoading
+  const profileQuery = useQuery({
+    queryKey: ['my-profile-dashboard'],
+    queryFn: getProfileRequest,
+  })
 
-  const totalRooms = floorsQuery.data?.length ?? 0
-  const availableRooms =
+  const publicBookingsQuery = useQuery({
+    queryKey: ['public-bookings-by-email', profileQuery.data?.email],
+    queryFn: () => listPublicBookingsByEmail(profileQuery.data!.email),
+    enabled: Boolean(profileQuery.data?.email),
+  })
+
+  const cancelMutation = useMutation({
+    mutationFn: cancelReservationRequest,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reservations-current'] })
+      queryClient.invalidateQueries({ queryKey: ['reservations-history'] })
+      setCancelingId(null)
+    },
+    onError: (err) => {
+      console.error(err)
+      setCancelingId(null)
+      alert('Failed to cancel reservation. Please try again.')
+    },
+  })
+
+  const isLoading =
+    floorsQuery.isLoading ||
+    currentQuery.isLoading ||
+    historyQuery.isLoading ||
+    profileQuery.isLoading ||
+    publicBookingsQuery.isLoading
+
+  const totalFloors = floorsQuery.data?.length ?? 0
+  const availableFloors =
     floorsQuery.data?.filter((item) => item.status === 'AVAILABLE').length ?? 0
 
+  const publicBookings = useMemo(
+    () => publicBookingsQuery.data ?? [],
+    [publicBookingsQuery.data],
+  )
+  const activePublicBookings = publicBookings.filter(
+    (item) => item.status === 'PENDING' || item.status === 'CONFIRMED',
+  )
+  const pastPublicBookings = publicBookings.filter(
+    (item) => item.status !== 'PENDING' && item.status !== 'CONFIRMED',
+  )
+
+  const activeReservationsCount =
+    (currentQuery.data?.length ?? 0) + activePublicBookings.length
+  const historyCount = (historyQuery.data?.length ?? 0) + pastPublicBookings.length
+
+  const totalSpent = useMemo(() => {
+    let sum = 0
+    publicBookings.forEach((booking) => {
+      if (booking.status === 'CONFIRMED' || booking.status === 'COMPLETED') {
+        sum += booking.price
+      }
+    })
+    return sum
+  }, [publicBookings])
+
+  const handleCancelClick = (id: string) => {
+    if (window.confirm('Are you sure you want to cancel this reservation?')) {
+      setCancelingId(id)
+      cancelMutation.mutate(id)
+    }
+  }
+
   return (
-    <Stack spacing={3}>
-      <Typography variant="h4">User Dashboard</Typography>
-      <Grid container spacing={2}>
-        <Grid size={{ xs: 12, md: 4 }}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6">Available rooms</Typography>
-            {isLoading ? (
-              <Skeleton width={120} />
-            ) : (
-              <Typography color="text.secondary">
-                {availableRooms} of {totalRooms} rooms are currently available.
-              </Typography>
-            )}
-          </Paper>
-        </Grid>
-        <Grid size={{ xs: 12, md: 4 }}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6">Current reservations</Typography>
-            {currentQuery.isLoading ? (
-              <Skeleton width={100} />
-            ) : (
-              <Typography color="text.secondary">
-                You have {currentQuery.data?.length ?? 0} active reservations.
-              </Typography>
-            )}
-          </Paper>
-        </Grid>
-        <Grid size={{ xs: 12, md: 4 }}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6">Reservation history</Typography>
-            {historyQuery.isLoading ? (
-              <Skeleton width={100} />
-            ) : (
-              <Typography color="text.secondary">
-                Total reservations: {historyQuery.data?.length ?? 0}
-              </Typography>
-            )}
-          </Paper>
-        </Grid>
-      </Grid>
-    </Stack>
+    <DashboardOverview
+      isLoading={isLoading}
+      floors={floorsQuery.data}
+      currentReservations={currentQuery.data}
+      historyReservations={historyQuery.data}
+      publicBookings={publicBookings}
+      cancelingId={cancelingId}
+      totalFloors={totalFloors}
+      availableFloors={availableFloors}
+      activeReservationsCount={activeReservationsCount}
+      historyCount={historyCount}
+      totalSpent={totalSpent}
+      onCancelReservation={handleCancelClick}
+    />
   )
 }

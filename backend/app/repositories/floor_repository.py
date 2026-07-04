@@ -16,6 +16,12 @@ class FloorRepository:
         return floor
 
     async def get_by_id(self, floor_id: str) -> Floor | None:
+        try:
+            import uuid
+
+            uuid.UUID(floor_id)
+        except ValueError:
+            return None
         statement = select(Floor).where(Floor.id == floor_id)
         result = await self._session.execute(statement)
         return result.scalar_one_or_none()
@@ -42,6 +48,29 @@ class FloorRepository:
             statement = statement.where(Floor.building == building)
         if floor_number is not None:
             statement = statement.where(Floor.floor_number == floor_number)
+
+        statement = statement.order_by(Floor.created_at.desc())
+        result = await self._session.execute(statement)
+        return list(result.scalars().all())
+
+    async def list_floors_by_admin(
+        self,
+        *,
+        admin_id: str,
+        include_deleted: bool,
+    ) -> list[Floor]:
+        try:
+            import uuid
+
+            uuid.UUID(admin_id)
+        except ValueError:
+            return []
+        statement: Select[tuple[Floor]] = select(Floor).where(
+            Floor.admin_id == admin_id
+        )
+
+        if not include_deleted:
+            statement = statement.where(Floor.is_deleted.is_(False))
 
         statement = statement.order_by(Floor.created_at.desc())
         result = await self._session.execute(statement)

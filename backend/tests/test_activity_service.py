@@ -26,12 +26,6 @@ class FakeActivityRepository:
     async def list_by_reservation(self, _: str) -> list[object]:
         return self._activities
 
-    async def update(self, activity: object) -> object:
-        return activity
-
-    async def delete(self, _: object) -> None:
-        self.deleted = True
-
 
 class FakeReservationRepository:
     def __init__(self, reservation: object | None = None) -> None:
@@ -95,24 +89,6 @@ async def test_create_activity_allows_owner() -> None:
 
     assert activity.title == "Activity"
     assert str(activity.reservation_id) == "r1"
-
-
-@pytest.mark.asyncio
-async def test_delete_activity_allows_admin() -> None:
-    activity = SimpleNamespace(id="a1", reservation_id="r1")
-    reservation = SimpleNamespace(id="r1", user_id="owner-id")
-    activity_repo = FakeActivityRepository(activity=activity)
-    service = ActivityService(
-        activity_repository=activity_repo,
-        reservation_repository=FakeReservationRepository(reservation=reservation),
-    )
-
-    await service.delete_activity(
-        current_user=_user(role=UserRole.ADMIN, user_id="admin-id"),
-        activity_id="a1",
-    )
-
-    assert activity_repo.deleted is True
 
 
 @pytest.mark.asyncio

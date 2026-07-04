@@ -1,0 +1,11 @@
+export * from '@/features/admin-workspace/sections/dashboard-section'
+export * from '@/features/admin-workspace/sections/floor-management-section'
+export * from '@/features/admin-workspace/sections/organizations-section'
+export * from '@/features/admin-workspace/sections/places-section'
+export * from '@/features/admin-workspace/sections/ratings-section'
+export * from '@/features/admin-workspace/sections/requests-section'
+export * from '@/features/admin-workspace/sections/reservations-section'
+export * from '@/features/admin-workspace/sections/settings-section'
+export * from '@/features/admin-workspace/sections/users-section'
+export * from '@/features/admin-workspace/sections/logs-section'
+

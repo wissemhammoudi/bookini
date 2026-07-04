@@ -18,3 +18,10 @@ class ReservationStatus(str, Enum):
     CONFIRMED = "CONFIRMED"
     CANCELLED = "CANCELLED"
     COMPLETED = "COMPLETED"
+
+
+class PublicBookingStatus(str, Enum):
+    PENDING = "PENDING"
+    CONFIRMED = "CONFIRMED"
+    CANCELLED = "CANCELLED"
+    COMPLETED = "COMPLETED"

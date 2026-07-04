@@ -39,56 +39,6 @@ class ActivityService:
         )
         return await self._activity_repository.create(activity)
 
-    async def update_activity(
-        self,
-        *,
-        current_user: User,
-        activity_id: str,
-        title: str | None,
-        description: str | None,
-    ) -> Activity:
-        activity = await self._activity_repository.get_by_id(activity_id)
-        if not activity:
-            raise NotFoundException("Activity not found")
-
-        reservation = await self._reservation_repository.get_by_id(
-            str(activity.reservation_id)
-        )
-        if not reservation:
-            raise NotFoundException("Reservation not found")
-
-        is_admin = current_user.role.value in {"ADMIN", "SUPER_ADMIN"}
-        if str(reservation.user_id) != str(current_user.id) and not is_admin:
-            raise ForbiddenException(
-                "You do not have permission to modify this activity"
-            )
-
-        if title is not None:
-            activity.title = title
-        if description is not None:
-            activity.description = description
-
-        return await self._activity_repository.update(activity)
-
-    async def delete_activity(self, *, current_user: User, activity_id: str) -> None:
-        activity = await self._activity_repository.get_by_id(activity_id)
-        if not activity:
-            raise NotFoundException("Activity not found")
-
-        reservation = await self._reservation_repository.get_by_id(
-            str(activity.reservation_id)
-        )
-        if not reservation:
-            raise NotFoundException("Reservation not found")
-
-        is_admin = current_user.role.value in {"ADMIN", "SUPER_ADMIN"}
-        if str(reservation.user_id) != str(current_user.id) and not is_admin:
-            raise ForbiddenException(
-                "You do not have permission to delete this activity"
-            )
-
-        await self._activity_repository.delete(activity)
-
     async def list_activities(
         self, *, current_user: User, reservation_id: str
     ) -> list[Activity]:

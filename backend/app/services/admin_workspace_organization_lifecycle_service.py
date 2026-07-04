@@ -1,0 +1,110 @@
+from __future__ import annotations
+
+from fastapi import HTTPException, status
+
+from app.schemas.admin_workspace import OrganizationRecord, OrganizationUpsertRequest
+from app.services.admin_workspace_helpers import generate_prefixed_id
+from app.services.admin_workspace_seed import utc_now
+from app.services.admin_workspace_state_store import AdminWorkspaceStateStore
+
+
+class AdminWorkspaceOrganizationLifecycleService:
+    @staticmethod
+    def create_organization(payload: OrganizationUpsertRequest) -> OrganizationRecord:
+        state = AdminWorkspaceStateStore.get_state()
+        organization = OrganizationRecord(
+            id=generate_prefixed_id("org"),
+            created_date=utc_now(),
+            **payload.model_dump(),
+        )
+        state.organizations.insert(0, organization)
+        AdminWorkspaceStateStore.record_activity(
+            organization.name,
+            "Organization profile created.",
+            "organization",
+        )
+        return organization
+
+    @staticmethod
+    def update_organization(
+        organization_id: str,
+        payload: OrganizationUpsertRequest,
+    ) -> OrganizationRecord:
+        state = AdminWorkspaceStateStore.get_state()
+        for index, organization in enumerate(state.organizations):
+            if organization.id == organization_id:
+                updated = organization.model_copy(update=payload.model_dump())
+                state.organizations[index] = updated
+                AdminWorkspaceStateStore.record_activity(
+                    updated.name,
+                    "Organization profile updated.",
+                    "organization",
+                )
+                return updated
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Organization not found",
+        )
+
+    @staticmethod
+    def delete_organization(organization_id: str) -> None:
+        state = AdminWorkspaceStateStore.get_state()
+        previous = len(state.organizations)
+        state.organizations = [
+            item for item in state.organizations if item.id != organization_id
+        ]
+        for user in state.users:
+            if user.organization_ids and organization_id in user.organization_ids:
+                user.organization_ids = [
+                    org_id
+                    for org_id in user.organization_ids
+                    if org_id != organization_id
+                ]
+        state.users = [
+            user
+            for user in state.users
+            if not user.organization_ids
+            or len(user.organization_ids) > 0
+            or user.role != "ADMIN"
+        ]
+        place_ids = {
+            item.id for item in state.places if item.organization_id == organization_id
+        }
+        state.places = [
+            item for item in state.places if item.organization_id != organization_id
+        ]
+        state.floors = [item for item in state.floors if item.place_id not in place_ids]
+        state.reservations = [
+            item for item in state.reservations if item.place_id not in place_ids
+        ]
+        if len(state.organizations) == previous:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Organization not found",
+            )
+        AdminWorkspaceStateStore.record_activity(
+            "Organization deleted",
+            f"Organization {organization_id} was removed.",
+            "organization",
+        )
+
+    @staticmethod
+    def set_organization_status(
+        organization_id: str,
+        status_value: str,
+    ) -> OrganizationRecord:
+        state = AdminWorkspaceStateStore.get_state()
+        for index, organization in enumerate(state.organizations):
+            if organization.id == organization_id:
+                updated = organization.model_copy(update={"status": status_value})
+                state.organizations[index] = updated
+                AdminWorkspaceStateStore.record_activity(
+                    updated.name,
+                    f"Organization status set to {status_value}.",
+                    "organization",
+                )
+                return updated
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Organization not found",
+        )

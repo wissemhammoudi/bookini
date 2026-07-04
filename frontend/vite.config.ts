@@ -1,9 +1,15 @@
+import path from 'path'
 import { defineConfig, mergeConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 
 // https://vite.dev/config/
 const viteConfig = {
   plugins: [react()],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
 }
 
 const vitestConfig = defineConfig({

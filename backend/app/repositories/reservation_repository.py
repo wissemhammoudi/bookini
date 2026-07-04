@@ -4,6 +4,7 @@ from sqlalchemy import Select, and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.enums import ReservationStatus
+from app.models.floor import Floor
 from app.models.reservation import Reservation
 
 
@@ -18,6 +19,12 @@ class ReservationRepository:
         return reservation
 
     async def get_by_id(self, reservation_id: str) -> Reservation | None:
+        try:
+            import uuid
+
+            uuid.UUID(reservation_id)
+        except ValueError:
+            return None
         statement = select(Reservation).where(Reservation.id == reservation_id)
         result = await self._session.execute(statement)
         return result.scalar_one_or_none()
@@ -75,3 +82,41 @@ class ReservationRepository:
         await self._session.commit()
         await self._session.refresh(reservation)
         return reservation
+
+    async def has_completed_reservation_for_floor(
+        self,
+        *,
+        user_id: str,
+        floor_id: str,
+    ) -> bool:
+        statement = (
+            select(Reservation.id)
+            .where(
+                Reservation.user_id == user_id,
+                Reservation.floor_id == floor_id,
+                Reservation.status == ReservationStatus.COMPLETED,
+            )
+            .limit(1)
+        )
+        result = await self._session.execute(statement)
+        return result.scalar_one_or_none() is not None
+
+    async def has_completed_reservation_with_admin(
+        self,
+        *,
+        user_id: str,
+        admin_id: str,
+    ) -> bool:
+        statement = (
+            select(Reservation.id)
+            .join(Floor, Floor.id == Reservation.floor_id)
+            .where(
+                Reservation.user_id == user_id,
+                Reservation.status == ReservationStatus.COMPLETED,
+                Floor.admin_id == admin_id,
+                Floor.is_deleted.is_(False),
+            )
+            .limit(1)
+        )
+        result = await self._session.execute(statement)
+        return result.scalar_one_or_none() is not None

@@ -1,3 +1,9 @@
+import asyncio
+import sys
+
+if sys.platform == "win32":
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
@@ -10,12 +16,12 @@ from app.api.v1.router import api_v1_router
 from app.core.config import get_settings
 from app.core.exception_handlers import register_exception_handlers
 from app.core.logging_config import get_logger, setup_logging
-from app.core.seed import seed_default_users
+from app.core.seed import seed_default_test_data, seed_super_admin_account
 from app.infrastructure.session import get_session_factory
 
 REQUEST_COUNT = Counter(
-    "bookini_http_requests_total",
-    "Total HTTP requests processed by Bookini API",
+    "bookiwa7dek_http_requests_total",
+    "Total HTTP requests processed by bookiwa7dek API",
     ["method", "path", "status_code"],
 )
 
@@ -24,9 +30,41 @@ REQUEST_COUNT = Counter(
 async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
     logger = get_logger(__name__)
     settings = get_settings()
-    await seed_default_users(get_session_factory(), settings)
+
+    # Initialize MinIO Bucket
+    try:
+        from app.infrastructure.minio_client import MinioClient
+
+        minio_client = MinioClient()
+        minio_client.ensure_bucket_exists()
+        logger.info("MinIO bucket initialization complete")
+    except Exception as e:
+        logger.error(f"Failed to initialize MinIO bucket: {e}")
+
+    # Warm up Redis connection pool
+    try:
+        from app.infrastructure.redis_client import get_redis_pool
+
+        redis = get_redis_pool()
+        await redis.ping()
+        logger.info("Redis connection established")
+    except Exception as e:
+        logger.error(f"Redis connection failed at startup: {e}")
+
+    await seed_super_admin_account(get_session_factory(), settings)
+    await seed_default_test_data(get_session_factory(), settings)
     logger.info("Application startup complete")
     yield
+
+    # Shutdown: close Redis pool gracefully
+    try:
+        from app.infrastructure.redis_client import close_redis_pool
+
+        await close_redis_pool()
+        logger.info("Redis pool closed")
+    except Exception as e:
+        logger.error(f"Error closing Redis pool: {e}")
+
     logger.info("Application shutdown complete")
 
 

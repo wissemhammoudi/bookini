@@ -22,3 +22,14 @@ providers:
 
 log:
   level: INFO
+
+accessLog: {}
+
+certificatesResolvers:
+  letsencrypt:
+    acme:
+      email: hammoudiwissem81@email.com
+      storage: /letsencrypt/acme.json
+      httpChallenge:
+        entryPoint: web
+

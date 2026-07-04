@@ -1,0 +1,6 @@
+export { ConfirmDialog } from '@/features/admin-workspace/dialogs/confirm-dialog'
+export { FloorDialog } from '@/features/admin-workspace/dialogs/floor-dialog'
+export { OrganizationDialog } from '@/features/admin-workspace/dialogs/organization-dialog'
+export { PlaceDialog } from '@/features/admin-workspace/dialogs/place-dialog'
+export { SettingsDialog } from '@/features/admin-workspace/dialogs/settings-dialog'
+export { UserDialog } from '@/features/admin-workspace/dialogs/user-dialog'
